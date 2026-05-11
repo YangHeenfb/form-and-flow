@@ -1,0 +1,102 @@
+import { Download, Pause, Play, RotateCcw } from 'lucide-react'
+import type { AppCopy } from '../i18n.ts'
+import type { AnimationState, PlaybackMode, ViewOptions } from '../math/types.ts'
+
+type Props = {
+  copy: AppCopy['controls']
+  animation: AnimationState
+  viewOptions: ViewOptions
+  onPlay: () => void
+  onPause: () => void
+  onReset: () => void
+  onSpeedChange: (speed: number) => void
+  viewZoom: number
+  onViewZoomChange: (zoom: number) => void
+  onModeChange: (mode: PlaybackMode) => void
+  onViewOptionChange: (key: keyof ViewOptions, value: boolean) => void
+  onExport: () => void
+}
+
+const viewOptionKeys: Array<keyof ViewOptions> = ['showGrid', 'showBasis', 'showUnitShape', 'showVectors', 'showTrails']
+
+export function AnimationControls({
+  copy,
+  animation,
+  viewOptions,
+  onPlay,
+  onPause,
+  onReset,
+  onSpeedChange,
+  viewZoom,
+  onViewZoomChange,
+  onModeChange,
+  onViewOptionChange,
+  onExport,
+}: Props) {
+  return (
+    <footer className="transport">
+      <div className="transport-buttons">
+        <button className="primary-button" type="button" onClick={onPlay}>
+          <Play size={17} />
+          {copy.play}
+        </button>
+        <button type="button" onClick={onPause}>
+          <Pause size={17} />
+          {copy.pause}
+        </button>
+        <button type="button" onClick={onReset}>
+          <RotateCcw size={17} />
+          {copy.reset}
+        </button>
+        <button type="button" onClick={onExport}>
+          <Download size={17} />
+          {copy.exportPng}
+        </button>
+      </div>
+      <label className="speed-control">
+        <span>{copy.speed}</span>
+        <input
+          type="range"
+          min="0.25"
+          max="2.5"
+          step="0.05"
+          value={animation.speed}
+          onChange={(event) => onSpeedChange(Number(event.target.value))}
+        />
+        <strong>{animation.speed.toFixed(2)}x</strong>
+      </label>
+      <label className="zoom-control">
+        <span>{copy.zoom}</span>
+        <input
+          type="range"
+          min="0.25"
+          max="2.5"
+          step="0.05"
+          value={viewZoom}
+          onChange={(event) => onViewZoomChange(Number(event.target.value))}
+        />
+        <strong>{viewZoom.toFixed(2)}x</strong>
+      </label>
+      <div className="segmented compact-segmented" role="group" aria-label={copy.playbackMode}>
+        <button type="button" className={animation.mode === 'combined' ? 'active' : ''} onClick={() => onModeChange('combined')}>
+          {copy.combined}
+        </button>
+        <button type="button" className={animation.mode === 'step' ? 'active' : ''} onClick={() => onModeChange('step')}>
+          {copy.step}
+        </button>
+      </div>
+      <div className="view-toggles">
+        {viewOptionKeys.map((key) => (
+          <label key={key}>
+            <input
+              type="checkbox"
+              checked={viewOptions[key]}
+              onChange={(event) => onViewOptionChange(key, event.target.checked)}
+            />
+            {copy.viewLabels[key]}
+          </label>
+        ))}
+      </div>
+    </footer>
+  )
+}
