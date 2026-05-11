@@ -2,12 +2,17 @@ import type { SpaceDim, ThemeSettings, ViewOptions } from './math/types.ts'
 
 export type Locale = 'en' | 'zh'
 
+function spacePlain(dim: number): string {
+  return dim === 2 ? 'R²' : dim === 3 ? 'R³' : `R^${dim}`
+}
+
 type ViewOptionKey = keyof ViewOptions
 type ThemeColorKey = keyof ThemeSettings['colors']
 
 export type AppCopy = {
   top: {
     eyebrow: string
+    title: string
     darkApp: string
     lightApp: string
     shareUrl: string
@@ -141,6 +146,7 @@ export const appCopy: Record<Locale, AppCopy> = {
   en: {
     top: {
       eyebrow: 'Linear Algebra Workspace',
+      title: 'Matrix Motion Lab',
       darkApp: 'Dark App',
       lightApp: 'Light App',
       shareUrl: 'Share URL',
@@ -151,25 +157,25 @@ export const appCopy: Record<Locale, AppCopy> = {
     views: {
       title: (inputDim, outputDim) => {
         if (inputDim === 3 && outputDim === 2) {
-          return 'R3 → R2 Bridge View'
+          return `${spacePlain(3)} → ${spacePlain(2)} Bridge View`
         }
         if (inputDim === 2 && outputDim === 3) {
-          return 'R2 → R3 Embedded View'
+          return `${spacePlain(2)} → ${spacePlain(3)} Embedded View`
         }
-        return `R${inputDim} → R${outputDim} View`
+        return `${spacePlain(inputDim)} → ${spacePlain(outputDim)} View`
       },
       subtitle: (inputDim, outputDim) => {
         if (inputDim === 3 && outputDim === 2) {
           return 'The output plane is embedded in 3D as z = 0, so Av appears as (Av.x, Av.y, 0).'
         }
         if (inputDim === 2 && outputDim === 3) {
-          return 'The 2D input plane unfolds into R3 according to the current 3x2 matrix.'
+          return `The 2D input plane unfolds into ${spacePlain(3)} according to the current 3x2 matrix.`
         }
         return 'The 3D grid, basis, unit shape, and vectors are computed from the current linear map.'
       },
-      canvas2dTitle: 'R2 → R2 Canvas',
+      canvas2dTitle: `${spacePlain(2)} → ${spacePlain(2)} Canvas`,
       canvas2dSubtitle: 'The grid, basis, unit square, and vectors all use the current animation matrix T(t).',
-      trueR2Title: 'True R2 Output Coordinates',
+      trueR2Title: `True ${spacePlain(2)} Output Coordinates`,
       trueR2Subtitle: 'The final vector Av is drawn as (x, y); the 3D bridge embeds it as (x, y, 0).',
     },
     matrixSequence: {
@@ -191,8 +197,8 @@ export const appCopy: Record<Locale, AppCopy> = {
     vectorPanel: {
       title: 'Vectors',
       add: 'Add',
-      help: (dim) => `Input vectors must live in R${dim}, matching the first matrix input dimension.`,
-      mismatch: (name, vectorDim, requiredDim) => `${name} was R${vectorDim}; editing it here will resize it to R${requiredDim}.`,
+      help: (dim) => `Input vectors must live in ${spacePlain(dim)}, matching the first matrix input dimension.`,
+      mismatch: (name, vectorDim, requiredDim) => `${name} was ${spacePlain(vectorDim)}; editing it here will resize it to ${spacePlain(requiredDim)}.`,
     },
     vectorInput: {
       colorTitle: 'Vector color',
@@ -251,7 +257,7 @@ export const appCopy: Record<Locale, AppCopy> = {
       },
       title: 'Explanation',
       sequence: (names, composedName, inputDim, outputDim) =>
-        `The sequence applies ${names} in user order. The final matrix is ${composedName}, mapping R${inputDim} to R${outputDim}.`,
+        `The sequence applies ${names} in user order. The final matrix is ${composedName}, mapping ${spacePlain(inputDim)} to ${spacePlain(outputDim)}.`,
       fixDimensions: 'Fix the sequence dimensions to preview the composed transformation.',
       dimensionCheck: 'Dimension Check',
       currentDimensions: 'Current Dimensions',
@@ -268,14 +274,14 @@ export const appCopy: Record<Locale, AppCopy> = {
       rank: 'rank',
       nullity: 'nullity',
       imageDimension: 'image dimension',
-      compressionRank2: 'R3 is compressed onto the 2D output plane.',
-      compressionRank1: 'R3 is compressed onto a line in the output plane.',
+      compressionRank2: `${spacePlain(3)} is compressed onto the 2D output plane.`,
+      compressionRank1: `${spacePlain(3)} is compressed onto a line in the output plane.`,
       compressionRank0: 'Every vector is collapsed to the zero vector.',
       transformedBasis: 'Transformed Basis',
-      r3ToR2BasisNote: 'The i, j, and k columns each land in true R2 output coordinates.',
-      r2ToR3BasisNote: 'The i and j columns each land in R3, defining the embedded output plane.',
+      r3ToR2BasisNote: `The i, j, and k columns each land in true ${spacePlain(2)} output coordinates.`,
+      r2ToR3BasisNote: `The i and j columns each land in ${spacePlain(3)}, defining the embedded output plane.`,
       transformedVectors: 'Transformed Vectors',
-      vectorMismatch: (name, vectorDim, requiredDim) => `${name} is R${vectorDim}; it must be R${requiredDim}.`,
+      vectorMismatch: (name, vectorDim, requiredDim) => `${name} is ${spacePlain(vectorDim)}; it must be ${spacePlain(requiredDim)}.`,
       stepMatrices: 'Step Matrices',
       afterStep: (step) => `After step ${step}`,
     },
@@ -283,6 +289,7 @@ export const appCopy: Record<Locale, AppCopy> = {
   zh: {
     top: {
       eyebrow: '线性代数工作区',
+      title: '矩阵运动实验室',
       darkApp: '深色界面',
       lightApp: '浅色界面',
       shareUrl: '分享链接',
@@ -293,25 +300,25 @@ export const appCopy: Record<Locale, AppCopy> = {
     views: {
       title: (inputDim, outputDim) => {
         if (inputDim === 3 && outputDim === 2) {
-          return 'R3 → R2 桥接视图'
+          return `${spacePlain(3)} → ${spacePlain(2)} 桥接视图`
         }
         if (inputDim === 2 && outputDim === 3) {
-          return 'R2 → R3 嵌入视图'
+          return `${spacePlain(2)} → ${spacePlain(3)} 嵌入视图`
         }
-        return `R${inputDim} → R${outputDim} 视图`
+        return `${spacePlain(inputDim)} → ${spacePlain(outputDim)} 视图`
       },
       subtitle: (inputDim, outputDim) => {
         if (inputDim === 3 && outputDim === 2) {
           return '输出平面嵌入三维场景的 z = 0 平面，Av 显示为 (Av.x, Av.y, 0)。'
         }
         if (inputDim === 2 && outputDim === 3) {
-          return '二维输入平面会按照当前 3x2 矩阵展开到 R3。'
+          return `二维输入平面会按照当前 3x2 矩阵展开到 ${spacePlain(3)}。`
         }
         return '三维网格、基向量、单位形状和向量都由当前线性映射计算。'
       },
-      canvas2dTitle: 'R2 → R2 画布',
+      canvas2dTitle: `${spacePlain(2)} → ${spacePlain(2)} 画布`,
       canvas2dSubtitle: '网格、基向量、单位方格和向量都使用当前动画矩阵 T(t)。',
-      trueR2Title: '真实 R2 输出坐标',
+      trueR2Title: `真实 ${spacePlain(2)} 输出坐标`,
       trueR2Subtitle: '最终向量 Av 按 (x, y) 绘制；三维桥接视图把它嵌入为 (x, y, 0)。',
     },
     matrixSequence: {
@@ -333,8 +340,8 @@ export const appCopy: Record<Locale, AppCopy> = {
     vectorPanel: {
       title: '向量',
       add: '添加',
-      help: (dim) => `输入向量必须属于 R${dim}，与第一个矩阵的输入维度一致。`,
-      mismatch: (name, vectorDim, requiredDim) => `${name} 原本是 R${vectorDim}；在这里编辑会把它调整为 R${requiredDim}。`,
+      help: (dim) => `输入向量必须属于 ${spacePlain(dim)}，与第一个矩阵的输入维度一致。`,
+      mismatch: (name, vectorDim, requiredDim) => `${name} 原本是 ${spacePlain(vectorDim)}；在这里编辑会把它调整为 ${spacePlain(requiredDim)}。`,
     },
     vectorInput: {
       colorTitle: '向量颜色',
@@ -393,7 +400,7 @@ export const appCopy: Record<Locale, AppCopy> = {
       },
       title: '解释',
       sequence: (names, composedName, inputDim, outputDim) =>
-        `序列会按用户顺序依次作用 ${names}。最终矩阵是 ${composedName}，表示从 R${inputDim} 到 R${outputDim} 的映射。`,
+        `序列会按用户顺序依次作用 ${names}。最终矩阵是 ${composedName}，表示从 ${spacePlain(inputDim)} 到 ${spacePlain(outputDim)} 的映射。`,
       fixDimensions: '请先修正序列维度，才能预览合成变换。',
       dimensionCheck: '维度检查',
       currentDimensions: '当前维度',
@@ -414,10 +421,10 @@ export const appCopy: Record<Locale, AppCopy> = {
       compressionRank1: '三维空间被压缩到输出平面中的一条线。',
       compressionRank0: '所有向量都被压成零向量。',
       transformedBasis: '变换后的基向量',
-      r3ToR2BasisNote: 'i、j、k 三列分别落在真实的 R2 输出坐标中。',
-      r2ToR3BasisNote: 'i、j 两列分别落在 R3 中，并定义嵌入后的输出平面。',
+      r3ToR2BasisNote: `i、j、k 三列分别落在真实的 ${spacePlain(2)} 输出坐标中。`,
+      r2ToR3BasisNote: `i、j 两列分别落在 ${spacePlain(3)} 中，并定义嵌入后的输出平面。`,
       transformedVectors: '变换后的向量',
-      vectorMismatch: (name, vectorDim, requiredDim) => `${name} 是 R${vectorDim}；它必须是 R${requiredDim}。`,
+      vectorMismatch: (name, vectorDim, requiredDim) => `${name} 是 ${spacePlain(vectorDim)}；它必须是 ${spacePlain(requiredDim)}。`,
       stepMatrices: '分步矩阵',
       afterStep: (step) => `第 ${step} 步后`,
     },
@@ -457,6 +464,29 @@ export function translateValidationMessage(message: string, locale: Locale): str
   const nonFinite = message.match(/^(.+) contains a non-finite value\.$/)
   if (nonFinite) {
     return `${nonFinite[1]} 包含非有限数值。`
+  }
+
+  const expectedRows = message.match(/^Expected ([23]) rows, received (\d+)\.$/)
+  if (expectedRows) {
+    return `应有 ${expectedRows[1]} 行，实际收到 ${expectedRows[2]} 行。`
+  }
+
+  const rowValues = message.match(/^Row (\d+) must contain ([23]) values\.$/)
+  if (rowValues) {
+    return `第 ${rowValues[1]} 行必须包含 ${rowValues[2]} 个值。`
+  }
+
+  if (message === 'Every matrix entry must be a finite number.') {
+    return '每个矩阵元素都必须是有限数值。'
+  }
+
+  const vectorDimension = message.match(/^Vector must live in R([23]); received R([23])\.$/)
+  if (vectorDimension) {
+    return `向量必须属于 R${vectorDimension[1]}；实际收到 R${vectorDimension[2]}。`
+  }
+
+  if (message === 'Every vector entry must be a finite number.') {
+    return '每个向量元素都必须是有限数值。'
   }
 
   return message

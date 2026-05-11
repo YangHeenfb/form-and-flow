@@ -1,5 +1,8 @@
 import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react'
 import type { AppCopy } from '../i18n.ts'
+import { Formula } from '../core/ui/Formula.tsx'
+import { SelectMenu } from '../core/ui/SelectMenu.tsx'
+import { indexedNameTex, spaceTex } from '../core/ui/mathNotation.ts'
 import { canonicalBridgeMatrix } from '../math/matrix.ts'
 import type { LinearMap, SpaceDim } from '../math/types.ts'
 
@@ -15,6 +18,11 @@ type Props = {
 }
 
 const dims: SpaceDim[] = [2, 3]
+const dimensionOptions = dims.map((dim) => ({
+  value: dim,
+  textValue: `R${dim}`,
+  label: <Formula tex={spaceTex(dim)} />,
+}))
 
 export function MatrixInput({ copy, map, index, canMoveUp, canMoveDown, onChange, onDelete, onMove }: Props) {
   const setEntry = (row: number, col: number, value: number) => {
@@ -39,7 +47,9 @@ export function MatrixInput({ copy, map, index, canMoveUp, canMoveDown, onChange
     <article className="matrix-card">
       <header className="matrix-card-header">
         <div>
-          <strong>{map.name}</strong>
+          <strong>
+            <Formula tex={indexedNameTex(map.name)} />
+          </strong>
           <span>{map.outputDim}x{map.inputDim}</span>
         </div>
         <div className="icon-row">
@@ -58,19 +68,21 @@ export function MatrixInput({ copy, map, index, canMoveUp, canMoveDown, onChange
       <div className="dim-selectors">
         <label>
           {copy.input}
-          <select value={map.inputDim} onChange={(event) => setDims(Number(event.target.value) as SpaceDim, map.outputDim)}>
-            {dims.map((dim) => (
-              <option key={dim} value={dim}>R{dim}</option>
-            ))}
-          </select>
+          <SelectMenu
+            value={map.inputDim}
+            options={dimensionOptions}
+            onChange={(next) => setDims(next, map.outputDim)}
+            ariaLabel={copy.input}
+          />
         </label>
         <label>
           {copy.output}
-          <select value={map.outputDim} onChange={(event) => setDims(map.inputDim, Number(event.target.value) as SpaceDim)}>
-            {dims.map((dim) => (
-              <option key={dim} value={dim}>R{dim}</option>
-            ))}
-          </select>
+          <SelectMenu
+            value={map.outputDim}
+            options={dimensionOptions}
+            onChange={(next) => setDims(map.inputDim, next)}
+            ariaLabel={copy.output}
+          />
         </label>
       </div>
 
@@ -78,7 +90,9 @@ export function MatrixInput({ copy, map, index, canMoveUp, canMoveDown, onChange
         {map.matrix.map((row, rowIndex) =>
           row.map((value, colIndex) => (
             <label key={`${map.id}-${rowIndex}-${colIndex}`}>
-              <span>a{rowIndex + 1}{colIndex + 1}</span>
+              <span>
+                <Formula tex={`a_{${rowIndex + 1}${colIndex + 1}}`} />
+              </span>
               <input
                 type="number"
                 step="0.5"

@@ -10,7 +10,9 @@ import {
 import { appCopy, translateValidationMessage } from '../i18n.ts'
 import type { AppCopy, Locale } from '../i18n.ts'
 import type { LinearMap, MapSequenceValidation, VectorState } from '../math/types.ts'
-import { formatNumber, formatVector } from '../math/vector.ts'
+import { formatNumber } from '../math/vector.ts'
+import { Formula } from '../core/ui/Formula.tsx'
+import { indexedNameTex, spaceTex } from '../core/ui/mathNotation.ts'
 
 type Props = {
   locale?: Locale
@@ -62,11 +64,11 @@ export function ExplanationPanel({ locale = 'en', maps, composedMap, stepMaps, v
             <dl className="metric-list">
               <div>
                 <dt>{copy.inputDimension}</dt>
-                <dd>R{composedMap.inputDim}</dd>
+                <dd><Formula tex={spaceTex(composedMap.inputDim)} /></dd>
               </div>
               <div>
                 <dt>{copy.outputDimension}</dt>
-                <dd>R{composedMap.outputDim}</dd>
+                <dd><Formula tex={spaceTex(composedMap.outputDim)} /></dd>
               </div>
               <div>
                 <dt>{copy.matrixShape}</dt>
@@ -100,7 +102,7 @@ export function ExplanationPanel({ locale = 'en', maps, composedMap, stepMaps, v
               const output = applyMatrixToVector(composedMap.matrix, vector.values)
               return (
                 <p key={vector.id}>
-                  <strong>{vector.name}</strong>: {formatVector(vector.values)} → {formatVector(output)}
+                  <Formula tex={`${indexedNameTex(vector.name)}:${vectorToTex(vector.values)}\\to${vectorToTex(output)}`} />
                 </p>
               )
             })}
@@ -127,23 +129,19 @@ function MappingTypeCard({ copy, maps, composedMap }: { copy: ExplanationCopy; m
   const inputDim = composedMap?.inputDim ?? maps[0]?.inputDim ?? 2
   const outputDim = composedMap?.outputDim ?? maps.at(-1)?.outputDim ?? inputDim
   const current = `${inputDim}-${outputDim}`
-  const options = [
-    { value: '2-2', label: 'R2 → R2', hint: copy.mappingHints['2-2'] },
-    { value: '3-3', label: 'R3 → R3', hint: copy.mappingHints['3-3'] },
-    { value: '3-2', label: 'R3 → R2', hint: copy.mappingHints['3-2'] },
-    { value: '2-3', label: 'R2 → R3', hint: copy.mappingHints['2-3'] },
-  ]
+  const labelTex = `${spaceTex(inputDim)}\\to${spaceTex(outputDim)}`
+  const hint = copy.mappingHints[current as keyof typeof copy.mappingHints]
 
   return (
     <section className="info-card mapping-type-card" aria-label={copy.mappingAria}>
       <h2>{copy.mappingType}</h2>
-      <div className="mapping-type-readonly" role="list">
-        {options.map((option) => (
-          <div key={option.value} className={option.value === current ? 'active' : ''} role="listitem" aria-current={option.value === current}>
-            <strong>{option.label}</strong>
-            <span>{option.hint}</span>
-          </div>
-        ))}
+      <div className="mapping-type-readonly compact-current" role="status">
+        <div className="active">
+          <strong>
+            <Formula tex={labelTex} />
+          </strong>
+          <span>{hint}</span>
+        </div>
       </div>
       <p className="muted compact">{copy.mappingSummary}</p>
     </section>
@@ -161,7 +159,7 @@ function InvariantCard({ copy, map }: { copy: ExplanationCopy; map: LinearMap })
       <section className="info-card">
         <h2>{map.inputDim === 2 ? copy.areaScale : copy.volumeScale}</h2>
         <p>
-          {copy.determinant} = <strong>{formatNumber(det, 4)}</strong>
+          <Formula tex={`\\det(T)=${formatNumber(det, 4)}`} />
         </p>
         {Math.abs(det) < 1e-8 && <p className="warning-text">{copy.notInvertible}</p>}
         {det < 0 && <p className="warning-text">{copy.orientationFlipped}</p>}
@@ -207,7 +205,7 @@ function BasisList({ copy, map }: { copy: ExplanationCopy; map: LinearMap }) {
     <div>
       {basis.map((vector, index) => (
         <p key={`${map.id}-basis-${index}`}>
-          T({['i', 'j', 'k'][index]}) = {formatVector(vector)}
+          <Formula tex={`T(\\mathbf{${['i', 'j', 'k'][index]}})=${vectorToTex(vector)}`} />
         </p>
       ))}
       {map.outputDim === 2 && map.inputDim === 3 && (
@@ -223,9 +221,15 @@ function BasisList({ copy, map }: { copy: ExplanationCopy; map: LinearMap }) {
 function MatrixBlock({ matrix }: { matrix: number[][] }) {
   return (
     <div className="matrix-block">
-      {matrix.map((row, rowIndex) => (
-        <code key={`row-${rowIndex}`}>[{row.map((value) => formatNumber(value, 3)).join(', ')}]</code>
-      ))}
+      <Formula tex={matrixToTex(matrix)} block />
     </div>
   )
+}
+
+function matrixToTex(matrix: number[][]): string {
+  return `\\begin{bmatrix}${matrix.map((row) => row.map((value) => formatNumber(value, 3)).join(' & ')).join(' \\\\ ')}\\end{bmatrix}`
+}
+
+function vectorToTex(vector: number[]): string {
+  return `\\begin{bmatrix}${vector.map((value) => formatNumber(value, 3)).join(' \\\\ ')}\\end{bmatrix}`
 }

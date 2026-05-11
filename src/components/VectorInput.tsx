@@ -1,5 +1,7 @@
 import { Trash2 } from 'lucide-react'
 import type { AppCopy } from '../i18n.ts'
+import { Formula } from '../core/ui/Formula.tsx'
+import { indexedNameTex } from '../core/ui/mathNotation.ts'
 import type { SpaceDim, VectorState } from '../math/types.ts'
 import { resizeVector } from '../math/vector.ts'
 
@@ -31,10 +33,14 @@ export function VectorInput({ copy, vector, requiredDim, canDelete, onChange, on
         />
         <span style={{ background: vector.color ?? '#c88cff' }} />
       </label>
-      <strong>{vector.name}</strong>
+      <strong>
+        <Formula tex={indexedNameTex(vector.name)} />
+      </strong>
       {Array.from({ length: requiredDim }, (_, index) => (
         <label key={`${vector.id}-${index}`}>
-          <span>{['x', 'y', 'z'][index]}</span>
+          <span>
+            <Formula tex={['x', 'y', 'z'][index]} />
+          </span>
           <input
             type="number"
             step="0.5"

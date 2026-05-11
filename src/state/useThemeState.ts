@@ -9,12 +9,12 @@ export const neutralDarkTheme: ThemeSettings = {
   includeThemeInShareLink: false,
   colors: {
     grid: '#3f4a55',
-    transformedGrid: '#5e8fd8',
+    transformedGrid: '#55b9aa',
     axis: '#d7dde5',
-    vectorI: '#6aa4ff',
-    vectorJ: '#9adf8f',
-    vectorK: '#f2c66d',
-    inputVector: '#c88cff',
+    vectorI: '#7fd6c2',
+    vectorJ: '#b9a7ff',
+    vectorK: '#c7dc8a',
+    inputVector: '#e2a8cf',
     unitShape: '#9fb7ce',
   },
 }
@@ -24,12 +24,12 @@ export const neutralLightTheme: ThemeSettings = {
   surfaceMode: 'light',
   colors: {
     grid: '#c7d0da',
-    transformedGrid: '#276bb6',
+    transformedGrid: '#2f8d82',
     axis: '#22303d',
-    vectorI: '#1e63c8',
-    vectorJ: '#32823d',
-    vectorK: '#9d6816',
-    inputVector: '#7b3fc4',
+    vectorI: '#166d63',
+    vectorJ: '#6550a8',
+    vectorK: '#718326',
+    inputVector: '#9a4c7b',
     unitShape: '#52708b',
   },
 }
@@ -70,12 +70,25 @@ export function loadThemeSettings(storage: Storage = localStorage): ThemeSetting
   try {
     const parsed = JSON.parse(raw) as ThemeSettings
     if ((parsed.surfaceMode === 'dark' || parsed.surfaceMode === 'light') && parsed.colors) {
+      if (isLegacyNeutralTheme(parsed)) {
+        return parsed.surfaceMode === 'dark'
+          ? { ...neutralDarkTheme, includeThemeInShareLink: parsed.includeThemeInShareLink }
+          : { ...neutralLightTheme, includeThemeInShareLink: parsed.includeThemeInShareLink }
+      }
       return parsed
     }
   } catch {
     return neutralDarkTheme
   }
   return neutralDarkTheme
+}
+
+function isLegacyNeutralTheme(settings: ThemeSettings): boolean {
+  return (
+    settings.colorPreset === 'neutral' &&
+    settings.colors.vectorI.toLowerCase() === '#6aa4ff' &&
+    settings.colors.vectorK.toLowerCase() === '#f2c66d'
+  )
 }
 
 export function useThemeState(initialTheme?: ThemeSettings) {
@@ -127,7 +140,7 @@ export function useThemeState(initialTheme?: ThemeSettings) {
       '--text-muted': dark ? '#a7b1bd' : '#5e6a78',
       '--control-bg': dark ? '#1d2732' : '#edf2f8',
       '--control-bg-strong': dark ? '#263343' : '#dfe8f3',
-      '--focus': dark ? '#74a7ff' : '#1e63c8',
+      '--focus': dark ? '#7fd6c2' : '#166d63',
       '--grid-color': theme.colors.grid,
       '--transformed-grid-color': theme.colors.transformedGrid,
       '--axis-color': theme.colors.axis,
