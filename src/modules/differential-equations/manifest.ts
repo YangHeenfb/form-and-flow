@@ -5,7 +5,7 @@ const base = '/modules/differential-equations'
 
 export const differentialEquationsManifest: ModuleDefinition = {
   id: 'differential-equations',
-  title: 'Differential Equation Playground',
+  title: 'Differential Equations',
   shortTitle: 'Differential Equations',
   description: 'Interactive ODE solver and system dynamics explorer.',
   category: 'differential-equations',
@@ -16,11 +16,11 @@ export const differentialEquationsManifest: ModuleDefinition = {
   component: DifferentialEquationsModule,
   lessons: [
     lesson('slope-fields', 'Slope Fields & Initial Value Problems', 'Read local slopes and launch a solution from an initial condition.'),
-    lesson('numerical-methods', 'Numerical Methods Lab', 'Compare Euler, midpoint, and RK4 on the same ODE.'),
+    lesson('numerical-methods', 'Numerical Methods', 'Compare Euler, midpoint, and RK4 on the same ODE.'),
     lesson('phase-portraits', 'Phase Portraits & Vector Fields', 'Follow trajectories through two-dimensional systems.'),
     lesson('pendulum', 'Pendulum & Oscillators', 'Turn a second-order oscillator into a phase-space system.'),
     lesson('population', 'Population Dynamics', 'Explore coupled feedback in predator-prey motion.'),
-    lesson('heat-equation', 'Heat Equation / Diffusion Explorer', 'Watch an initial temperature profile diffuse over time.'),
+    lesson('heat-equation', 'Heat Equation / Diffusion', 'Watch an initial temperature profile diffuse over time.'),
   ],
 }
 

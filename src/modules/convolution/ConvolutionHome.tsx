@@ -12,12 +12,12 @@ export function ConvolutionHome() {
     {
       id: 'fourier',
       routeBase: '/modules/fourier',
-      title: locale === 'zh' ? '傅里叶变换探索器' : 'Fourier Transform Explorer',
+      title: locale === 'zh' ? '傅里叶变换' : 'Fourier Transform',
     },
     {
       id: 'probability',
       routeBase: '/modules/probability',
-      title: locale === 'zh' ? '概率直觉实验室' : 'Probability Intuition Lab',
+      title: locale === 'zh' ? '概率直觉' : 'Probability Intuition',
     },
   ]
 

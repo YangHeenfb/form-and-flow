@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { Download, Pause, Play, RotateCcw, Share2, Shuffle } from 'lucide-react'
-import { Formula } from '../../../core/ui/Formula.tsx'
+import { Formula, renderMathText } from '../../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton } from '../../../core/ui/LearningHelp.tsx'
 import { SelectMenu } from '../../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../../i18n.ts'
@@ -503,7 +503,7 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
     },
     canvasAriaSuffix: 'probability visualization',
     medicalWarning: 'Educational toy model, not medical advice.',
-    relatedConvolution: 'Open full Convolution Lab for the continuous and signal-processing view.',
+    relatedConvolution: 'Open the full Convolution module for the continuous and signal-processing view.',
   },
   zh: {
     controls: {
@@ -665,7 +665,7 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
     },
     canvasAriaSuffix: '概率可视化',
     medicalWarning: '教学玩具模型，不是医疗建议。',
-    relatedConvolution: '打开完整卷积实验室，查看连续与信号处理视角。',
+    relatedConvolution: '打开完整卷积模块，查看连续与信号处理视角。',
   },
 }
 
@@ -947,11 +947,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
     <>
     <section className="probability-lesson">
       <aside className="probability-controls platform-card">
-        <div className="probability-learning-entry">
-          <div>
-            <h2>{learningCopy.entryTitle}</h2>
-            <p>{learningCopy.entryHint}</p>
-          </div>
+        <div className="probability-learning-entry learning-help-entry">
           <HelpTrigger ariaLabel={learningCopy.openOverview} onClick={() => openHelpTopic('overview')}>
             {learningCopy.openOverview}
           </HelpTrigger>
@@ -984,13 +980,9 @@ export function ProbabilityLesson({ lessonId }: Props) {
           </HelpTrigger>
         </div>
         <div className="probability-playback platform-card">
-          <button type="button" onClick={() => setPlaying(true)}>
-            <Play size={16} />
-            {ui.controls.play}
-          </button>
-          <button type="button" onClick={() => setPlaying(false)}>
-            <Pause size={16} />
-            {ui.controls.pause}
+          <button type="button" className="primary-button" aria-label={playing ? ui.controls.pause : ui.controls.play} onClick={() => setPlaying((current) => !current)}>
+            {playing ? <Pause size={16} /> : <Play size={16} />}
+            {playing ? ui.controls.pause : ui.controls.play}
           </button>
           <button type="button" onClick={resetLesson}>
             <RotateCcw size={16} />
@@ -1029,7 +1021,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
         <dl>
           {values.map((row) => (
             <div key={row.label}>
-              <dt>{row.label}</dt>
+              <dt>{renderMathText(row.label)}</dt>
               <dd>{row.value}</dd>
             </div>
           ))}
@@ -1284,7 +1276,8 @@ function Range({ label, value, min, max, step, onChange }: { label: string; valu
   return (
     <label className="probability-range">
       <span>
-        {label}: <strong>{formatNumber(value)}</strong>
+        <span className="probability-range-label">{renderMathText(label)}:</span>
+        <strong>{formatNumber(value)}</strong>
       </span>
       <input type="range" min={min} max={max} step={step} value={Math.min(max, Math.max(min, value))} onChange={(event) => onChange(Number(event.target.value))} />
     </label>

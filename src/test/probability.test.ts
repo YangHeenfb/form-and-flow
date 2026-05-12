@@ -113,7 +113,7 @@ describe('probability registry integration', () => {
   })
 
   it('renders the probability home and lessons without crashing', () => {
-    expect(renderToStaticMarkup(createElement(ProbabilityModule))).toContain('Probability Intuition Lab')
+    expect(renderToStaticMarkup(createElement(ProbabilityModule))).toContain('Probability Intuition')
     for (const lesson of probabilityManifest.lessons) {
       const html = renderToStaticMarkup(createElement(ProbabilityModule, { lessonId: lesson.id }))
       expect(html).toContain('probability-main-canvas')

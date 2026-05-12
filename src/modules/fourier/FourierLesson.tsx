@@ -282,7 +282,7 @@ export function FourierLesson({ lessonId }: Props) {
   const lessonKey = isFourierLesson(lessonId) ? lessonId : 'spectrum'
   const copy = fourierCopy[locale].lessons[lessonKey]
   const ui = fourierCopy[locale].ui
-  const [presetId, setPresetId] = useState(() => readPresetParam(defaultPresetForLesson(lessonKey)))
+  const [presetId, setPresetId] = useState(() => readInitialPresetParam(defaultPresetForLesson(lessonKey)))
   const selectedPreset = getFourierPreset(presetId === 'custom' ? defaultPresetForLesson(lessonKey) : presetId)
   const [expression, setExpression] = useState(() => readParam('f') ?? selectedPreset.expression ?? 'sin(2*pi*t)')
   const [sampleCount, setSampleCount] = useState(() => readNumberParam('samples', 512))
@@ -674,13 +674,9 @@ export function FourierLesson({ lessonId }: Props) {
           </HelpTrigger>
         </div>
         <div className="fourier-playback platform-card">
-          <button type="button" onClick={() => setPlaying(true)}>
-            <Play size={16} />
-            {ui.play}
-          </button>
-          <button type="button" onClick={() => setPlaying(false)}>
-            <Pause size={16} />
-            {ui.pause}
+          <button type="button" className="primary-button" aria-label={playing ? ui.pause : ui.play} onClick={() => setPlaying((current) => !current)}>
+            {playing ? <Pause size={16} /> : <Play size={16} />}
+            {playing ? ui.pause : ui.play}
           </button>
           <button type="button" onClick={() => resetLesson(lessonKey, selectedPreset.defaultFrequency, setSelectedFrequency, setCoefficientCount, setCutoff, setPlayhead)}>
             <RotateCcw size={16} />
@@ -1433,6 +1429,14 @@ function defaultPresetForLesson(lessonId: string): string {
 
 function isFourierLesson(lessonId: string): lessonId is 'spectrum' | 'reconstruction' | 'filtering' {
   return lessonId === 'spectrum' || lessonId === 'reconstruction' || lessonId === 'filtering'
+}
+
+function readInitialPresetParam(fallback: string): string {
+  const presetId = readPresetParam(fallback)
+  const expression = readParam('f')
+  if (!expression || presetId === 'custom') return presetId
+  const preset = getFourierPreset(presetId)
+  return preset.expression && expression.trim() === preset.expression.trim() ? presetId : 'custom'
 }
 
 function readPresetParam(fallback: string): string {

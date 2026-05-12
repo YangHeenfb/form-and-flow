@@ -5,7 +5,7 @@ const base = '/modules/convolution'
 
 export const convolutionManifest: ModuleDefinition = {
   id: 'convolution',
-  title: 'Convolution Lab',
+  title: 'Convolution',
   shortTitle: 'Convolution',
   description: 'Understand convolution through sliding, overlapping, probability sums, signals, images, and polynomials.',
   category: 'transforms',
@@ -16,12 +16,12 @@ export const convolutionManifest: ModuleDefinition = {
   component: ConvolutionModule,
   relatedConcepts: ['fourier-transform', 'convolution-theorem', 'filtering'],
   lessons: [
-    lesson('discrete', 'Discrete Convolution Explorer'),
-    lesson('probability', 'Probability Sum Explorer'),
-    lesson('signal', 'Signal Filtering Lab'),
-    lesson('image-kernel', 'Image Kernel Lab'),
-    lesson('polynomial', 'Polynomial Multiplication Lab'),
-    lesson('continuous', 'Continuous Convolution Explorer'),
+    lesson('discrete', 'Discrete Convolution'),
+    lesson('probability', 'Probability Sum'),
+    lesson('signal', 'Signal Filtering'),
+    lesson('image-kernel', 'Image Kernel'),
+    lesson('polynomial', 'Polynomial Multiplication'),
+    lesson('continuous', 'Continuous Convolution'),
   ],
 }
 

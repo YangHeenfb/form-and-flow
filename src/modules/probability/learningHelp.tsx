@@ -35,7 +35,7 @@ export const probabilityLearningCopy: Record<Locale, LearningCopy> = {
     close: 'Close explanation',
   },
   zh: {
-    entryTitle: '看不懂也可以继续探索',
+    entryTitle: '新手解释',
     entryHint: '遇到条件概率、贝叶斯、分布、密度或模拟这些概念时，可以随时打开解释。',
     openOverview: '新手解释',
     openGraph: '怎么看图',

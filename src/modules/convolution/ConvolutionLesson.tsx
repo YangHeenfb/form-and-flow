@@ -148,8 +148,14 @@ function DiscreteConvolutionLesson() {
               setK(0)
             }}
           />
-          <SequenceEditor label={ui.labels.sequenceA} values={a} onChange={setA} addLabel={ui.add} />
-          <SequenceEditor label={ui.labels.kernelB} values={b} onChange={setB} addLabel={ui.add} />
+          <SequenceEditor label={ui.labels.sequenceA} values={a} onChange={(values) => {
+            setPresetId('custom-small')
+            setA(values)
+          }} addLabel={ui.add} />
+          <SequenceEditor label={ui.labels.kernelB} values={b} onChange={(values) => {
+            setPresetId('custom-small')
+            setB(values)
+          }} addLabel={ui.add} />
           <SelectControl label={ui.labels.mode} value={mode} options={modeOptions(ui)} onChange={(next) => setMode(next as ConvolutionMode)} />
           <SelectControl label={ui.labels.operation} value={operation} options={operationOptions(ui)} onChange={(next) => setOperation(next as OperationMode)} />
           <Range label={ui.labels.shiftOutputIndex} value={currentK} min={0} max={maxK} step={1} onChange={setK} />
@@ -465,8 +471,12 @@ function PolynomialMultiplicationLesson() {
           <SelectControl
             label={ui.preset}
             value={presetId}
-            options={polynomialPresets.map((preset) => ({ value: preset.id, label: optionLabel(ui, preset.label) }))}
+            options={[{ value: 'custom', label: locale === 'zh' ? '自定义' : 'custom' }, ...polynomialPresets.map((preset) => ({ value: preset.id, label: optionLabel(ui, preset.label) }))]}
             onChange={(id) => {
+              if (id === 'custom') {
+                setPresetId('custom')
+                return
+              }
               const preset = polynomialPresets.find((candidate) => candidate.id === id) ?? polynomialPresets[0]
               setPresetId(preset.id)
               setAText(formatCoefficientList(preset.a))
@@ -476,11 +486,17 @@ function PolynomialMultiplicationLesson() {
           />
           <label>
             {ui.labels.aCoefficients}
-            <input value={aText} onChange={(event) => setAText(event.target.value)} />
+            <input value={aText} onChange={(event) => {
+              setPresetId('custom')
+              setAText(event.target.value)
+            }} />
           </label>
           <label>
             {ui.labels.bCoefficients}
-            <input value={bText} onChange={(event) => setBText(event.target.value)} />
+            <input value={bText} onChange={(event) => {
+              setPresetId('custom')
+              setBText(event.target.value)
+            }} />
           </label>
           <p className="input-help">{ui.labels.ascendingPowersHelp}</p>
           <Range label={ui.labels.coefficientK} value={currentK} min={0} max={maxK} step={1} onChange={setK} />
@@ -1155,13 +1171,9 @@ function PlaybackControls({
   return (
     <>
       <div className="transport-buttons">
-        <button type="button" onClick={onPlay} disabled={playing}>
-          <Play size={16} />
-          {ui.play}
-        </button>
-        <button type="button" onClick={onPause} disabled={!playing}>
-          <Pause size={16} />
-          {ui.pause}
+        <button type="button" className="primary-button" aria-label={playing ? ui.pause : ui.play} onClick={playing ? onPause : onPlay}>
+          {playing ? <Pause size={16} /> : <Play size={16} />}
+          {playing ? ui.pause : ui.play}
         </button>
         <button type="button" onClick={onReset}>
           <RotateCcw size={16} />

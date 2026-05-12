@@ -78,7 +78,7 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
     moduleHome: {
       eyebrow: 'Explore',
       title: 'All Modules',
-      summary: (count) => `${count} interactive labs and implementation slots for mathematical visualization.`,
+      summary: (count) => `${count} interactive modules and implementation slots for mathematical visualization.`,
     },
     moduleDetail: {
       learningGoals: 'Learning goals',
@@ -143,7 +143,7 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
     moduleHome: {
       eyebrow: '浏览',
       title: '全部模块',
-      summary: (count) => `${count} 个交互式实验室和数学可视化实现槽位。`,
+      summary: (count) => `${count} 个交互式模块和数学可视化实现槽位。`,
     },
     moduleDetail: {
       learningGoals: '学习目标',
@@ -203,17 +203,17 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       },
     },
     calculus: {
-      title: '微积分发现实验室',
+      title: '微积分',
       shortTitle: '微积分',
       description: '探索导数、积分、微积分基本定理和泰勒近似。',
       lessons: {
         derivative: {
-          title: '导数探索器',
+          title: '导数',
           description: '观察割线如何逐渐变成切线。',
           learningGoals: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
         },
         integral: {
-          title: '积分 / 黎曼和探索器',
+          title: '积分 / 黎曼和',
           description: '用矩形和梯形近似有符号面积。',
           learningGoals: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
         },
@@ -223,14 +223,14 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
           learningGoals: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
         },
         taylor: {
-          title: '泰勒多项式探索器',
+          title: '泰勒多项式',
           description: '围绕一个中心构造局部多项式近似。',
           learningGoals: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
         },
       },
     },
     fourier: {
-      title: '傅里叶变换探索器',
+      title: '傅里叶变换',
       shortTitle: '傅里叶',
       description: '观察信号如何在时间域和频率域之间转换。',
       lessons: {
@@ -257,9 +257,9 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       },
     },
     'differential-equations': {
-      title: '微分方程游乐场',
+      title: '微分方程',
       shortTitle: '微分方程',
-      description: '交互式 ODE 求解器和系统动力学探索器。',
+      description: '交互式 ODE 求解器和系统动力学可视化。',
       lessons: {
         'slope-fields': {
           title: '斜率场与初值问题',
@@ -267,7 +267,7 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
           learningGoals: ['读懂变化规则', '比较数值运动和可视化轨迹'],
         },
         'numerical-methods': {
-          title: '数值方法实验室',
+          title: '数值方法',
           description: '探索局部变化规则如何生成整体运动。',
           learningGoals: ['读懂变化规则', '比较数值运动和可视化轨迹'],
         },
@@ -287,14 +287,14 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
           learningGoals: ['读懂变化规则', '比较数值运动和可视化轨迹'],
         },
         'heat-equation': {
-          title: '热方程 / 扩散探索器',
+          title: '热方程 / 扩散',
           description: '探索局部变化规则如何生成整体运动。',
           learningGoals: ['读懂变化规则', '比较数值运动和可视化轨迹'],
         },
       },
     },
     probability: {
-      title: '概率直觉实验室',
+      title: '概率直觉',
       shortTitle: '概率',
       description: '把概率公式转化为可见的人群、面积、样本和分布。',
       lessons: {
@@ -336,44 +336,44 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       },
     },
     convolution: {
-      title: '卷积实验室',
+      title: '卷积',
       shortTitle: '卷积',
       description: '通过滑动、重叠、概率和、信号、图像与多项式理解卷积。',
       lessons: {
         discrete: {
-          title: '离散卷积探索器',
+          title: '离散卷积',
           description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
           learningGoals: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
         },
         probability: {
-          title: '概率和探索器',
+          title: '概率和',
           description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
           learningGoals: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
         },
         signal: {
-          title: '信号滤波实验室',
+          title: '信号滤波',
           description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
           learningGoals: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
         },
         'image-kernel': {
-          title: '图像卷积核实验室',
+          title: '图像卷积核',
           description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
           learningGoals: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
         },
         polynomial: {
-          title: '多项式乘法实验室',
+          title: '多项式乘法',
           description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
           learningGoals: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
         },
         continuous: {
-          title: '连续卷积探索器',
+          title: '连续卷积',
           description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
           learningGoals: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
         },
       },
     },
     'complex-plane': {
-      title: '复平面实验室',
+      title: '复平面',
       shortTitle: '复平面',
       description: '探索复数、映射、保角变换和图像环路。',
       lessons: {
@@ -400,7 +400,7 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       },
     },
     optimization: {
-      title: '优化 / 梯度下降实验室',
+      title: '优化 / 梯度下降',
       shortTitle: '优化',
       description: '可视化优化过程和基于梯度的方法。',
       lessons: {
@@ -415,12 +415,12 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
           learningGoals: ['解释梯度', '比较学习率和优化路径'],
         },
         'learning-rate': {
-          title: '学习率探索器',
+          title: '学习率',
           description: '在损失地形中移动，并比较优化器行为。',
           learningGoals: ['解释梯度', '比较学习率和优化路径'],
         },
         momentum: {
-          title: '动量探索器',
+          title: '动量',
           description: '在损失地形中移动，并比较优化器行为。',
           learningGoals: ['解释梯度', '比较学习率和优化路径'],
         },
@@ -437,7 +437,7 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       },
     },
     'neural-networks': {
-      title: '神经网络游乐场',
+      title: '神经网络',
       shortTitle: '神经网络',
       description: '构建、训练并理解简单神经网络。',
       lessons: {
@@ -452,14 +452,14 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
           learningGoals: ['读懂网络结构', '把训练和参数变化联系起来'],
         },
         training: {
-          title: '训练游乐场',
+          title: '训练',
           description: '用可视化模型连接参数、激活和训练。',
           learningGoals: ['读懂网络结构', '把训练和参数变化联系起来'],
         },
       },
     },
     'vector-field': {
-      title: '向量场实验室',
+      title: '向量场',
       shortTitle: '向量场',
       description: '可视化向量场、流、散度、旋度、通量和环流。',
       lessons: {
@@ -474,12 +474,12 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
           learningGoals: ['理解每个点上的向量', '把局部箭头和整体流动联系起来'],
         },
         divergence: {
-          title: '散度探索器',
+          title: '散度',
           description: '在二维向量场中跟随箭头、粒子和局部探针。',
           learningGoals: ['理解每个点上的向量', '把局部箭头和整体流动联系起来'],
         },
         curl: {
-          title: '旋度探索器',
+          title: '旋度',
           description: '在二维向量场中跟随箭头、粒子和局部探针。',
           learningGoals: ['理解每个点上的向量', '把局部箭头和整体流动联系起来'],
         },
@@ -496,7 +496,7 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       },
     },
     'fourier-series': {
-      title: '傅里叶级数 / 圆轮绘图器',
+      title: '傅里叶级数 / 圆轮',
       shortTitle: '傅里叶级数',
       description: '用圆轮和傅里叶级数绘制周期函数。',
       lessons: {
@@ -528,7 +528,7 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       },
     },
     'group-theory': {
-      title: '群论 / 对称性实验室',
+      title: '群论 / 对称性',
       shortTitle: '群论',
       description: '探索对称性、群、作用、表格、图示和变换。',
       lessons: {
@@ -553,7 +553,7 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
           learningGoals: ['组合不同作用', '从表格和图示中读取群结构'],
         },
         permutations: {
-          title: '置换游乐场',
+          title: '置换',
           description: '用有限对称性让抽象群结构可见。',
           learningGoals: ['组合不同作用', '从表格和图示中读取群结构'],
         },
@@ -570,12 +570,12 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       },
     },
     topology: {
-      title: '拓扑 / 绕数实验室',
+      title: '拓扑 / 绕数',
       shortTitle: '拓扑',
       description: '可视化探索拓扑和绕数。',
       lessons: {
         'winding-number': {
-          title: '绕数探索器',
+          title: '绕数',
           description: '用环路和目标点观察拓扑不变量。',
           learningGoals: ['追踪环路', '把绕数和内外判断直觉联系起来'],
         },
@@ -585,7 +585,7 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
           learningGoals: ['追踪环路', '把绕数和内外判断直觉联系起来'],
         },
         homotopy: {
-          title: '同伦不变性游乐场',
+          title: '同伦不变性',
           description: '用环路和目标点观察拓扑不变量。',
           learningGoals: ['追踪环路', '把绕数和内外判断直觉联系起来'],
         },
@@ -602,7 +602,7 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       },
     },
     'number-theory-fractals': {
-      title: '数论 / 分形实验室',
+      title: '数论 / 分形',
       shortTitle: '数与分形',
       description: '发现数字中的模式和美丽分形。',
       lessons: {
@@ -612,32 +612,32 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
           learningGoals: ['尝试迭代', '从视觉中读取数字模式'],
         },
         'prime-patterns': {
-          title: '素数模式探索器',
+          title: '素数模式',
           description: '观察简单离散规则和迭代规则如何产生复杂图案。',
           learningGoals: ['尝试迭代', '从视觉中读取数字模式'],
         },
         collatz: {
-          title: '考拉兹轨道探索器',
+          title: '考拉兹轨道',
           description: '观察简单离散规则和迭代规则如何产生复杂图案。',
           learningGoals: ['尝试迭代', '从视觉中读取数字模式'],
         },
         'ifs-chaos-game': {
-          title: 'IFS / 混沌游戏探索器',
+          title: 'IFS / 混沌游戏',
           description: '观察简单离散规则和迭代规则如何产生复杂图案。',
           learningGoals: ['尝试迭代', '从视觉中读取数字模式'],
         },
         'mandelbrot-julia': {
-          title: 'Mandelbrot 与 Julia 探索器',
+          title: 'Mandelbrot 与 Julia',
           description: '观察简单离散规则和迭代规则如何产生复杂图案。',
           learningGoals: ['尝试迭代', '从视觉中读取数字模式'],
         },
         'newton-fractal': {
-          title: '牛顿分形探索器',
+          title: '牛顿分形',
           description: '观察简单离散规则和迭代规则如何产生复杂图案。',
           learningGoals: ['尝试迭代', '从视觉中读取数字模式'],
         },
         'hilbert-curve': {
-          title: 'Hilbert 曲线探索器',
+          title: 'Hilbert 曲线',
           description: '观察简单离散规则和迭代规则如何产生复杂图案。',
           learningGoals: ['尝试迭代', '从视觉中读取数字模式'],
         },

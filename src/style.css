@@ -1636,6 +1636,19 @@ dt {
   min-height: 82px;
 }
 
+.calculus-playback button,
+.convolution-playback button,
+.fourier-playback button,
+.probability-playback button,
+.transport-buttons button,
+.segmented button {
+  flex: 0 0 auto;
+  min-width: max-content;
+  padding-inline: 12px;
+  white-space: nowrap;
+  word-break: keep-all;
+}
+
 .calculus-playback label {
   min-width: 260px;
   color: var(--text-muted);
@@ -1731,6 +1744,34 @@ dt {
   height: 3px;
   border-radius: 999px;
   display: inline-block;
+}
+
+.diffeq-variable-terms {
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: var(--panel-bg-soft);
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+}
+
+.diffeq-variable-terms > span {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.diffeq-variable-terms .concept-term {
+  border: 1px solid color-mix(in srgb, var(--focus) 36%, var(--panel-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--focus) 8%, transparent);
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  text-decoration: none;
 }
 
 .interactive-graph-canvas {
@@ -2030,10 +2071,25 @@ dt {
   color: var(--text-muted);
 }
 
-.probability-range span {
+
+
+.probability-range > span {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 12px;
+  width: 100%;
+}
+
+.probability-range-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.probability-range > span > strong {
+  margin-left: auto;
 }
 
 .probability-range strong,
@@ -2207,6 +2263,20 @@ dt {
     padding: 14px 10px;
     overflow: visible;
   }
+  .module-grid,
+  .lesson-card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .module-card,
+  .lesson-card {
+    min-width: 0;
+  }
+
+  .platform-page-heading {
+    flex-wrap: wrap;
+  }
+
 
   .calculus-lesson,
   .calculus-controls,
@@ -2269,4 +2339,90 @@ dt {
     align-items: stretch;
     flex-direction: column;
   }
+}
+
+.learning-help-entry {
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+}
+
+.learning-help-entry .learning-help-trigger {
+  align-self: flex-start;
+}
+
+.lesson-card-grid {
+  counter-reset: lesson-card;
+}
+
+.lesson-card-grid > .lesson-card {
+  counter-increment: lesson-card;
+}
+
+.lesson-order,
+.lesson-card-grid > .lesson-card:not(:has(.lesson-order)):not(:has(.module-order)):not(.complex-lesson-card)::before,
+.complex-card-topline span:first-child {
+  min-width: 34px;
+  width: max-content;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--focus) 24%, var(--panel-bg-soft));
+  color: var(--focus);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.lesson-card-grid > .lesson-card:not(:has(.lesson-order)):not(:has(.module-order)):not(.complex-lesson-card)::before {
+  content: counter(lesson-card, decimal-leading-zero);
+}
+
+.lesson-nav {
+  counter-reset: lesson-nav;
+}
+
+.lesson-nav a {
+  counter-increment: lesson-nav;
+}
+
+.lesson-nav a svg {
+  display: none;
+}
+
+.lesson-nav a::before {
+  content: counter(lesson-nav, decimal-leading-zero);
+  min-width: 22px;
+  color: var(--focus);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.lesson-list {
+  counter-reset: lesson-row;
+}
+
+.lesson-row {
+  counter-increment: lesson-row;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.lesson-row::before {
+  content: counter(lesson-row, decimal-leading-zero);
+  min-width: 34px;
+  height: 30px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--focus) 24%, var(--panel-bg-soft));
+  color: var(--focus);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.lesson-row small {
+  margin-left: auto;
 }

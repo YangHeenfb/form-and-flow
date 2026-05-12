@@ -36,13 +36,9 @@ export function AnimationControls({
   return (
     <footer className="transport">
       <div className="transport-buttons">
-        <button className="primary-button" type="button" onClick={onPlay}>
-          <Play size={17} />
-          {copy.play}
-        </button>
-        <button type="button" onClick={onPause}>
-          <Pause size={17} />
-          {copy.pause}
+        <button className="primary-button" type="button" aria-label={animation.playing ? copy.pause : copy.play} onClick={animation.playing ? onPause : onPlay}>
+          {animation.playing ? <Pause size={17} /> : <Play size={17} />}
+          {animation.playing ? copy.pause : copy.play}
         </button>
         <button type="button" onClick={onReset}>
           <RotateCcw size={17} />

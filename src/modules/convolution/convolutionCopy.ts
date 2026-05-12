@@ -51,7 +51,7 @@ export type ConvolutionUiCopy = {
 export const convolutionLessonCopy: Record<Locale, Record<ConvolutionLessonId, ConvolutionLessonCopy>> = {
   en: {
     discrete: {
-      title: 'Discrete Convolution Explorer',
+      title: 'Discrete Convolution',
       what: 'b is flipped, shifted across a, overlapping values are multiplied, and those products are summed.',
       why: 'This same operation appears in probability, signal filtering, image processing, polynomial multiplication, and Fourier analysis.',
       formula: 'y[k] = sum_i a[i] b[k - i]',
@@ -59,7 +59,7 @@ export const convolutionLessonCopy: Record<Locale, Record<ConvolutionLessonId, C
       watch: 'If the kernel is symmetric, flipping it does not change it. If it is asymmetric, convolution and correlation differ.',
     },
     probability: {
-      title: 'Probability Sum Explorer',
+      title: 'Probability Sum',
       what: 'Each output probability collects all pairs of outcomes that add to the same sum.',
       why: 'Adding independent random variables combines their distributions by convolution.',
       formula: 'P(S = s) = sum_x P_X(x) P_Y(s - x)',
@@ -67,7 +67,7 @@ export const convolutionLessonCopy: Record<Locale, Record<ConvolutionLessonId, C
       watch: 'The middle sums often have more combinations, which is why two dice are more likely to sum to 7 than to 2 or 12.',
     },
     signal: {
-      title: 'Signal Filtering Lab',
+      title: 'Signal Filtering',
       what: 'The kernel slides over the signal. At each position, the output is a weighted sum of nearby input values.',
       why: 'Changing the kernel changes the filter: averaging smooths, differences highlight changes, and other kernels can sharpen or detect edges.',
       formula: 'y[k] = sum_i signal[i] kernel[k - i]',
@@ -75,7 +75,7 @@ export const convolutionLessonCopy: Record<Locale, Record<ConvolutionLessonId, C
       watch: 'Larger smoothing kernels reduce noise but can blur sharp features. Convolution flips the kernel; correlation does not.',
     },
     'image-kernel': {
-      title: 'Image Kernel Lab',
+      title: 'Image Kernel',
       what: 'A small kernel looks at a pixel’s neighborhood. The output pixel is a weighted sum of nearby pixels.',
       why: 'Blur, sharpen, emboss, and edge detection can all be expressed as small convolution kernels.',
       formula: 'out[x,y] = sum_u sum_v image[x-u,y-v] kernel[u,v]',
@@ -83,7 +83,7 @@ export const convolutionLessonCopy: Record<Locale, Record<ConvolutionLessonId, C
       watch: 'Many image-processing kernels are symmetric, but asymmetric kernels reveal the difference between convolution and correlation.',
     },
     polynomial: {
-      title: 'Polynomial Multiplication Lab',
+      title: 'Polynomial Multiplication',
       what: 'Each product term contributes to a coefficient whose power is the sum of the two original powers.',
       why: 'Collecting equal powers is the same sum pattern as discrete convolution.',
       formula: 'c[k] = sum_i a[i] b[k - i]',
@@ -91,7 +91,7 @@ export const convolutionLessonCopy: Record<Locale, Record<ConvolutionLessonId, C
       watch: 'The coefficient of x^k collects all pairs i + j = k. Coefficients use ascending powers.',
     },
     continuous: {
-      title: 'Continuous Convolution Explorer',
+      title: 'Continuous Convolution',
       what: 'One function is flipped and shifted. At each shift, the overlap product is integrated.',
       why: 'Continuous convolution is the smooth analogue of discrete convolution. It appears in probability, signal processing, differential equations, and Fourier analysis.',
       formula: '(f * g)(t) = integral f(tau) g(t - tau) d tau',
@@ -101,7 +101,7 @@ export const convolutionLessonCopy: Record<Locale, Record<ConvolutionLessonId, C
   },
   zh: {
     discrete: {
-      title: '离散卷积探索器',
+      title: '离散卷积',
       what: 'b 先翻转，再沿着 a 平移；重叠的值逐项相乘，最后把乘积相加。',
       why: '同一个操作会出现在概率、信号滤波、图像处理、多项式乘法和傅里叶分析里。',
       formula: 'y[k] = sum_i a[i] b[k - i]',
@@ -109,7 +109,7 @@ export const convolutionLessonCopy: Record<Locale, Record<ConvolutionLessonId, C
       watch: '如果 kernel 对称，翻转前后没有区别；如果不对称，卷积和相关会得到不同结果。',
     },
     probability: {
-      title: '概率和探索器',
+      title: '概率和',
       what: '每个输出概率都会收集所有加起来等于同一个和的结果对。',
       why: '独立随机变量相加时，它们的分布会通过卷积组合。',
       formula: 'P(S = s) = sum_x P_X(x) P_Y(s - x)',
@@ -117,7 +117,7 @@ export const convolutionLessonCopy: Record<Locale, Record<ConvolutionLessonId, C
       watch: '中间的和通常有更多组合，所以两个骰子更容易掷出 7，而不是 2 或 12。',
     },
     signal: {
-      title: '信号滤波实验室',
+      title: '信号滤波',
       what: 'kernel 沿着信号滑动；每个位置的输出都是邻近输入值的加权和。',
       why: '改变 kernel 就是在改变滤波器：平均会平滑，差分会突出变化，其它 kernel 可以锐化或检测边缘。',
       formula: 'y[k] = sum_i signal[i] kernel[k - i]',
@@ -125,7 +125,7 @@ export const convolutionLessonCopy: Record<Locale, Record<ConvolutionLessonId, C
       watch: '更大的平滑 kernel 会减少噪声，但也可能模糊尖锐特征。卷积会翻转 kernel，相关不会。',
     },
     'image-kernel': {
-      title: '图像卷积核实验室',
+      title: '图像卷积核',
       what: '小 kernel 查看某个像素周围的邻域；输出像素是邻近像素的加权和。',
       why: '模糊、锐化、浮雕和边缘检测都可以用小卷积核表达。',
       formula: 'out[x,y] = sum_u sum_v image[x-u,y-v] kernel[u,v]',
@@ -133,7 +133,7 @@ export const convolutionLessonCopy: Record<Locale, Record<ConvolutionLessonId, C
       watch: '许多图像处理 kernel 是对称的，但不对称 kernel 能显示卷积和相关的区别。',
     },
     polynomial: {
-      title: '多项式乘法实验室',
+      title: '多项式乘法',
       what: '每个乘积项都会贡献到一个系数中；这个系数的次数等于两个原次数之和。',
       why: '合并同次幂项，就是和离散卷积相同的求和模式。',
       formula: 'c[k] = sum_i a[i] b[k - i]',
@@ -141,7 +141,7 @@ export const convolutionLessonCopy: Record<Locale, Record<ConvolutionLessonId, C
       watch: 'x^k 的系数会收集所有 i + j = k 的项。这里的系数按升幂排列。',
     },
     continuous: {
-      title: '连续卷积探索器',
+      title: '连续卷积',
       what: '一个函数先翻转再平移；每个平移位置都对重叠乘积做积分。',
       why: '连续卷积是离散卷积的平滑版本，出现在概率、信号处理、微分方程和傅里叶分析里。',
       formula: '(f * g)(t) = integral f(tau) g(t - tau) d tau',
@@ -153,7 +153,7 @@ export const convolutionLessonCopy: Record<Locale, Record<ConvolutionLessonId, C
 
 export const convolutionUiCopy: Record<Locale, ConvolutionUiCopy> = {
   en: {
-    moduleEyebrow: 'Convolution Lab',
+    moduleEyebrow: 'Convolution',
     homeSummary: 'Convolution combines two objects by sliding one across the other, multiplying overlapping parts, and summing the result.',
     relatedModulesAria: 'Related modules',
     relatedPrefix: 'Related',
@@ -320,7 +320,7 @@ export const convolutionUiCopy: Record<Locale, ConvolutionUiCopy> = {
     },
   },
   zh: {
-    moduleEyebrow: '卷积实验室',
+    moduleEyebrow: '卷积',
     homeSummary: '卷积把两个对象通过滑动、重叠相乘、再求和组合起来。',
     relatedModulesAria: '相关模块',
     relatedPrefix: '相关',

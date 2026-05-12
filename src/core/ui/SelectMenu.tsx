@@ -1,6 +1,7 @@
 import { ChevronDown } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { renderMathText } from './Formula.tsx'
 
 export type SelectMenuOption<T extends string | number> = {
   value: T
@@ -74,7 +75,7 @@ export function SelectMenu<T extends string | number>({ value, options, onChange
           }
         }}
       >
-        <span className="select-menu-value">{selected?.label}</span>
+        <span className="select-menu-value">{renderMathText(selected?.label)}</span>
         <ChevronDown size={15} aria-hidden="true" />
       </button>
       {open && (
@@ -93,8 +94,8 @@ export function SelectMenu<T extends string | number>({ value, options, onChange
                 buttonRef.current?.focus()
               }}
             >
-              <span>{option.label}</span>
-              <span className="select-menu-option-text">{option.textValue}</span>
+              <span>{renderMathText(option.label)}</span>
+              <span className="select-menu-option-text">{renderMathText(option.textValue)}</span>
             </button>
           ))}
         </div>

@@ -278,14 +278,10 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
 
       <div className="workspace">
         <aside className="left-panel">
-          <section className="panel-section matrix-learning-entry">
-            <div className="section-heading">
-              <h2>{learningCopy.entryTitle}</h2>
-              <HelpTrigger ariaLabel={learningCopy.openOverview} onClick={() => openHelpTopic('overview')}>
+          <section className="panel-section matrix-learning-entry learning-help-entry">
+            <HelpTrigger ariaLabel={learningCopy.openOverview} onClick={() => openHelpTopic('overview')}>
                 {learningCopy.openOverview}
               </HelpTrigger>
-            </div>
-            <p className="muted compact">{learningCopy.entryHint}</p>
           </section>
 
           <MatrixSequencePanel

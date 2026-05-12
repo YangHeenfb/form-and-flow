@@ -5,7 +5,7 @@ const base = '/modules/probability'
 
 export const probabilityManifest: ModuleDefinition = {
   id: 'probability',
-  title: 'Probability Intuition Lab',
+  title: 'Probability Intuition',
   shortTitle: 'Probability',
   description: 'Turn probability formulas into visible populations, areas, samples, and distributions.',
   category: 'probability',

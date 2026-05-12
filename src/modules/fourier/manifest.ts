@@ -5,7 +5,7 @@ const base = '/modules/fourier'
 
 export const fourierManifest: ModuleDefinition = {
   id: 'fourier',
-  title: 'Fourier Transform Explorer',
+  title: 'Fourier Transform',
   shortTitle: 'Fourier',
   description: 'See how signals transform between time and frequency.',
   category: 'fourier',

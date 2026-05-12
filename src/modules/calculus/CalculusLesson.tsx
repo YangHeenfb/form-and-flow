@@ -231,7 +231,7 @@ export function CalculusLesson({ lessonId }: Props) {
   const copy = calculusCopy[locale].lessons[lessonId] ?? calculusCopy[locale].lessons.derivative
   const ui = calculusCopy[locale].ui
   const learningCopy = calculusLearningCopy[locale]
-  const [presetId, setPresetId] = useState(() => readPresetParam(lessonId))
+  const [presetId, setPresetId] = useState(() => readInitialPresetParam(lessonId))
   const selectedPreset = calculusPresets.find((preset) => preset.id === presetId) ?? calculusPresets.find((preset) => preset.id === defaultPresetForLesson(lessonId)) ?? calculusPresets[0]
   const [expression, setExpression] = useState(() => readParam('f') ?? selectedPreset.expression)
   const [x0, setX0] = useState(() => readNumberParam('x0', selectedPreset.defaultX0 ?? 1))
@@ -330,11 +330,7 @@ export function CalculusLesson({ lessonId }: Props) {
     <>
     <section className="calculus-lesson">
       <aside className="calculus-controls platform-card">
-        <div className="calculus-learning-entry">
-          <div>
-            <h2>{learningCopy.entryTitle}</h2>
-            <p>{learningCopy.entryHint}</p>
-          </div>
+        <div className="calculus-learning-entry learning-help-entry">
           <HelpTrigger ariaLabel={learningCopy.openOverview} onClick={() => openHelpTopic('overview')}>
             {learningCopy.openOverview}
           </HelpTrigger>
@@ -460,13 +456,9 @@ export function CalculusLesson({ lessonId }: Props) {
           </HelpTrigger>
         </div>
         <div className="calculus-playback platform-card">
-          <button type="button" onClick={() => setPlaying(true)}>
-            <Play size={16} />
-            {ui.play}
-          </button>
-          <button type="button" onClick={() => setPlaying(false)}>
-            <Pause size={16} />
-            {ui.pause}
+          <button type="button" className="primary-button" aria-label={playing ? ui.pause : ui.play} onClick={() => setPlaying((current) => !current)}>
+            {playing ? <Pause size={16} /> : <Play size={16} />}
+            {playing ? ui.pause : ui.play}
           </button>
           <button type="button" onClick={() => resetLessonControls(lessonId, selectedPreset, setX0, setH, setA, setB, setN, setDegree)}>
             <RotateCcw size={16} />
@@ -749,6 +741,14 @@ function defaultPresetForLesson(lessonId: string): string {
   if (lessonId === 'integral' || lessonId === 'fundamental-theorem') return 'gaussian'
   if (lessonId === 'taylor') return 'sin'
   return 'sin'
+}
+
+function readInitialPresetParam(lessonId: string): string {
+  const presetId = readPresetParam(lessonId)
+  const expression = readParam('f')
+  if (!expression || presetId === 'custom') return presetId
+  const preset = calculusPresets.find((candidate) => candidate.id === presetId)
+  return preset && normalizeMathInput(expression) === preset.expression ? presetId : 'custom'
 }
 
 function readPresetParam(lessonId: string): string {

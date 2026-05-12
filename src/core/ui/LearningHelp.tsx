@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { BookOpen, CircleHelp, X } from 'lucide-react'
+import { renderMathText } from './Formula.tsx'
 
 export type HelpSection = {
   title: string
@@ -57,22 +58,22 @@ export function LearningDrawer({ topic, closeLabel, onClose }: { topic: HelpTopi
         <div className="learning-drawer-header">
           <div>
             {topic.eyebrow && <p className="eyebrow">{topic.eyebrow}</p>}
-            <h2 id="learning-drawer-title">{topic.title}</h2>
+            <h2 id="learning-drawer-title">{renderMathText(topic.title)}</h2>
           </div>
           <button className="learning-drawer-close" type="button" aria-label={closeLabel} title={closeLabel} onClick={onClose}>
             <X size={18} />
           </button>
         </div>
-        {topic.summary && <div className="learning-drawer-summary">{topic.summary}</div>}
+        {topic.summary && <div className="learning-drawer-summary">{renderMathText(topic.summary)}</div>}
         <div className="learning-drawer-sections">
           {topic.sections.map((section) => (
             <section className="learning-help-section" key={section.title}>
-              <h3>{section.title}</h3>
-              {section.body && <div className="learning-help-body">{section.body}</div>}
+              <h3>{renderMathText(section.title)}</h3>
+              {section.body && <div className="learning-help-body">{renderMathText(section.body)}</div>}
               {section.items && (
                 <ul>
                   {section.items.map((item, index) => (
-                    <li key={index}>{item}</li>
+                    <li key={index}>{renderMathText(item)}</li>
                   ))}
                 </ul>
               )}

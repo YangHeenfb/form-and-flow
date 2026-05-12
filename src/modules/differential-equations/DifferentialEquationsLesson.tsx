@@ -55,7 +55,19 @@ type LessonCopy = {
 }
 
 type DifferentialLocale = Locale
-type DifferentialTermId = 'y-prime' | 'ode' | 'initial-value' | 'slope-field' | 'euler' | 'midpoint' | 'rk4' | 'step-size'
+type DifferentialTermId =
+  | 'y-prime'
+  | 'ode'
+  | 'initial-value'
+  | 'slope-field'
+  | 'euler'
+  | 'midpoint'
+  | 'rk4'
+  | 'step-size'
+  | 'heat-u'
+  | 'heat-alpha'
+  | 'heat-ut'
+  | 'heat-uxx'
 type DifferentialHelpMode = { kind: 'beginner' } | { kind: 'graph' } | { kind: 'term'; term: DifferentialTermId }
 
 const methodOptions: OdeMethod[] = ['euler', 'midpoint', 'rk4']
@@ -156,7 +168,7 @@ const differentialCopy: Record<DifferentialLocale, {
         watch: 'Solutions can bend toward equilibria, away from unstable states, or follow periodic forcing.',
       },
       'numerical-methods': {
-        title: 'Numerical Methods Lab',
+        title: 'Numerical Methods',
         what: 'Euler, midpoint, and RK4 step through the same ODE with different estimates of the next point.',
         why: 'Most differential equations are solved numerically, so step size and method choice control accuracy.',
         formulaTex: "y_{n+1}=y_n+h\\,\\Phi(t_n,y_n,h)",
@@ -188,7 +200,7 @@ const differentialCopy: Record<DifferentialLocale, {
         watch: 'Changing interaction strength moves the equilibrium and changes the cycle size.',
       },
       'heat-equation': {
-        title: 'Heat Equation / Diffusion Explorer',
+        title: 'Heat Equation / Diffusion',
         what: 'The initial temperature profile smooths out over time while the heat strip shows the current rod state.',
         why: 'The heat equation turns local curvature into flow from hot regions toward cooler neighbors.',
         formulaTex: "u_t=\\alpha u_{xx}",
@@ -258,7 +270,7 @@ const differentialCopy: Record<DifferentialLocale, {
         watch: '解可能靠近平衡、远离不稳定状态，或跟随周期外力摆动。',
       },
       'numerical-methods': {
-        title: '数值方法实验室',
+        title: '数值方法',
         what: 'Euler、中点法和 RK4 用不同方式估计下一步，并求解同一个 ODE。',
         why: '多数微分方程需要数值求解，因此步长和方法会直接影响精度。',
         formulaTex: "y_{n+1}=y_n+h\\,\\Phi(t_n,y_n,h)",
@@ -290,7 +302,7 @@ const differentialCopy: Record<DifferentialLocale, {
         watch: '改变交互强度会移动平衡点，也会改变循环幅度。',
       },
       'heat-equation': {
-        title: '热方程 / 扩散探索器',
+        title: '热方程 / 扩散',
         what: '初始温度曲线会随时间变平滑，热量色带显示当前杆上的状态。',
         why: '热方程把局部曲率转化为从热处流向冷处的扩散。',
         formulaTex: "u_t=\\alpha u_{xx}",
@@ -652,14 +664,10 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
             {ui.graphHelp}
           </HelpTrigger>
         </div>
-        <div className="calculus-playback platform-card">
-          <button type="button" onClick={() => setPlaying(true)}>
-            <Play size={16} />
-            {ui.play}
-          </button>
-          <button type="button" onClick={() => setPlaying(false)}>
-            <Pause size={16} />
-            {ui.pause}
+        <div className="calculus-playback diffeq-playback platform-card">
+          <button type="button" className="primary-button" aria-label={playing ? ui.pause : ui.play} onClick={() => setPlaying((current) => !current)}>
+            {playing ? <Pause size={16} /> : <Play size={16} />}
+            {playing ? ui.pause : ui.play}
           </button>
           <button type="button" onClick={() => resetLesson()}>
             <RotateCcw size={16} />
@@ -681,6 +689,7 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
         <p className="formula-text formula-card">
           <Formula tex={currentFormulaTex(lessonId, scalarPreset, phasePreset, copy.formulaTex)} block label={copy.formulaLabel} />
         </p>
+        {lessonId === 'heat-equation' && <HeatVariableTerms locale={locale} onTerm={(term) => setHelpMode({ kind: 'term', term })} />}
         <Legend lessonId={lessonId} locale={locale} />
         <h2>{ui.values}</h2>
         <dl>
@@ -754,6 +763,26 @@ function Legend({ lessonId, locale }: { lessonId: string; locale: DifferentialLo
   )
 }
 
+function HeatVariableTerms({ locale, onTerm }: { locale: DifferentialLocale; onTerm: (term: DifferentialTermId) => void }) {
+  return (
+    <div className="diffeq-variable-terms" aria-label={locale === 'zh' ? '热方程变量解释' : 'Heat equation variable explanations'}>
+      <span>{locale === 'zh' ? '变量' : 'Variables'}</span>
+      <TermButton onClick={() => onTerm('heat-u')}>
+        <Formula tex="u" />
+      </TermButton>
+      <TermButton onClick={() => onTerm('heat-alpha')}>
+        <Formula tex="\\alpha" />
+      </TermButton>
+      <TermButton onClick={() => onTerm('heat-ut')}>
+        <Formula tex="u_t" />
+      </TermButton>
+      <TermButton onClick={() => onTerm('heat-uxx')}>
+        <Formula tex="u_{xx}" />
+      </TermButton>
+    </div>
+  )
+}
+
 function renderDifferentialWhat(lessonId: string, locale: DifferentialLocale, fallback: string, onTerm: (term: DifferentialTermId) => void): ReactNode {
   const term = (id: DifferentialTermId, labelText: string) => (
     <TermButton key={id} onClick={() => onTerm(id)}>
@@ -793,6 +822,18 @@ function renderDifferentialWhat(lessonId: string, locale: DifferentialLocale, fa
     ) : (
       <>
         Each arrow is a velocity vector, giving {term('y-prime', "x' and y'")} at that state. A trajectory shows the motion produced by one initial state.
+      </>
+    )
+  }
+
+  if (lessonId === 'heat-equation') {
+    return locale === 'zh' ? (
+      <>
+        每个位置的温度写作 {term('heat-u', 'u(x,t)')}。参数 {term('heat-alpha', 'α')} 控制扩散速度，而公式里的 {term('heat-uxx', 'uₓₓ')} 表示曲线的局部弯曲程度。
+      </>
+    ) : (
+      <>
+        The temperature at each position is {term('heat-u', 'u(x,t)')}. The parameter {term('heat-alpha', 'alpha')} controls diffusion speed, and {term('heat-uxx', 'u_xx')} measures local curvature.
       </>
     )
   }
@@ -1067,6 +1108,39 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
       summary: '步长是一次数值方法往前走的时间距离。',
       sections: [{ title: '影响', body: '步长越大，计算越快但误差越容易变大；步长越小，通常更准但需要更多计算。' }],
     },
+    'heat-u': {
+      eyebrow: '变量',
+      title: 'u 是什么',
+      summary: 'u(x,t) 表示位置 x 在时间 t 的温度或热量强度。',
+      sections: [
+        { title: '在图里怎么看', body: '横轴位置 x 上的曲线高度就是 u。曲线越高，说明那里越热。' },
+        { title: '为什么写成 u(x,t)', body: '因为同一个位置的温度会随时间变化，所以 u 同时依赖位置 x 和时间 t。' },
+      ],
+    },
+    'heat-alpha': {
+      eyebrow: '变量',
+      title: 'α 是什么',
+      summary: 'α 是扩散率，控制热量从高处流向低处的快慢。',
+      sections: [
+        { title: '调大 α 会怎样', body: '曲线会更快变平，尖峰和边缘更快消失。' },
+        { title: '调小 α 会怎样', body: '热量扩散更慢，初始形状会保留更久。' },
+      ],
+    },
+    'heat-ut': {
+      eyebrow: '变量',
+      title: 'u_t 是什么',
+      summary: 'u_t 表示温度对时间的变化率，也就是某个位置现在正在升温还是降温。',
+      sections: [{ title: '和动画的关系', body: '如果某处 u_t 是负的，那里的温度正在下降；如果是正的，那里的温度正在上升。' }],
+    },
+    'heat-uxx': {
+      eyebrow: '变量',
+      title: 'uₓₓ 是什么',
+      summary: 'uₓₓ 表示温度曲线对位置的二阶导数，可以理解为局部弯曲程度。',
+      sections: [
+        { title: '直觉', body: '尖峰附近弯曲大，所以变化快；平坦区域弯曲小，所以变化慢。' },
+        { title: '和热方程的关系', body: '公式 u_t = αuₓₓ 的意思是：曲线哪里弯得厉害，哪里就更快发生温度变化。' },
+      ],
+    },
   }
 
   const en: Record<DifferentialTermId, HelpTopic> = {
@@ -1120,6 +1194,39 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
       title: 'Step size h',
       summary: 'Step size is the time distance covered by one numerical step.',
       sections: [{ title: 'Effect', body: 'A larger step is faster but less accurate. A smaller step is usually more accurate but takes more computation.' }],
+    },
+    'heat-u': {
+      eyebrow: 'Variable',
+      title: 'What u means',
+      summary: 'u(x,t) is the temperature or heat intensity at position x and time t.',
+      sections: [
+        { title: 'On the graph', body: 'The curve height at a position x is u. Higher means hotter.' },
+        { title: 'Why u(x,t)', body: 'Temperature changes over time, so u depends on both position x and time t.' },
+      ],
+    },
+    'heat-alpha': {
+      eyebrow: 'Variable',
+      title: 'What alpha means',
+      summary: 'Alpha is the diffusivity. It controls how quickly heat spreads from hot regions to cooler regions.',
+      sections: [
+        { title: 'Larger alpha', body: 'The curve smooths faster, so peaks and sharp edges disappear sooner.' },
+        { title: 'Smaller alpha', body: 'Heat spreads more slowly, so the initial shape lasts longer.' },
+      ],
+    },
+    'heat-ut': {
+      eyebrow: 'Variable',
+      title: 'What u_t means',
+      summary: 'u_t is the rate of temperature change over time at one position.',
+      sections: [{ title: 'In the animation', body: 'If u_t is negative, that point is cooling down. If it is positive, that point is warming up.' }],
+    },
+    'heat-uxx': {
+      eyebrow: 'Variable',
+      title: 'What u_xx means',
+      summary: 'u_xx is the second derivative with respect to position, which measures local curvature.',
+      sections: [
+        { title: 'Intuition', body: 'Sharp peaks have high curvature and change quickly. Flat regions have low curvature and change slowly.' },
+        { title: 'In the heat equation', body: 'u_t = alpha u_xx says that curved parts of the temperature profile change faster.' },
+      ],
     },
   }
 

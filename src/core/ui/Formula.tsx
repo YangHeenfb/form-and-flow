@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { Fragment, useMemo, type ReactNode } from 'react'
 import { renderToString } from 'katex'
 import 'katex/dist/katex.min.css'
 
@@ -26,4 +26,51 @@ export function Formula({ tex, block = false, label }: Props) {
       dangerouslySetInnerHTML={{ __html: html }}
     />
   )
+}
+
+const inlineFormulaPattern =
+  /(y'\s*=\s*f\(t,y\)|R[²³]|[PCEAHfgxyu]\s*\([^)]{1,36}\)|[abxy]\[[^\]]{1,12}\]|x\^[a-zA-Z0-9]+|u[ₜₓ]+|[αβλσθω]|f\s*=\s*\d+)/g
+
+export function MathText({ text }: { text: string }) {
+  const parts = text.split(inlineFormulaPattern)
+  if (parts.length === 1) return <>{text}</>
+
+  return (
+    <>
+      {parts.map((part, index) => {
+        if (!part) return null
+        if (!part.match(inlineFormulaPattern)) return <Fragment key={index}>{part}</Fragment>
+        return <Formula key={index} tex={toInlineTex(part)} label={part} />
+      })}
+    </>
+  )
+}
+
+export function renderMathText(node: ReactNode): ReactNode {
+  return typeof node === 'string' ? <MathText text={node} /> : node
+}
+
+function toInlineTex(value: string) {
+  return value
+    .replace(/R²/g, '\\mathbb{R}^2')
+    .replace(/R³/g, '\\mathbb{R}^3')
+    .replace(/∩/g, '\\cap ')
+    .replace(/≤/g, '\\le ')
+    .replace(/≥/g, '\\ge ')
+    .replace(/≈/g, '\\approx ')
+    .replace(/Σ/g, '\\sum ')
+    .replace(/∫/g, '\\int ')
+    .replace(/α/g, '\\alpha ')
+    .replace(/β/g, '\\beta ')
+    .replace(/λ/g, '\\lambda ')
+    .replace(/σ/g, '\\sigma ')
+    .replace(/θ/g, '\\theta ')
+    .replace(/ω/g, '\\omega ')
+    .replace(/ₜ/g, '_t')
+    .replace(/ₓ/g, '_x')
+    .replace(/\|/g, '\\mid ')
+    .replace(/非\s*([A-Z])/g, '\\operatorname{not}\\,$1')
+    .replace(/not\s+([A-Z])/g, '\\operatorname{not}\\,$1')
+    .replace(/([abxy])\[([^\]]+)\]/g, '$1_{$2}')
+    .replace(/([a-zA-Z])\^([a-zA-Z0-9]+)/g, '$1^{$2}')
 }

@@ -32,7 +32,7 @@ export function ProbabilityHome() {
               ))}
             </ul>
             {lesson.id === 'random-variable-sum' && (
-              <p className="probability-card-link">{locale === 'zh' ? '若想深入了解，可打开卷积实验室。' : 'For a deeper version, open Convolution Lab.'}</p>
+              <p className="probability-card-link">{locale === 'zh' ? '若想深入了解，可打开卷积模块。' : 'For a deeper version, open the Convolution module.'}</p>
             )}
           </a>
         ))}
