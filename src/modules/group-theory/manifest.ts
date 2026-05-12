@@ -4,9 +4,9 @@ const base = '/modules/group-theory'
 
 export const groupTheoryManifest: ModuleDefinition = {
   id: 'group-theory',
-  title: 'Group Theory / Symmetry Lab',
+  title: 'Group Theory / Symmetry',
   shortTitle: 'Group Theory',
-  description: 'Explore symmetries, groups, actions, tables, diagrams, and transformations.',
+  description: 'Visualize symmetries, groups, actions, tables, diagrams, and transformations.',
   category: 'abstract-algebra',
   status: 'planned',
   routeBase: base,
@@ -17,7 +17,7 @@ export const groupTheoryManifest: ModuleDefinition = {
     lesson('composition', 'Composition Is the Operation'),
     lesson('cayley-table', 'Cayley Table Builder'),
     lesson('cayley-diagram', 'Generators & Cayley Diagram'),
-    lesson('permutations', 'Permutation Playground'),
+    lesson('permutations', 'Permutations'),
     lesson('subgroups-cosets', 'Subgroups & Cosets'),
     lesson('isomorphism', 'Isomorphism Matcher'),
   ],

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import type { ReactNode } from 'react'
 import type { AppCopy } from '../i18n.ts'
 import type { ThreeCameraView } from '../math/types.ts'
 import type { ThreeRenderPayload } from '../render/RendererAdapter.ts'
@@ -11,11 +12,12 @@ type Props = ThreeRenderPayload & {
   cameraView: ThreeCameraView
   onCameraViewChange: (view: ThreeCameraView) => void
   registerExporter: (exporter: () => string | null) => void
+  headerAction?: ReactNode
 }
 
 const cameraViews: ThreeCameraView[] = ['free', 'x', 'y', 'z']
 
-export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewChange, registerExporter, ...payload }: Props) {
+export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewChange, registerExporter, headerAction, ...payload }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null)
   const rendererRef = useRef<Three3DRenderer | null>(null)
 
@@ -48,17 +50,20 @@ export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewCha
           <h2>{title}</h2>
           <p>{subtitle}</p>
         </div>
-        <div className="camera-view-control segmented" role="group" aria-label={copy.cameraLabel}>
-          {cameraViews.map((view) => (
-            <button
-              key={view}
-              type="button"
-              className={cameraView === view ? 'active' : ''}
-              onClick={() => onCameraViewChange(view)}
-            >
-              {copy[view]}
-            </button>
-          ))}
+        <div className="view-header-actions">
+          {headerAction}
+          <div className="camera-view-control segmented" role="group" aria-label={copy.cameraLabel}>
+            {cameraViews.map((view) => (
+              <button
+                key={view}
+                type="button"
+                className={cameraView === view ? 'active' : ''}
+                onClick={() => onCameraViewChange(view)}
+              >
+                {copy[view]}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
       <div ref={hostRef} className="three-host" aria-label={title} />

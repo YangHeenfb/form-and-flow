@@ -7,6 +7,7 @@ import { MatrixSequencePanel } from '../../components/MatrixSequencePanel.tsx'
 import { ThemePanel } from '../../components/ThemePanel.tsx'
 import { Three3DView } from '../../components/Three3DView.tsx'
 import { VectorPanel } from '../../components/VectorPanel.tsx'
+import { HelpTrigger, LearningDrawer } from '../../core/ui/LearningHelp.tsx'
 import { appCopy } from '../../i18n.ts'
 import type { Locale } from '../../i18n.ts'
 import {
@@ -24,6 +25,8 @@ import { platformLocaleEventName, platformLocaleStorageKey, platformSurfaceModeE
 import { useAppState } from '../../state/useAppState.ts'
 import { useThemeState } from '../../state/useThemeState.ts'
 import { decodeUrlState, updateBrowserUrl } from '../../state/urlState.ts'
+import { getMatrixHelpTopics, matrixLearningCopy } from './learningHelp.tsx'
+import type { MatrixHelpTopicId } from './learningHelp.tsx'
 
 const initialAnimation: AnimationState = {
   playing: false,
@@ -51,9 +54,11 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
   const [threeCameraView, setThreeCameraView] = useState<ThreeCameraView>('free')
   const [viewZoom, setViewZoom] = useState(1)
   const [viewPan, setViewPan] = useState<ViewPan>({ x: 0, y: 0 })
+  const [activeHelpTopicId, setActiveHelpTopicId] = useState<MatrixHelpTopicId | null>(null)
   const centerStageRef = useRef<HTMLElement | null>(null)
   const exporterRef = useRef<() => string | null>(() => null)
   const copy = appCopy[locale]
+  const learningCopy = matrixLearningCopy[locale]
 
   useEffect(() => {
     localStorage.setItem(matrixLocaleStorageKey, locale)
@@ -156,6 +161,11 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
     [activeInputDim, activeOutputDim, activeTarget?.matrix, animation.progress, currentMatrix, previousStep?.matrix],
   )
   const usesThree = appState.maps.some((map) => map.inputDim === 3 || map.outputDim === 3) || activeInputDim === 3 || activeOutputDim === 3
+  const learningTopics = useMemo(
+    () => getMatrixHelpTopics(locale, activeInputDim, activeOutputDim, usesThree),
+    [activeInputDim, activeOutputDim, locale, usesThree],
+  )
+  const activeHelpTopic = activeHelpTopicId ? learningTopics[activeHelpTopicId] : null
   const renderPayload = {
     matrix: currentMatrix,
     inputDim: activeInputDim,
@@ -178,7 +188,7 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
     }
     const anchor = document.createElement('a')
     anchor.href = dataUrl
-    anchor.download = 'matrix-motion-lab.png'
+    anchor.download = 'matrix-motion.png'
     anchor.click()
   }, [])
 
@@ -198,6 +208,16 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
   const setClampedViewZoom = useCallback((zoom: number) => {
     setViewZoom(clampViewZoom(zoom))
   }, [])
+
+  const openHelpTopic = useCallback((topic: MatrixHelpTopicId) => {
+    setActiveHelpTopicId(topic)
+  }, [])
+
+  const renderGraphHelpAction = () => (
+    <HelpTrigger ariaLabel={learningCopy.openGraph} onClick={() => openHelpTopic('graph')}>
+      {learningCopy.openGraph}
+    </HelpTrigger>
+  )
 
   const handleViewWheel = useCallback((event: WheelEvent) => {
     event.preventDefault()
@@ -258,6 +278,16 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
 
       <div className="workspace">
         <aside className="left-panel">
+          <section className="panel-section matrix-learning-entry">
+            <div className="section-heading">
+              <h2>{learningCopy.entryTitle}</h2>
+              <HelpTrigger ariaLabel={learningCopy.openOverview} onClick={() => openHelpTopic('overview')}>
+                {learningCopy.openOverview}
+              </HelpTrigger>
+            </div>
+            <p className="muted compact">{learningCopy.entryHint}</p>
+          </section>
+
           <MatrixSequencePanel
             copy={copy}
             locale={locale}
@@ -298,6 +328,7 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
                 cameraView={threeCameraView}
                 onCameraViewChange={setThreeCameraView}
                 registerExporter={registerExporter}
+                headerAction={renderGraphHelpAction()}
               />
               {activeInputDim === 3 && activeOutputDim === 2 && (
                 <Canvas2DView
@@ -306,6 +337,7 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
                   subtitle={copy.views.trueR2Subtitle}
                   onViewPanChange={setViewPan}
                   registerExporter={() => undefined}
+                  headerAction={renderGraphHelpAction()}
                 />
               )}
             </>
@@ -316,6 +348,7 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
               subtitle={copy.views.canvas2dSubtitle}
               onViewPanChange={setViewPan}
               registerExporter={registerExporter}
+              headerAction={renderGraphHelpAction()}
             />
           )}
         </section>
@@ -327,6 +360,7 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
           stepMaps={stepMaps}
           vectors={appState.vectors}
           validation={appState.validation}
+          onOpenHelpTopic={openHelpTopic}
         />
       </div>
 
@@ -344,6 +378,7 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
         onViewOptionChange={setViewOption}
         onExport={exportPng}
       />
+      <LearningDrawer topic={activeHelpTopic} closeLabel={learningCopy.close} onClose={() => setActiveHelpTopicId(null)} />
     </main>
   )
 }

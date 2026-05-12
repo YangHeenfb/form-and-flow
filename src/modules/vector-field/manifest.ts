@@ -4,7 +4,7 @@ const base = '/modules/vector-field'
 
 export const vectorFieldManifest: ModuleDefinition = {
   id: 'vector-field',
-  title: 'Vector Field Lab',
+  title: 'Vector Fields',
   shortTitle: 'Vector Fields',
   description: 'Visualize vector fields, flow, divergence, curl, flux, and circulation.',
   category: 'vector-calculus',
@@ -15,8 +15,8 @@ export const vectorFieldManifest: ModuleDefinition = {
   lessons: [
     lesson('basics', 'Vector Field Basics'),
     lesson('flow', 'Flow & Streamlines'),
-    lesson('divergence', 'Divergence Explorer'),
-    lesson('curl', 'Curl Explorer'),
+    lesson('divergence', 'Divergence'),
+    lesson('curl', 'Curl'),
     lesson('flux-circulation', 'Flux & Circulation'),
     lesson('gradient-fields', 'Gradient Fields'),
   ],

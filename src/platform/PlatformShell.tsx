@@ -51,8 +51,8 @@ export function PlatformShell({ currentModule, currentLessonId, children }: Prop
       <main className={`platform-shell${showModuleSidebar ? '' : ' no-sidebar'}${sidebarOpen ? '' : ' sidebar-collapsed'}`} style={surfaceVariables(surfaceMode)}>
         <header className="platform-topbar">
           <a className="platform-brand" href="/modules" aria-label={copy.homeAria}>
-            <span className="brand-mark">VML</span>
-            <strong>Visual Math Lab</strong>
+            <span className="brand-mark">VM</span>
+            <strong>Visual Math</strong>
           </a>
           <div className="platform-context">
             {localizedCurrentModule ? (

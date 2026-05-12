@@ -1,4 +1,5 @@
 import type { ModuleDefinition } from '../../platform/moduleTypes.ts'
+import { ConvolutionModule } from './ConvolutionModule.tsx'
 
 const base = '/modules/convolution'
 
@@ -8,10 +9,12 @@ export const convolutionManifest: ModuleDefinition = {
   shortTitle: 'Convolution',
   description: 'Understand convolution through sliding, overlapping, probability sums, signals, images, and polynomials.',
   category: 'transforms',
-  status: 'planned',
+  status: 'ready',
   routeBase: base,
   order: 6,
   previewKind: 'convolution',
+  component: ConvolutionModule,
+  relatedConcepts: ['fourier-transform', 'convolution-theorem', 'filtering'],
   lessons: [
     lesson('discrete', 'Discrete Convolution Explorer'),
     lesson('probability', 'Probability Sum Explorer'),
@@ -28,9 +31,11 @@ function lesson(id: string, title: string) {
     title,
     description: 'Slide, multiply, and sum to see convolution as a reusable pattern.',
     route: `${base}/${id}`,
-    status: 'planned' as const,
+    status: 'ready' as const,
     difficulty: 'intermediate' as const,
     estimatedMinutes: 12,
     learningGoals: ['See flip, shift, overlap, multiply, sum', 'Connect convolution across contexts'],
+    component: ConvolutionModule,
+    relatedConcepts: ['fourier-transform', 'convolution-theorem', 'filtering'],
   }
 }

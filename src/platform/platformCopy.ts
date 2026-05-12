@@ -296,32 +296,42 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
     probability: {
       title: '概率直觉实验室',
       shortTitle: '概率',
-      description: '通过模拟、分布、贝叶斯和期望建立概率直觉。',
+      description: '把概率公式转化为可见的人群、面积、样本和分布。',
       lessons: {
-        randomness: {
-          title: '随机性与长期频率',
-          description: '用交互和模拟把概率规则连接到可见结果。',
-          learningGoals: ['把随机性和分布联系起来', '从重复试验中读取概率'],
-        },
-        distributions: {
-          title: '分布构建器',
-          description: '用交互和模拟把概率规则连接到可见结果。',
-          learningGoals: ['把随机性和分布联系起来', '从重复试验中读取概率'],
-        },
         'conditional-probability': {
           title: '条件概率',
-          description: '用交互和模拟把概率规则连接到可见结果。',
-          learningGoals: ['把随机性和分布联系起来', '从重复试验中读取概率'],
+          description: '在人群格中比较 P(A | B) 与 P(B | A)。',
+          learningGoals: ['把概率公式连接到可见数量', '用滑块和模拟检验直觉'],
         },
         bayes: {
-          title: '贝叶斯探索器',
-          description: '用交互和模拟把概率规则连接到可见结果。',
-          learningGoals: ['把随机性和分布联系起来', '从重复试验中读取概率'],
+          title: '贝叶斯规则',
+          description: '用自然频数理解证据出现后如何更新假设。',
+          learningGoals: ['把概率公式连接到可见数量', '用滑块和模拟检验直觉'],
         },
-        expectation: {
-          title: '期望值',
-          description: '用交互和模拟把概率规则连接到可见结果。',
-          learningGoals: ['把随机性和分布联系起来', '从重复试验中读取概率'],
+        'medical-test': {
+          title: '医学测试悖论',
+          description: '观察基础率和假阳性如何改变测试结果的含义。',
+          learningGoals: ['把概率公式连接到可见数量', '用滑块和模拟检验直觉'],
+        },
+        binomial: {
+          title: '二项分布',
+          description: '构造重复独立试验中成功次数的分布。',
+          learningGoals: ['把概率公式连接到可见数量', '用滑块和模拟检验直觉'],
+        },
+        'continuous-density': {
+          title: '连续概率密度',
+          description: '把连续概率读成密度曲线下的面积。',
+          learningGoals: ['把概率公式连接到可见数量', '用滑块和模拟检验直觉'],
+        },
+        'central-limit-theorem': {
+          title: '中心极限定理',
+          description: '观察样本均值如何变窄并接近钟形。',
+          learningGoals: ['把概率公式连接到可见数量', '用滑块和模拟检验直觉'],
+        },
+        'random-variable-sum': {
+          title: '随机变量：X + Y',
+          description: '通过汇总所有独立配对来组合两个离散分布。',
+          learningGoals: ['把概率公式连接到可见数量', '用滑块和模拟检验直觉'],
         },
       },
     },

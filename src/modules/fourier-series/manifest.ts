@@ -4,7 +4,7 @@ const base = '/modules/fourier-series'
 
 export const fourierSeriesManifest: ModuleDefinition = {
   id: 'fourier-series',
-  title: 'Fourier Series / Epicycle Drawer',
+  title: 'Fourier Series / Epicycle',
   shortTitle: 'Fourier Series',
   description: 'Draw periodic functions using epicycles and Fourier series.',
   category: 'fourier',

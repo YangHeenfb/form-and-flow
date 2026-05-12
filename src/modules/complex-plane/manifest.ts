@@ -4,9 +4,9 @@ const base = '/modules/complex-plane'
 
 export const complexPlaneManifest: ModuleDefinition = {
   id: 'complex-plane',
-  title: 'Complex Plane Lab',
+  title: 'Complex Plane',
   shortTitle: 'Complex Plane',
-  description: 'Explore complex numbers, maps, conformal transformations, and image loops.',
+  description: 'Visualize complex numbers, maps, conformal transformations, and image loops.',
   category: 'complex-numbers',
   status: 'planned',
   routeBase: base,

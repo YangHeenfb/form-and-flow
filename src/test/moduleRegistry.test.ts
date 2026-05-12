@@ -11,6 +11,10 @@ describe('module registry', () => {
   it('keeps matrix and calculus ready', () => {
     expect(moduleRegistry.find((module) => module.id === 'matrix')?.status).toBe('ready')
     expect(moduleRegistry.find((module) => module.id === 'calculus')?.status).toBe('ready')
+    expect(moduleRegistry.find((module) => module.id === 'fourier')?.status).toBe('ready')
+    expect(moduleRegistry.find((module) => module.id === 'differential-equations')?.status).toBe('ready')
+    expect(moduleRegistry.find((module) => module.id === 'probability')?.status).toBe('ready')
+    expect(moduleRegistry.find((module) => module.id === 'convolution')?.status).toBe('ready')
   })
 
   it('has no duplicate lesson ids within each module', () => {
@@ -28,5 +32,17 @@ describe('module registry', () => {
     expect(resolveRoute('/modules/calculus/derivative').kind).toBe('lesson')
     expect(resolveRoute('/modules/calculus/limits').kind).toBe('not-found')
     expect(resolveRoute('/modules/fourier').kind).toBe('module')
+    expect(resolveRoute('/modules/fourier/winding').kind).toBe('not-found')
+    expect(resolveRoute('/modules/fourier/spectrum').kind).toBe('lesson')
+    expect(resolveRoute('/modules/fourier/reconstruction').kind).toBe('lesson')
+    expect(resolveRoute('/modules/fourier/filtering').kind).toBe('lesson')
+    expect(resolveRoute('/modules/differential-equations').kind).toBe('module')
+    expect(resolveRoute('/modules/differential-equations/slope-fields').kind).toBe('lesson')
+    expect(resolveRoute('/modules/differential-equations/heat-equation').kind).toBe('lesson')
+    expect(resolveRoute('/modules/probability').kind).toBe('module')
+    expect(resolveRoute('/modules/probability/bayes').kind).toBe('lesson')
+    expect(resolveRoute('/modules/convolution').kind).toBe('module')
+    expect(resolveRoute('/modules/convolution/discrete').kind).toBe('lesson')
+    expect(resolveRoute('/modules/convolution/continuous').kind).toBe('lesson')
   })
 })

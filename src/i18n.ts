@@ -146,7 +146,7 @@ export const appCopy: Record<Locale, AppCopy> = {
   en: {
     top: {
       eyebrow: 'Linear Algebra Workspace',
-      title: 'Matrix Motion Lab',
+      title: 'Matrix Motion',
       darkApp: 'Dark App',
       lightApp: 'Light App',
       shareUrl: 'Share URL',
@@ -289,7 +289,7 @@ export const appCopy: Record<Locale, AppCopy> = {
   zh: {
     top: {
       eyebrow: '线性代数工作区',
-      title: '矩阵运动实验室',
+      title: '矩阵运动',
       darkApp: '深色界面',
       lightApp: '浅色界面',
       shareUrl: '分享链接',

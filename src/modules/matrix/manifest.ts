@@ -19,7 +19,7 @@ export const matrixManifest: ModuleDefinition = {
     {
       id: 'matrix-transformations',
       title: 'Matrix Transformations',
-      description: 'Explore how matrix sequences move grids, basis vectors, and custom vectors.',
+      description: 'See how matrix sequences move grids, basis vectors, and custom vectors.',
       route: `${base}/transformations`,
       status: 'ready',
       difficulty: 'beginner',

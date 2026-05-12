@@ -138,10 +138,10 @@ export class Three3DRenderer {
     const points: Point3[] = []
     for (let line = -4; line <= 4; line += 1) {
       for (let value = -4; value < 4; value += 0.5) {
-        points.push(transformPoint(payload.visualMatrix, [value, line, 0]))
-        points.push(transformPoint(payload.visualMatrix, [value + 0.5, line, 0]))
-        points.push(transformPoint(payload.visualMatrix, [line, value, 0]))
-        points.push(transformPoint(payload.visualMatrix, [line, value + 0.5, 0]))
+        points.push(transformPoint(payload.visualMatrix, [value, line, 0], payload.inputDim))
+        points.push(transformPoint(payload.visualMatrix, [value + 0.5, line, 0], payload.inputDim))
+        points.push(transformPoint(payload.visualMatrix, [line, value, 0], payload.inputDim))
+        points.push(transformPoint(payload.visualMatrix, [line, value + 0.5, 0], payload.inputDim))
       }
     }
     this.scene.add(lineSegments(points, payload.theme.colors.transformedGrid, 0.5))
@@ -177,8 +177,8 @@ export class Three3DRenderer {
     const edges = payload.inputDim === 3 ? cubeEdges() : squareEdges()
     const points: Point3[] = []
     edges.forEach(([a, b]) => {
-      points.push(transformPoint(payload.visualMatrix, corners[a]))
-      points.push(transformPoint(payload.visualMatrix, corners[b]))
+      points.push(transformPoint(payload.visualMatrix, corners[a], payload.inputDim))
+      points.push(transformPoint(payload.visualMatrix, corners[b], payload.inputDim))
     })
     this.scene.add(lineSegments(points, payload.theme.colors.unitShape, 0.95, 2))
   }
@@ -187,7 +187,7 @@ export class Three3DRenderer {
     const colors = [payload.theme.colors.vectorI, payload.theme.colors.vectorJ, payload.theme.colors.vectorK]
     for (let index = 0; index < payload.inputDim; index += 1) {
       const values = Array.from({ length: payload.inputDim }, (_, col) => (col === index ? 1 : 0))
-      const end = transformPoint(payload.visualMatrix, values)
+      const end = transformPoint(payload.visualMatrix, values, payload.inputDim)
       this.scene.add(arrow(end, colors[index], `basis-${index}`))
     }
   }
@@ -202,8 +202,8 @@ export class Three3DRenderer {
   }
 }
 
-function transformPoint(matrix: Matrix, values: number[]): Point3 {
-  const output = applyMatrixToVector(matrix, values)
+function transformPoint(matrix: Matrix, values: number[], inputDim: number): Point3 {
+  const output = applyMatrixToVector(matrix, values.slice(0, inputDim))
   return [output[0] ?? 0, output[1] ?? 0, output[2] ?? 0]
 }
 

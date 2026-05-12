@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { Dispatch, PointerEvent, SetStateAction } from 'react'
+import type { Dispatch, PointerEvent, ReactNode, SetStateAction } from 'react'
 import type { ViewPan } from '../math/types.ts'
 import type { RenderPayload } from '../render/RendererAdapter.ts'
 import { Canvas2DRenderer } from '../render/canvas2d/Canvas2DRenderer.ts'
@@ -14,6 +14,7 @@ type Props = RenderPayload & {
   subtitle: string
   onViewPanChange: Dispatch<SetStateAction<ViewPan>>
   registerExporter: (exporter: () => string | null) => void
+  headerAction?: ReactNode
 }
 
 type DragState = {
@@ -23,7 +24,7 @@ type DragState = {
   startPan: ViewPan
 }
 
-export function Canvas2DView({ title, subtitle, onViewPanChange, registerExporter, ...payload }: Props) {
+export function Canvas2DView({ title, subtitle, onViewPanChange, registerExporter, headerAction, ...payload }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const dragRef = useRef<DragState | null>(null)
   const [isPanning, setIsPanning] = useState(false)
@@ -110,6 +111,7 @@ export function Canvas2DView({ title, subtitle, onViewPanChange, registerExporte
           <h2>{title}</h2>
           <p>{subtitle}</p>
         </div>
+        {headerAction && <div className="view-header-actions">{headerAction}</div>}
       </header>
       <canvas
         ref={canvasRef}

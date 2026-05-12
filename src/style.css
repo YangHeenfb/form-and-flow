@@ -309,7 +309,12 @@ dt {
 }
 
 .center-stage:has(.view-panel + .view-panel) {
-  grid-template-rows: minmax(360px, 1.3fr) minmax(240px, 0.7fr);
+  grid-template-rows: minmax(0, 1.15fr) minmax(0, 0.85fr);
+}
+
+.center-stage:has(.view-panel + .view-panel) .view-panel canvas,
+.center-stage:has(.view-panel + .view-panel) .three-host {
+  min-height: 0;
 }
 
 .panel-section,
@@ -349,6 +354,8 @@ dt {
 }
 
 .view-header {
+  flex-wrap: wrap;
+  align-items: flex-start;
   min-height: 60px;
   padding: 12px 14px;
   border-bottom: 1px solid var(--panel-border);
@@ -357,6 +364,25 @@ dt {
 .view-header p,
 .muted {
   color: var(--text-muted);
+}
+
+.view-header > div:first-child {
+  min-width: 0;
+  flex: 1 1 180px;
+}
+
+.view-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.view-header-actions .learning-help-trigger {
+  min-height: 32px;
 }
 
 .compact {
@@ -440,6 +466,9 @@ dt {
 .camera-view-control button {
   min-height: 32px;
   padding: 0 10px;
+  min-width: 42px;
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .stack {
@@ -453,6 +482,15 @@ dt {
   border-radius: 8px;
   background: var(--panel-bg-soft);
   padding: 10px;
+}
+
+.matrix-learning-entry .section-heading {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.matrix-learning-entry .learning-help-trigger {
+  min-height: 32px;
 }
 
 .matrix-card-header strong {
@@ -851,6 +889,7 @@ dt {
 
   .workspace {
     grid-template-columns: 1fr;
+    overflow: visible;
   }
 
   .left-panel,
@@ -862,6 +901,10 @@ dt {
     grid-template-rows: minmax(360px, 58vh);
   }
 
+  .center-stage:has(.view-panel + .view-panel) {
+    min-height: 720px;
+  }
+
   .transport {
     align-items: stretch;
   }
@@ -869,6 +912,12 @@ dt {
   .speed-control,
   .zoom-control {
     grid-template-columns: 1fr;
+  }
+
+  .matrix-embedded-shell {
+    height: auto;
+    min-height: 0;
+    grid-template-rows: auto auto;
   }
 }
 
@@ -907,9 +956,15 @@ dt {
 .platform-actions,
 .platform-context,
 .module-card-header,
-.calculus-title-row,
-.calculus-actions,
-.calculus-playback {
+  .calculus-title-row,
+  .calculus-actions,
+  .calculus-playback,
+  .convolution-title-row,
+  .convolution-playback,
+  .fourier-title-row,
+  .fourier-actions,
+  .fourier-playback,
+  .probability-playback {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1128,6 +1183,14 @@ dt {
   grid-template-rows: minmax(0, 1fr) auto;
 }
 
+@media (max-width: 860px) {
+  .matrix-embedded-shell {
+    height: auto;
+    min-height: 0;
+    grid-template-rows: auto auto;
+  }
+}
+
 .module-preview {
   height: 118px;
   border-radius: 8px;
@@ -1195,6 +1258,123 @@ dt {
   overflow: hidden;
 }
 
+.fourier-home {
+  display: grid;
+  gap: 18px;
+}
+
+.fourier-planned-card {
+  opacity: 0.72;
+}
+
+.fourier-lesson {
+  display: grid;
+  grid-template-columns: minmax(240px, 290px) minmax(540px, 1fr) minmax(280px, 330px);
+  gap: 14px;
+  height: calc(100vh - 104px);
+  min-height: 640px;
+  max-height: 860px;
+  overflow: hidden;
+}
+
+.fourier-controls,
+.fourier-explanation {
+  align-self: stretch;
+  overflow: auto;
+}
+
+.fourier-controls {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.fourier-controls label,
+.fourier-control-group {
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.fourier-control-group {
+  border-top: 1px solid var(--panel-border);
+  padding-top: 12px;
+}
+
+.fourier-control-group h3 {
+  margin: 0;
+  color: var(--text-main);
+  font-size: 13px;
+}
+
+.fourier-toggle {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.fourier-toggle input {
+  min-height: auto;
+}
+
+.fourier-main {
+  display: grid;
+  grid-template-rows: auto minmax(380px, 1fr) auto;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.fourier-title-row {
+  justify-content: space-between;
+}
+
+.fourier-playback {
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  min-height: 82px;
+}
+
+.fourier-playback label {
+  min-width: 240px;
+  color: var(--text-muted);
+  display: grid;
+  gap: 4px;
+}
+
+.fourier-explanation {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.fourier-explanation h2 {
+  margin-top: 4px;
+}
+
+.fourier-explanation p,
+.fourier-explanation dt {
+  color: var(--text-muted);
+}
+
+.fourier-explanation dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.fourier-explanation dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.fourier-explanation dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
 .calculus-controls,
 .calculus-explanation {
   align-self: stretch;
@@ -1207,10 +1387,38 @@ dt {
   gap: 12px;
 }
 
+.calculus-learning-entry {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--panel-border);
+  padding-bottom: 12px;
+}
+
+.calculus-learning-entry p {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.calculus-learning-entry .learning-help-trigger {
+  min-height: 32px;
+  flex: 0 0 auto;
+}
+
 .calculus-controls label {
   display: grid;
   gap: 6px;
   color: var(--text-muted);
+}
+
+.range-label {
+  min-width: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
 .math-input-toolbar {
@@ -1223,6 +1431,35 @@ dt {
   min-height: 28px;
   padding: 0 9px;
   color: var(--text-muted);
+}
+
+.math-formula-preview {
+  border: 1px solid color-mix(in srgb, var(--focus) 24%, var(--panel-border));
+  border-left: 3px solid var(--focus);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--focus) 5%, var(--panel-bg-soft));
+  color: var(--text-main);
+  display: grid;
+  gap: 6px;
+  min-height: 64px;
+  align-content: center;
+  padding: 9px 10px;
+  overflow-x: auto;
+}
+
+.math-formula-preview > span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.math-formula-preview .formula-render {
+  color: var(--focus);
+  white-space: nowrap;
+}
+
+.select-menu-value .formula-render,
+.select-menu-option .formula-render {
+  color: inherit;
 }
 
 .input-help {
@@ -1250,6 +1487,146 @@ dt {
   border-radius: 8px;
   background: var(--graph-canvas-background);
   display: block;
+}
+
+.graph-help-stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.graph-help-stage .graph-canvas {
+  height: 100%;
+}
+
+.calculus-graph-stage {
+  min-height: 0;
+}
+
+.learning-help-trigger {
+  padding: 0 11px;
+  border-color: color-mix(in srgb, var(--focus) 46%, var(--panel-border));
+  background: color-mix(in srgb, var(--focus) 12%, var(--control-bg));
+  white-space: nowrap;
+}
+
+.learning-help-trigger-graph {
+  position: absolute;
+  z-index: 5;
+  top: 10px;
+  right: 10px;
+  min-height: 36px;
+  background: color-mix(in srgb, var(--panel-bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.concept-term {
+  min-height: 0;
+  display: inline;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 4px;
+  color: var(--focus);
+  background: transparent;
+  font: inherit;
+  line-height: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  vertical-align: baseline;
+}
+
+.concept-term:hover {
+  color: var(--text-main);
+  background: color-mix(in srgb, var(--focus) 14%, transparent);
+}
+
+.concept-term:active {
+  transform: none;
+}
+
+.learning-drawer-backdrop {
+  position: fixed;
+  z-index: 120;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.learning-drawer {
+  width: min(460px, 100%);
+  height: 100%;
+  border-left: 1px solid var(--panel-border);
+  background: var(--panel-bg);
+  color: var(--text-main);
+  box-shadow: -24px 0 70px rgba(0, 0, 0, 0.36);
+  overflow: auto;
+  padding: 18px;
+}
+
+.learning-drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.learning-drawer-header h2 {
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.learning-drawer-close {
+  width: 38px;
+  min-width: 38px;
+  padding: 0;
+}
+
+.learning-drawer-summary {
+  border: 1px solid color-mix(in srgb, var(--focus) 30%, var(--panel-border));
+  border-left: 3px solid var(--focus);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--focus) 7%, var(--panel-bg-soft));
+  color: var(--text-main);
+  padding: 11px 12px;
+  margin-bottom: 14px;
+  line-height: 1.55;
+}
+
+.learning-drawer-sections {
+  display: grid;
+  gap: 14px;
+}
+
+.learning-help-section {
+  display: grid;
+  gap: 8px;
+}
+
+.learning-help-section h3 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.learning-help-body,
+.learning-help-section li {
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.learning-help-section ul {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 7px;
+}
+
+.learning-help-body .formula-render {
+  color: var(--focus);
 }
 
 .calculus-playback {
@@ -1331,6 +1708,31 @@ dt {
   font-size: 1.04em;
 }
 
+.diffeq-legend {
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: var(--panel-bg-soft);
+  padding: 8px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.diffeq-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.diffeq-legend i {
+  width: 18px;
+  height: 3px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
 .interactive-graph-canvas {
   cursor: grab;
   touch-action: none;
@@ -1344,20 +1746,527 @@ dt {
   color: var(--graph-warning);
 }
 
-@media (max-width: 1100px) {
-  .calculus-lesson {
+.convolution-home-summary {
+  margin-top: 8px;
+}
+
+.related-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -6px 0 16px;
+}
+
+.related-row a {
+  color: var(--focus);
+  text-decoration: none;
+}
+
+.convolution-lesson-card {
+  min-height: 220px;
+}
+
+.convolution-lesson {
+  display: grid;
+  grid-template-columns: minmax(250px, 300px) minmax(520px, 1fr) minmax(280px, 330px);
+  gap: 14px;
+  height: calc(100vh - 104px);
+  min-height: 650px;
+  max-height: 860px;
+  overflow: hidden;
+}
+
+.convolution-controls,
+.convolution-explanation {
+  align-self: stretch;
+  overflow: auto;
+}
+
+.convolution-controls {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.convolution-controls label,
+.range-control,
+.sequence-editor {
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.convolution-main {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto minmax(380px, 1fr) auto;
+  gap: 12px;
+}
+
+.convolution-title-row {
+  justify-content: space-between;
+}
+
+.convolution-stage {
+  position: relative;
+  min-height: 0;
+  display: grid;
+}
+
+.convolution-canvas {
+  min-height: 360px;
+}
+
+.convolution-playback {
+  min-height: 82px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.convolution-playback .range-control {
+  min-width: 260px;
+}
+
+.sequence-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sequence-row label {
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 7px;
+  background: var(--panel-bg-soft);
+}
+
+.sequence-row input[type="range"] {
+  width: 100%;
+  padding: 0;
+}
+
+.distribution-table {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(42px, 1fr));
+  gap: 4px;
+}
+
+.distribution-table span {
+  min-height: 28px;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  background: var(--panel-bg-soft);
+  font-size: 12px;
+}
+
+.distribution-table span.active {
+  color: var(--text-main);
+  border-color: var(--focus);
+  background: color-mix(in srgb, var(--focus) 22%, var(--panel-bg-soft));
+}
+
+.kernel-grid-editor {
+  display: grid;
+  gap: 6px;
+}
+
+.image-kernel-stage {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.image-canvas-frame {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: var(--graph-canvas-background);
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+}
+
+.image-canvas-frame figcaption {
+  min-height: 38px;
+  padding: 10px 12px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--panel-border);
+  font-size: 13px;
+}
+
+.image-canvas-frame canvas {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  object-fit: contain;
+  display: block;
+  background: var(--graph-canvas-background);
+}
+
+.pixel-marker {
+  width: 13px;
+  height: 13px;
+  border: 2px solid var(--focus);
+  border-radius: 50%;
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--panel-bg) 86%, transparent);
+}
+
+.convolution-explanation {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.convolution-explanation p,
+.convolution-explanation dt {
+  color: var(--text-muted);
+}
+
+.convolution-explanation dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.convolution-explanation dl div {
+  display: grid;
+  gap: 2px;
+  border-bottom: 1px solid color-mix(in srgb, var(--panel-border) 72%, transparent);
+  padding-bottom: 7px;
+}
+
+.convolution-explanation dd {
+  margin: 0;
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.convolution-explanation .formula-card .katex {
+  font-size: 0.94em;
+}
+
+.probability-home .platform-page-heading p {
+  max-width: 680px;
+}
+
+.probability-lesson-grid {
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+.probability-lesson-card {
+  min-height: 250px;
+  align-content: start;
+}
+
+.probability-card-link,
+.probability-related-link {
+  color: var(--focus);
+}
+
+.probability-card-link {
+  font-size: 12px;
+}
+
+.probability-lesson {
+  display: grid;
+  grid-template-columns: minmax(240px, 286px) minmax(520px, 1fr) minmax(280px, 330px);
+  gap: 14px;
+  height: calc(100vh - 104px);
+  min-height: 640px;
+  max-height: 860px;
+  overflow: hidden;
+}
+
+.probability-controls,
+.probability-explanation {
+  align-self: stretch;
+  overflow: auto;
+  min-width: 0;
+}
+
+.probability-controls {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.probability-learning-entry {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--panel-border);
+  padding-bottom: 12px;
+}
+
+.probability-learning-entry p {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.probability-learning-entry .learning-help-trigger {
+  min-height: 32px;
+  flex: 0 0 auto;
+}
+
+.probability-controls label,
+.seed-control {
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.probability-range span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.probability-range strong,
+.probability-explanation dd {
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
+}
+
+.seed-control {
+  grid-template-columns: minmax(0, 1fr) 40px;
+  align-items: end;
+}
+
+.seed-control .probability-range {
+  min-width: 0;
+}
+
+.seed-control button {
+  min-width: 38px;
+  padding: 0;
+}
+
+.probability-toggle {
+  margin-top: 0;
+}
+
+.probability-main {
+  display: grid;
+  grid-template-rows: auto minmax(380px, 1fr) auto;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.probability-canvas,
+.probability-graph-stage {
+  min-height: 0;
+}
+
+.probability-playback {
+  min-height: 78px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.probability-playback label {
+  min-width: 230px;
+  color: var(--text-muted);
+}
+
+.probability-explanation {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.probability-explanation h2 {
+  margin-top: 4px;
+}
+
+.probability-explanation p,
+.probability-explanation dt {
+  color: var(--text-muted);
+}
+
+.probability-explanation dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.probability-explanation dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  min-width: 0;
+}
+
+.probability-explanation dd {
+  margin: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.probability-explanation .formula-card {
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.probability-related-link {
+  border: 1px solid color-mix(in srgb, var(--focus) 30%, var(--panel-border));
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--focus) 8%, var(--panel-bg-soft));
+}
+
+@media (max-width: 1180px) {
+  .convolution-lesson {
     grid-template-columns: 1fr;
     height: auto;
     max-height: none;
     overflow: visible;
   }
 
-  .calculus-main {
+  .convolution-main {
+    grid-template-rows: auto 560px auto;
+  }
+}
+
+@media (max-width: 1100px) {
+  .calculus-lesson,
+  .fourier-lesson,
+  .probability-lesson {
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .calculus-main,
+  .fourier-main,
+  .probability-main {
     grid-template-rows: auto 520px auto;
   }
 
   .calculus-controls,
-  .calculus-explanation {
+  .calculus-explanation,
+  .fourier-controls,
+  .fourier-explanation,
+  .probability-controls,
+  .probability-explanation {
     max-height: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .platform-shell {
+    overflow-x: hidden;
+  }
+
+  .platform-topbar {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .platform-brand,
+  .platform-context,
+  .platform-actions {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .platform-actions {
+    justify-content: flex-start;
+  }
+
+  .platform-workspace,
+  .sidebar-collapsed .platform-workspace {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .platform-sidebar,
+  .sidebar-collapsed .platform-sidebar {
+    padding: 12px 8px;
+  }
+
+  .platform-content {
+    padding: 14px 10px;
+    overflow: visible;
+  }
+
+  .calculus-lesson,
+  .calculus-controls,
+  .calculus-main,
+  .calculus-explanation,
+  .convolution-lesson,
+  .convolution-controls,
+  .convolution-main,
+  .convolution-explanation,
+  .fourier-lesson,
+  .fourier-controls,
+  .fourier-main,
+  .fourier-explanation,
+  .probability-lesson,
+  .probability-controls,
+  .probability-main,
+  .probability-explanation {
+    min-width: 0;
+  }
+
+  .calculus-title-row,
+  .calculus-actions,
+  .calculus-playback,
+  .convolution-title-row,
+  .convolution-playback,
+  .fourier-title-row,
+  .fourier-actions,
+  .fourier-playback,
+  .probability-playback {
+    flex-wrap: wrap;
+  }
+
+  .calculus-title-row > div:first-child,
+  .convolution-title-row > div:first-child,
+  .fourier-title-row > div:first-child {
+    min-width: 0;
+  }
+
+  .calculus-playback,
+  .convolution-playback,
+  .fourier-playback,
+  .probability-playback {
+    justify-content: flex-start;
+  }
+
+  .calculus-playback label,
+  .convolution-playback .range-control,
+  .fourier-playback label,
+  .probability-playback label {
+    min-width: min(240px, 100%);
+    flex: 1 1 200px;
+  }
+
+  .image-kernel-stage {
+    grid-template-columns: 1fr;
+  }
+
+  .convolution-title-row,
+  .convolution-playback {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

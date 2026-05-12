@@ -14,6 +14,7 @@ describe('platform localization', () => {
     expect(matrix.lessons[0].learningGoals).toContain('组合矩阵变换')
 
     expect(calculus.title).toBe('微积分发现实验室')
+    expect(calculus.lessons.find((lesson) => lesson.id === 'taylor')?.title).toBe('泰勒多项式探索器')
     expect(calculus.lessons.find((lesson) => lesson.id === 'taylor')?.description).toBe('围绕一个中心构造局部多项式近似。')
   })
 

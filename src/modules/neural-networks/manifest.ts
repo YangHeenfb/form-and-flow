@@ -4,7 +4,7 @@ const base = '/modules/neural-networks'
 
 export const neuralNetworksManifest: ModuleDefinition = {
   id: 'neural-networks',
-  title: 'Neural Network Playground',
+  title: 'Neural Networks',
   shortTitle: 'Neural Networks',
   description: 'Build, train, and understand simple neural networks.',
   category: 'machine-learning',
@@ -15,7 +15,7 @@ export const neuralNetworksManifest: ModuleDefinition = {
   lessons: [
     lesson('perceptron', 'Perceptron Basics'),
     lesson('forward-pass', 'Forward Pass'),
-    lesson('training', 'Training Playground'),
+    lesson('training', 'Training'),
   ],
 }
 

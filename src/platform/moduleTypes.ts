@@ -30,6 +30,7 @@ export type LessonDefinition = {
   estimatedMinutes?: number
   learningGoals: string[]
   component?: ComponentType<any>
+  relatedConcepts?: string[]
 }
 
 export type ModuleDefinition = {
@@ -46,4 +47,5 @@ export type ModuleDefinition = {
   lessons: LessonDefinition[]
   component?: ComponentType<any>
   previewKind?: string
+  relatedConcepts?: string[]
 }

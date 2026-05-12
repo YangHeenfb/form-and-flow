@@ -4,7 +4,7 @@ const base = '/modules/number-theory-fractals'
 
 export const numberTheoryFractalsManifest: ModuleDefinition = {
   id: 'number-theory-fractals',
-  title: 'Number Theory / Fractal Lab',
+  title: 'Number Theory / Fractals',
   shortTitle: 'Numbers & Fractals',
   description: 'Discover patterns in numbers and beautiful fractals.',
   category: 'number-theory',
@@ -14,12 +14,12 @@ export const numberTheoryFractalsManifest: ModuleDefinition = {
   previewKind: 'number-theory-fractals',
   lessons: [
     lesson('modular-circles', 'Modular Multiplication Circles'),
-    lesson('prime-patterns', 'Prime Pattern Explorer'),
-    lesson('collatz', 'Collatz Orbit Explorer'),
-    lesson('ifs-chaos-game', 'IFS / Chaos Game Explorer'),
-    lesson('mandelbrot-julia', 'Mandelbrot & Julia Explorer'),
-    lesson('newton-fractal', 'Newton Fractal Explorer'),
-    lesson('hilbert-curve', 'Hilbert Curve Explorer'),
+    lesson('prime-patterns', 'Prime Patterns'),
+    lesson('collatz', 'Collatz Orbits'),
+    lesson('ifs-chaos-game', 'IFS / Chaos Game'),
+    lesson('mandelbrot-julia', 'Mandelbrot & Julia'),
+    lesson('newton-fractal', 'Newton Fractals'),
+    lesson('hilbert-curve', 'Hilbert Curve'),
   ],
 }
 

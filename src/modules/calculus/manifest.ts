@@ -5,9 +5,9 @@ const base = '/modules/calculus'
 
 export const calculusManifest: ModuleDefinition = {
   id: 'calculus',
-  title: 'Calculus Discovery Lab',
+  title: 'Calculus',
   shortTitle: 'Calculus',
-  description: 'Explore derivatives, integrals, the fundamental theorem, and Taylor approximation.',
+  description: 'Work with derivatives, integrals, the fundamental theorem, and Taylor approximation.',
   category: 'calculus',
   status: 'ready',
   routeBase: base,
@@ -15,10 +15,10 @@ export const calculusManifest: ModuleDefinition = {
   previewKind: 'calculus',
   component: CalculusModule,
   lessons: [
-    lesson('derivative', 'Derivative Explorer', 'Watch secant lines become tangent lines.'),
-    lesson('integral', 'Integral / Riemann Sum Explorer', 'Approximate signed area with rectangles and trapezoids.'),
+    lesson('derivative', 'Derivative', 'Watch secant lines become tangent lines.'),
+    lesson('integral', 'Integral / Riemann Sums', 'Approximate signed area with rectangles and trapezoids.'),
     lesson('fundamental-theorem', 'Fundamental Theorem Connector', 'Connect accumulated area with instantaneous height.'),
-    lesson('taylor', 'Taylor Polynomial Explorer', 'Build local polynomial approximations around a center.'),
+    lesson('taylor', 'Taylor Polynomial', 'Build local polynomial approximations around a center.'),
   ],
 }
 

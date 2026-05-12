@@ -4,18 +4,18 @@ const base = '/modules/topology'
 
 export const topologyManifest: ModuleDefinition = {
   id: 'topology',
-  title: 'Topology / Winding Number Lab',
+  title: 'Topology / Winding Number',
   shortTitle: 'Topology',
-  description: 'Explore topology and winding numbers visually.',
+  description: 'Visualize topology and winding numbers.',
   category: 'topology',
   status: 'planned',
   routeBase: base,
   order: 13,
   previewKind: 'topology',
   lessons: [
-    lesson('winding-number', 'Winding Number Explorer'),
+    lesson('winding-number', 'Winding Number'),
     lesson('regions', 'Inside / Outside Regions'),
-    lesson('homotopy', 'Homotopy Invariance Playground'),
+    lesson('homotopy', 'Homotopy Invariance'),
     lesson('image-loops', 'Image Loops & Domain Coloring'),
     lesson('root-counting', 'Root Counting Intuition'),
   ],

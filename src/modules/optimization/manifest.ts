@@ -4,7 +4,7 @@ const base = '/modules/optimization'
 
 export const optimizationManifest: ModuleDefinition = {
   id: 'optimization',
-  title: 'Optimization / Gradient Descent Lab',
+  title: 'Optimization / Gradient Descent',
   shortTitle: 'Optimization',
   description: 'Visualize optimization and gradient-based methods.',
   category: 'optimization',
@@ -15,8 +15,8 @@ export const optimizationManifest: ModuleDefinition = {
   lessons: [
     lesson('one-dimensional-descent', '1D Gradient Descent'),
     lesson('contour-descent', 'Loss Landscape & Contours'),
-    lesson('learning-rate', 'Learning Rate Explorer'),
-    lesson('momentum', 'Momentum Explorer'),
+    lesson('learning-rate', 'Learning Rate'),
+    lesson('momentum', 'Momentum'),
     lesson('linear-regression', 'Linear Regression Training'),
     lesson('stochastic-gradient-descent', 'Stochastic / Mini-batch Gradient Descent'),
   ],

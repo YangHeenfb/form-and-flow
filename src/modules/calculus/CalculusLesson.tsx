@@ -1,12 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Download, Pause, Play, RotateCcw, Share2 } from 'lucide-react'
 import { GraphCanvas, drawGrid, line, worldToScreen } from '../../core/graph2d/GraphCanvas.tsx'
 import type { GraphTheme, GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
+import { HelpTrigger, LearningDrawer, TermButton } from '../../core/ui/LearningHelp.tsx'
+import { expressionToTex } from '../../core/ui/mathNotation.ts'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../i18n.ts'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
 import { compileCalculusExpression, calculusPresets, presetFunction } from './calculusPresets.ts'
+import { calculusLearningCopy, conceptTopicForLesson, getCalculusHelpTopics } from './learningHelp.tsx'
+import type { CalculusHelpTopicId } from './learningHelp.tsx'
 import { calculusFunctionNames, completeBareFunctionInput, normalizeMathInput } from './shared/mathInput.ts'
 import {
   approximateDerivative,
@@ -52,6 +56,7 @@ const calculusCopy: Record<CalculusLocale, {
     preset: string
     customFunction: string
     commonFunctions: string
+    formulaPreview: string
     inputHelp: string
     method: string
     play: string
@@ -79,6 +84,7 @@ const calculusCopy: Record<CalculusLocale, {
       preset: 'Preset',
       customFunction: 'Custom function',
       commonFunctions: 'Common functions',
+      formulaPreview: 'Formula preview',
       inputHelp: 'Use x, pi, e, ^, and functions such as sin(x), ln(x), sqrt(x).',
       method: 'method',
       play: 'Play',
@@ -112,7 +118,7 @@ const calculusCopy: Record<CalculusLocale, {
     },
     lessons: {
       derivative: {
-        title: 'Derivative Explorer',
+        title: 'Derivative',
         what: 'The secant line through two nearby points rotates toward the tangent line.',
         why: 'The derivative is the limiting slope of nearby secant lines.',
         formula: "f'(x0) ≈ (f(x0+h)-f(x0))/h",
@@ -120,7 +126,7 @@ const calculusCopy: Record<CalculusLocale, {
         watch: 'At corners or jumps, left and right slopes may disagree.',
       },
       integral: {
-        title: 'Integral / Riemann Sum Explorer',
+        title: 'Integral / Riemann Sums',
         what: 'Rectangles or trapezoids approximate the signed area under the curve.',
         why: 'A definite integral is the limiting value of many small area pieces.',
         formula: '∫[a,b] f(x) dx',
@@ -136,7 +142,7 @@ const calculusCopy: Record<CalculusLocale, {
         watch: 'This is a numerical demonstration, not a formal proof.',
       },
       taylor: {
-        title: 'Taylor Polynomial Explorer',
+        title: 'Taylor Polynomial',
         what: 'A polynomial matches the function near the selected center.',
         why: 'Taylor approximation uses local derivative information to build a local model.',
         formula: 'Pₙ(x)=Σ f⁽ᵏ⁾(c)/k! · (x-c)ᵏ',
@@ -151,6 +157,7 @@ const calculusCopy: Record<CalculusLocale, {
       preset: '预设',
       customFunction: '自定义函数',
       commonFunctions: '常用函数',
+      formulaPreview: '公式预览',
       inputHelp: '可使用 x、pi、e、^，以及 sin(x)、ln(x)、sqrt(x) 等函数。',
       method: '方法',
       play: '播放',
@@ -184,7 +191,7 @@ const calculusCopy: Record<CalculusLocale, {
     },
     lessons: {
       derivative: {
-        title: '导数探索器',
+        title: '导数',
         what: '穿过两个邻近点的割线会逐渐转向切线。',
         why: '导数就是邻近割线斜率趋近的极限。',
         formula: "f'(x0) ≈ (f(x0+h)-f(x0))/h",
@@ -192,7 +199,7 @@ const calculusCopy: Record<CalculusLocale, {
         watch: '在尖角或跳跃处，左右斜率可能不一致。',
       },
       integral: {
-        title: '积分 / 黎曼和探索器',
+        title: '积分 / 黎曼和',
         what: '矩形或梯形正在近似曲线下方的有符号面积。',
         why: '定积分可以理解为很多小面积片段的极限。',
         formula: '∫[a,b] f(x) dx',
@@ -208,7 +215,7 @@ const calculusCopy: Record<CalculusLocale, {
         watch: '这里是数值演示，不是严格证明。',
       },
       taylor: {
-        title: '泰勒多项式探索器',
+        title: '泰勒多项式',
         what: '多项式会在选定中心附近尽量贴合原函数。',
         why: '泰勒近似用局部导数信息构造局部模型。',
         formula: 'Pₙ(x)=Σ f⁽ᵏ⁾(c)/k! · (x-c)ᵏ',
@@ -223,6 +230,7 @@ export function CalculusLesson({ lessonId }: Props) {
   const { locale } = usePlatformLocale()
   const copy = calculusCopy[locale].lessons[lessonId] ?? calculusCopy[locale].lessons.derivative
   const ui = calculusCopy[locale].ui
+  const learningCopy = calculusLearningCopy[locale]
   const [presetId, setPresetId] = useState(() => readPresetParam(lessonId))
   const selectedPreset = calculusPresets.find((preset) => preset.id === presetId) ?? calculusPresets.find((preset) => preset.id === defaultPresetForLesson(lessonId)) ?? calculusPresets[0]
   const [expression, setExpression] = useState(() => readParam('f') ?? selectedPreset.expression)
@@ -237,6 +245,11 @@ export function CalculusLesson({ lessonId }: Props) {
   const [playing, setPlaying] = useState(false)
   const [speed, setSpeed] = useState(1)
   const [error, setError] = useState<string | null>(null)
+  const [activeHelpTopicId, setActiveHelpTopicId] = useState<CalculusHelpTopicId | null>(null)
+  const expressionTex = useMemo(() => expressionToTex(expression), [expression])
+  const learningTopics = useMemo(() => getCalculusHelpTopics(locale, lessonId), [lessonId, locale])
+  const activeHelpTopic = activeHelpTopicId ? learningTopics[activeHelpTopicId] : null
+  const openHelpTopic = useCallback((topic: CalculusHelpTopicId) => setActiveHelpTopicId(topic), [])
 
   useEffect(() => {
     const preset = calculusPresets.find((candidate) => candidate.id === presetId)
@@ -314,19 +327,31 @@ export function CalculusLesson({ lessonId }: Props) {
   }
 
   return (
+    <>
     <section className="calculus-lesson">
       <aside className="calculus-controls platform-card">
-        <h2>{ui.function}</h2>
+        <div className="calculus-learning-entry">
+          <div>
+            <h2>{learningCopy.entryTitle}</h2>
+            <p>{learningCopy.entryHint}</p>
+          </div>
+          <HelpTrigger ariaLabel={learningCopy.openOverview} onClick={() => openHelpTopic('overview')}>
+            {learningCopy.openOverview}
+          </HelpTrigger>
+        </div>
+        <h2>
+          <TermButton onClick={() => openHelpTopic('function')}>{ui.function}</TermButton>
+        </h2>
         <label>
           {ui.preset}
           <SelectMenu
             value={presetId}
             options={[
-              { value: 'custom', textValue: ui.customFunction, label: ui.customFunction },
+              { value: 'custom', textValue: ui.customFunction, label: <Formula tex="f(x)" label={ui.customFunction} /> },
               ...calculusPresets.map((preset) => ({
                 value: preset.id,
                 textValue: preset.label,
-                label: <Formula tex={expressionToTex(preset.label)} />,
+                label: <Formula tex={`f(x)=${expressionToTex(preset.expression)}`} label={preset.label} />,
               })),
             ]}
             onChange={setPresetId}
@@ -345,6 +370,10 @@ export function CalculusLesson({ lessonId }: Props) {
             }}
           />
         </label>
+        <div className="math-formula-preview" aria-label={ui.formulaPreview}>
+          <span>{ui.formulaPreview}</span>
+          <Formula tex={`f(x)=${expressionTex}`} label={`${ui.formulaPreview}: f(x)=${expression}`} />
+        </div>
         <div className="math-input-toolbar" aria-label={ui.commonFunctions}>
           {calculusFunctionNames.map((name) => (
             <button type="button" key={name} onClick={() => {
@@ -415,16 +444,21 @@ export function CalculusLesson({ lessonId }: Props) {
             </button>
           </div>
         </div>
-        <GraphCanvas
-          className="graph-canvas calculus-canvas interactive-graph-canvas"
-          ariaLabel={`${copy.title}. ${ui.graphInstructions}`}
-          xMin={view.xMin}
-          xMax={view.xMax}
-          yMin={view.yMin}
-          yMax={view.yMax}
-          draw={draw}
-          onViewportChange={setView}
-        />
+        <div className="graph-help-stage calculus-graph-stage">
+          <GraphCanvas
+            className="graph-canvas calculus-canvas interactive-graph-canvas"
+            ariaLabel={`${copy.title}. ${ui.graphInstructions}`}
+            xMin={view.xMin}
+            xMax={view.xMax}
+            yMin={view.yMin}
+            yMax={view.yMax}
+            draw={draw}
+            onViewportChange={setView}
+          />
+          <HelpTrigger variant="graph" ariaLabel={learningCopy.openGraph} onClick={() => openHelpTopic('graph')}>
+            {learningCopy.openGraph}
+          </HelpTrigger>
+        </div>
         <div className="calculus-playback platform-card">
           <button type="button" onClick={() => setPlaying(true)}>
             <Play size={16} />
@@ -446,15 +480,31 @@ export function CalculusLesson({ lessonId }: Props) {
       </main>
 
       <aside className="calculus-explanation platform-card">
-        <h2>{ui.seeing}</h2>
+        <h2>
+          <HelpLabel topic="graph" onOpenHelpTopic={openHelpTopic}>
+            {ui.seeing}
+          </HelpLabel>
+        </h2>
         <p>{copy.what}</p>
-        <h2>{ui.why}</h2>
+        <h2>
+          <HelpLabel topic={conceptTopicForLesson(lessonId)} onOpenHelpTopic={openHelpTopic}>
+            {ui.why}
+          </HelpLabel>
+        </h2>
         <p>{copy.why}</p>
-        <h2>{ui.formula}</h2>
+        <h2>
+          <HelpLabel topic="formula" onOpenHelpTopic={openHelpTopic}>
+            {ui.formula}
+          </HelpLabel>
+        </h2>
         <p className="formula-text formula-card">
           <Formula tex={copy.formulaTex} block label={copy.formula} />
         </p>
-        <h2>{ui.values}</h2>
+        <h2>
+          <HelpLabel topic="values" onOpenHelpTopic={openHelpTopic}>
+            {ui.values}
+          </HelpLabel>
+        </h2>
         <dl>
           {values.map(({ label, labelTex, value }) => (
             <div key={label}>
@@ -463,11 +513,29 @@ export function CalculusLesson({ lessonId }: Props) {
             </div>
           ))}
         </dl>
-        <h2>{ui.watch}</h2>
+        <h2>
+          <HelpLabel topic="approximation" onOpenHelpTopic={openHelpTopic}>
+            {ui.watch}
+          </HelpLabel>
+        </h2>
         <p>{copy.watch}</p>
       </aside>
     </section>
+    <LearningDrawer topic={activeHelpTopic} closeLabel={learningCopy.close} onClose={() => setActiveHelpTopicId(null)} />
+    </>
   )
+}
+
+function HelpLabel({
+  topic,
+  onOpenHelpTopic,
+  children,
+}: {
+  topic: CalculusHelpTopicId
+  onOpenHelpTopic: (topic: CalculusHelpTopicId) => void
+  children: ReactNode
+}) {
+  return <TermButton onClick={() => onOpenHelpTopic(topic)}>{children}</TermButton>
 }
 
 function Range({ label, labelTex, value, min, max, step, onChange }: { label: string; labelTex?: string; value: number; min: number; max: number; step: number; onChange: (value: number) => void }) {
@@ -657,19 +725,6 @@ function methodLabel(method: RiemannMethod, locale: CalculusLocale): string {
   if (method === 'right') return '右端点'
   if (method === 'midpoint') return '中点'
   return '梯形'
-}
-
-function expressionToTex(expression: string): string {
-  return expression
-    .replace(/\s+/g, '')
-    .replace(/\bsqrt\(([^()]+)\)/g, '\\sqrt{$1}')
-    .replace(/\*/g, '\\,')
-    .replace(/\bsin\(/g, '\\sin(')
-    .replace(/\bcos\(/g, '\\cos(')
-    .replace(/\btan\(/g, '\\tan(')
-    .replace(/\bexp\(/g, '\\exp(')
-    .replace(/\blog\(/g, '\\log(')
-    .replace(/\bln\(/g, '\\ln(')
 }
 
 function resetLessonControls(
