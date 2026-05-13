@@ -1,7 +1,7 @@
 import type { ModuleDefinition } from '../../platform/moduleTypes.ts'
-import { FourierModule } from './FourierModule.tsx'
 
 const base = '/modules/fourier'
+const loadFourierModule = () => import('./FourierModule.tsx').then(({ FourierModule }) => ({ default: FourierModule }))
 
 export const fourierManifest: ModuleDefinition = {
   id: 'fourier',
@@ -13,7 +13,7 @@ export const fourierManifest: ModuleDefinition = {
   routeBase: base,
   order: 3,
   previewKind: 'fourier',
-  component: FourierModule,
+  loadComponent: loadFourierModule,
   lessons: [
     lesson('spectrum', 'Frequency Spectrum', 'Scan many frequencies to build a spectrum.'),
     lesson('reconstruction', 'Signal Reconstruction', 'Rebuild a signal from selected coefficients.'),
@@ -31,6 +31,6 @@ function lesson(id: string, title: string, description: string) {
     difficulty: 'beginner' as const,
     estimatedMinutes: 12,
     learningGoals: ['Understand frequency components', 'Connect visual motion to a numeric spectrum'],
-    component: FourierModule,
+    loadComponent: loadFourierModule,
   }
 }

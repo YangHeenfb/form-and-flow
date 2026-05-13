@@ -1,8 +1,8 @@
 import type { ModuleDefinition } from '../../platform/moduleTypes.ts'
-import { MatrixHome } from './MatrixHome.tsx'
-import { MatrixModuleAdapter } from './MatrixModuleAdapter.tsx'
 
 const base = '/modules/matrix'
+const loadMatrixHome = () => import('./MatrixHome.tsx').then(({ MatrixHome }) => ({ default: MatrixHome }))
+const loadMatrixLesson = () => import('./MatrixModuleAdapter.tsx').then(({ MatrixModuleAdapter }) => ({ default: MatrixModuleAdapter }))
 
 export const matrixManifest: ModuleDefinition = {
   id: 'matrix',
@@ -14,7 +14,7 @@ export const matrixManifest: ModuleDefinition = {
   routeBase: base,
   order: 1,
   previewKind: 'matrix',
-  component: MatrixHome,
+  loadComponent: loadMatrixHome,
   lessons: [
     {
       id: 'matrix-transformations',
@@ -25,7 +25,7 @@ export const matrixManifest: ModuleDefinition = {
       difficulty: 'beginner',
       estimatedMinutes: 12,
       learningGoals: ['Compose matrix transformations', 'Read transformed basis vectors', 'Connect determinant to area or volume scale'],
-      component: MatrixModuleAdapter,
+      loadComponent: loadMatrixLesson,
     },
   ],
 }

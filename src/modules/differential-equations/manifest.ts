@@ -1,7 +1,8 @@
 import type { ModuleDefinition } from '../../platform/moduleTypes.ts'
-import { DifferentialEquationsModule } from './DifferentialEquationsModule.tsx'
 
 const base = '/modules/differential-equations'
+const loadDifferentialEquationsModule = () =>
+  import('./DifferentialEquationsModule.tsx').then(({ DifferentialEquationsModule }) => ({ default: DifferentialEquationsModule }))
 
 export const differentialEquationsManifest: ModuleDefinition = {
   id: 'differential-equations',
@@ -13,7 +14,7 @@ export const differentialEquationsManifest: ModuleDefinition = {
   routeBase: base,
   order: 4,
   previewKind: 'differential-equations',
-  component: DifferentialEquationsModule,
+  loadComponent: loadDifferentialEquationsModule,
   lessons: [
     lesson('slope-fields', 'Slope Fields & Initial Value Problems', 'Read local slopes and launch a solution from an initial condition.'),
     lesson('numerical-methods', 'Numerical Methods', 'Compare Euler, midpoint, and RK4 on the same ODE.'),
@@ -34,6 +35,6 @@ function lesson(id: string, title: string, description: string) {
     difficulty: 'intermediate' as const,
     estimatedMinutes: 14,
     learningGoals: ['Read a change rule', 'Compare numerical motion and visual trajectories'],
-    component: DifferentialEquationsModule,
+    loadComponent: loadDifferentialEquationsModule,
   }
 }

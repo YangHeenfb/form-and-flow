@@ -34,9 +34,10 @@ export function ModuleHome() {
 }
 
 function ModulePreview({ id }: { id: string }) {
+  const base = import.meta.env.BASE_URL
   return (
     <div className="module-preview" aria-hidden="true">
-      <img src={`/module-covers/${id}.jpg`} alt="" loading="lazy" />
+      <img src={`${base}module-covers/${id}.jpg`} alt="" loading="lazy" />
     </div>
   )
 }

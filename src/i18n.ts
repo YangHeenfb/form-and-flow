@@ -59,6 +59,7 @@ export type AppCopy = {
     neutral: string
     highContrast: string
     includeInShare: string
+    lowContrastWarning: string
     colorLabels: Record<ThemeColorKey, string>
   }
   controls: {
@@ -79,11 +80,13 @@ export type AppCopy = {
     x: string
     y: string
     z: string
+    webglUnavailable: string
   }
   explanation: {
     mappingType: string
     mappingAria: string
     mappingSummary: string
+    sceneSummary: (inputDim: SpaceDim, outputDim: SpaceDim, mapCount: number, vectorCount: number) => string
     mappingHints: Record<'2-2' | '3-3' | '3-2' | '2-3', string>
     title: string
     sequence: (names: string, composedName: string, inputDim: SpaceDim, outputDim: SpaceDim) => string
@@ -209,6 +212,7 @@ export const appCopy: Record<Locale, AppCopy> = {
       neutral: 'Neutral',
       highContrast: 'High Contrast',
       includeInShare: 'Include drawing colors in share link',
+      lowContrastWarning: 'Low contrast warning: some axes, grids, vectors, or labels may be hard to read.',
       colorLabels: {
         grid: 'Grid',
         transformedGrid: 'Transformed grid',
@@ -244,11 +248,14 @@ export const appCopy: Record<Locale, AppCopy> = {
       x: 'X',
       y: 'Y',
       z: 'Z',
+      webglUnavailable: '3D rendering needs WebGL. The rest of the lesson and numeric explanation are still available.',
     },
     explanation: {
       mappingType: 'Mapping Type',
       mappingAria: 'Current mapping type',
       mappingSummary: 'Read-only summary of the current matrix sequence.',
+      sceneSummary: (inputDim, outputDim, mapCount, vectorCount) =>
+        `Scene summary: ${mapCount} matrix step${mapCount === 1 ? '' : 's'} map ${spacePlain(inputDim)} to ${spacePlain(outputDim)} with ${vectorCount} input vector${vectorCount === 1 ? '' : 's'} visible when dimensions match.`,
       mappingHints: {
         '2-2': '2x2 square map',
         '3-3': '3x3 square map',
@@ -352,6 +359,7 @@ export const appCopy: Record<Locale, AppCopy> = {
       neutral: '中性',
       highContrast: '高对比',
       includeInShare: '分享链接中包含绘图颜色',
+      lowContrastWarning: '低对比提醒：部分坐标轴、网格、向量或标签可能不易辨认。',
       colorLabels: {
         grid: '网格',
         transformedGrid: '变换后网格',
@@ -387,11 +395,14 @@ export const appCopy: Record<Locale, AppCopy> = {
       x: 'X',
       y: 'Y',
       z: 'Z',
+      webglUnavailable: '3D 渲染需要 WebGL；章节内容和数值解释仍可继续使用。',
     },
     explanation: {
       mappingType: '映射类型',
       mappingAria: '当前映射类型',
       mappingSummary: '当前矩阵序列的只读摘要。',
+      sceneSummary: (inputDim, outputDim, mapCount, vectorCount) =>
+        `场景摘要：${mapCount} 个矩阵步骤把 ${spacePlain(inputDim)} 映射到 ${spacePlain(outputDim)}；维度匹配时会显示 ${vectorCount} 个输入向量。`,
       mappingHints: {
         '2-2': '2x2 方阵映射',
         '3-3': '3x3 方阵映射',

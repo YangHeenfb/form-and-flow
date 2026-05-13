@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
-import { BookOpen, Download, Grid3X3, Languages, Menu, Moon, PanelLeftClose, Share2, Sun } from 'lucide-react'
+import { BookOpen, Download, Grid3X3, HelpCircle, Languages, Menu, Moon, PanelLeftClose, RotateCcw, Share2, Sun } from 'lucide-react'
 import type { ModuleDefinition } from './moduleTypes.ts'
+import { ModuleActionProvider, useModuleActionContext } from './ModuleActionContext.tsx'
 import { moduleRegistry } from './moduleRegistry.ts'
 import { localizeModule, platformCopy } from './platformCopy.ts'
 import {
@@ -21,8 +22,21 @@ type Props = {
 }
 
 export function PlatformShell({ currentModule, currentLessonId, children }: Props) {
+  const resetKey = `${currentModule?.id ?? 'home'}:${currentLessonId ?? ''}`
+
+  return (
+    <ModuleActionProvider key={resetKey}>
+      <PlatformShellContent currentModule={currentModule} currentLessonId={currentLessonId}>
+        {children}
+      </PlatformShellContent>
+    </ModuleActionProvider>
+  )
+}
+
+function PlatformShellContent({ currentModule, currentLessonId, children }: Props) {
   const [locale, setLocale] = useState(() => loadStoredPlatformLocale())
   const [surfaceMode, setSurfaceMode] = useState<PlatformSurfaceMode>(() => loadStoredSurfaceMode())
+  const { actions: moduleActions } = useModuleActionContext()
   const copy = platformCopy[locale].shell
   const modules = [...moduleRegistry].sort((a, b) => a.order - b.order).map((module) => localizeModule(module, locale))
   const localizedCurrentModule = currentModule ? localizeModule(currentModule, locale) : undefined
@@ -72,14 +86,30 @@ export function PlatformShell({ currentModule, currentLessonId, children }: Prop
             <button type="button" aria-label={themeAria} title={themeAria} onClick={() => setSurfaceMode((current) => (current === 'dark' ? 'light' : 'dark'))}>
               {surfaceMode === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
             </button>
-            <button type="button" aria-label={copy.shareAria} onClick={() => navigator.clipboard?.writeText(window.location.href)}>
-              <Share2 size={17} />
-              {copy.share}
-            </button>
-            <button type="button" aria-label={copy.exportAria}>
-              <Download size={17} />
-              {copy.exportPng}
-            </button>
+            {moduleActions.openHelp && (
+              <button type="button" aria-label={copy.helpAria} onClick={moduleActions.openHelp}>
+                <HelpCircle size={17} />
+                {copy.help}
+              </button>
+            )}
+            {moduleActions.reset && (
+              <button type="button" aria-label={copy.resetAria} onClick={moduleActions.reset}>
+                <RotateCcw size={17} />
+                {copy.reset}
+              </button>
+            )}
+            {moduleActions.share && (
+              <button type="button" aria-label={copy.shareAria} onClick={() => void moduleActions.share?.()}>
+                <Share2 size={17} />
+                {copy.share}
+              </button>
+            )}
+            {moduleActions.exportPng && (
+              <button type="button" aria-label={copy.exportAria} onClick={moduleActions.exportPng}>
+                <Download size={17} />
+                {copy.exportPng}
+              </button>
+            )}
           </div>
         </header>
 

@@ -34,6 +34,16 @@ export function ExplanationPanel({ locale = 'en', maps, composedMap, stepMaps, v
 
   return (
     <aside className="right-panel">
+      {validation.valid && composedMap && (
+        <p className="sr-only">
+          {copy.sceneSummary(
+            composedMap.inputDim,
+            composedMap.outputDim,
+            maps.length,
+            vectors.filter((vector) => vector.dim === composedMap.inputDim).length,
+          )}
+        </p>
+      )}
       <MappingTypeCard copy={copy} maps={maps} composedMap={composedMap} onOpenHelpTopic={onOpenHelpTopic} />
 
       <section className="info-card">

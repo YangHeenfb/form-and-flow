@@ -1,6 +1,8 @@
+import { lazy, Suspense, useMemo } from 'react'
 import { ComingSoonModule } from '../platform/ComingSoonModule.tsx'
 import { ModuleHome } from '../platform/ModuleHome.tsx'
 import { PlatformShell } from '../platform/PlatformShell.tsx'
+import type { ModuleComponentLoader } from '../platform/moduleTypes.ts'
 import { platformCopy } from '../platform/platformCopy.ts'
 import { usePlatformLocale } from '../platform/platformLocale.tsx'
 import { resolveRoute } from '../platform/routes.ts'
@@ -17,11 +19,10 @@ export function App() {
   }
 
   if (route.kind === 'module') {
-    if (route.module.component) {
-      const Component = route.module.component
+    if (route.module.loadComponent) {
       return (
         <PlatformShell currentModule={route.module}>
-          <Component />
+          <LazyModule loadComponent={route.module.loadComponent} />
         </PlatformShell>
       )
     }
@@ -33,19 +34,11 @@ export function App() {
   }
 
   if (route.kind === 'lesson') {
-    if (route.lesson.component) {
-      const Component = route.lesson.component
+    const loadComponent = route.lesson.loadComponent ?? route.module.loadComponent
+    if (loadComponent) {
       return (
         <PlatformShell currentModule={route.module} currentLessonId={route.lesson.id}>
-          <Component lessonId={route.lesson.id} />
-        </PlatformShell>
-      )
-    }
-    if (route.module.component) {
-      const Component = route.module.component
-      return (
-        <PlatformShell currentModule={route.module} currentLessonId={route.lesson.id}>
-          <Component lessonId={route.lesson.id} />
+          <LazyModule loadComponent={loadComponent} lessonId={route.lesson.id} />
         </PlatformShell>
       )
     }
@@ -60,6 +53,26 @@ export function App() {
     <PlatformShell>
       <NotFoundPage />
     </PlatformShell>
+  )
+}
+
+function LazyModule({ loadComponent, lessonId }: { loadComponent: ModuleComponentLoader; lessonId?: string }) {
+  const Component = useMemo(() => lazy(loadComponent), [loadComponent])
+
+  return (
+    <Suspense fallback={<ModuleLoading />}>
+      <Component lessonId={lessonId} />
+    </Suspense>
+  )
+}
+
+function ModuleLoading() {
+  return (
+    <section className="platform-page">
+      <div className="platform-card module-loading" role="status" aria-live="polite">
+        Loading module...
+      </div>
+    </section>
   )
 }
 

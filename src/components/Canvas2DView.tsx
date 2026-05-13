@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Dispatch, PointerEvent, ReactNode, SetStateAction } from 'react'
 import type { ViewPan } from '../math/types.ts'
-import type { RenderPayload } from '../render/RendererAdapter.ts'
+import type { MatrixAnimationFrame, RenderPayload } from '../render/RendererAdapter.ts'
 import { Canvas2DRenderer } from '../render/canvas2d/Canvas2DRenderer.ts'
 
 const gridRadiusUnits = 5
@@ -14,6 +14,7 @@ type Props = RenderPayload & {
   subtitle: string
   onViewPanChange: Dispatch<SetStateAction<ViewPan>>
   registerExporter: (exporter: () => string | null) => void
+  registerFrameRenderer?: (renderer: (frame: MatrixAnimationFrame) => void) => () => void
   headerAction?: ReactNode
 }
 
@@ -24,11 +25,16 @@ type DragState = {
   startPan: ViewPan
 }
 
-export function Canvas2DView({ title, subtitle, onViewPanChange, registerExporter, headerAction, ...payload }: Props) {
+export function Canvas2DView({ title, subtitle, onViewPanChange, registerExporter, registerFrameRenderer, headerAction, ...payload }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const dragRef = useRef<DragState | null>(null)
+  const payloadRef = useRef(payload)
   const [isPanning, setIsPanning] = useState(false)
   const renderer = useMemo(() => new Canvas2DRenderer(), [])
+
+  useEffect(() => {
+    payloadRef.current = payload
+  }, [payload])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -60,6 +66,18 @@ export function Canvas2DView({ title, subtitle, onViewPanChange, registerExporte
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [payload, renderer])
+
+  useEffect(() => {
+    if (!registerFrameRenderer) {
+      return
+    }
+    return registerFrameRenderer((frame) => {
+      const canvas = canvasRef.current
+      if (canvas) {
+        renderer.render(canvas, { ...payloadRef.current, matrix: frame.matrix })
+      }
+    })
+  }, [registerFrameRenderer, renderer])
 
   const startPan = (event: PointerEvent<HTMLCanvasElement>) => {
     if (event.button !== 0) {
@@ -116,12 +134,15 @@ export function Canvas2DView({ title, subtitle, onViewPanChange, registerExporte
       <canvas
         ref={canvasRef}
         className={`canvas-2d ${isPanning ? 'is-panning' : ''}`}
+        role="img"
         aria-label={title}
         onPointerDown={startPan}
         onPointerMove={updatePan}
         onPointerUp={endPan}
         onPointerCancel={endPan}
-      />
+      >
+        {subtitle}
+      </canvas>
     </section>
   )
 }

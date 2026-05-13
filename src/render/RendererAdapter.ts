@@ -14,3 +14,9 @@ export type RenderPayload = {
 export type ThreeRenderPayload = RenderPayload & {
   visualMatrix: Matrix
 }
+
+export type MatrixAnimationFrame = {
+  matrix: Matrix
+  visualMatrix: Matrix
+  progress: number
+}

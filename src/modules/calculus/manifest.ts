@@ -1,7 +1,7 @@
 import type { ModuleDefinition } from '../../platform/moduleTypes.ts'
-import { CalculusModule } from './CalculusModule.tsx'
 
 const base = '/modules/calculus'
+const loadCalculusModule = () => import('./CalculusModule.tsx').then(({ CalculusModule }) => ({ default: CalculusModule }))
 
 export const calculusManifest: ModuleDefinition = {
   id: 'calculus',
@@ -13,7 +13,7 @@ export const calculusManifest: ModuleDefinition = {
   routeBase: base,
   order: 2,
   previewKind: 'calculus',
-  component: CalculusModule,
+  loadComponent: loadCalculusModule,
   lessons: [
     lesson('derivative', 'Derivative', 'Watch secant lines become tangent lines.'),
     lesson('integral', 'Integral / Riemann Sums', 'Approximate signed area with rectangles and trapezoids.'),
@@ -32,6 +32,6 @@ function lesson(id: string, title: string, description: string) {
     difficulty: 'beginner' as const,
     estimatedMinutes: 12,
     learningGoals: ['Connect formulas to motion and shape', 'Use sliders to compare numerical approximations'],
-    component: CalculusModule,
+    loadComponent: loadCalculusModule,
   }
 }

@@ -20,8 +20,10 @@ import {
   matrixShape,
   smoothstep,
 } from '../../math/matrix.ts'
-import type { AnimationState, Matrix, PlaybackMode, ThreeCameraView, ViewOptions, ViewPan } from '../../math/types.ts'
+import type { AnimationState, LinearMap, Matrix, PlaybackMode, ThreeCameraView, ViewOptions, ViewPan } from '../../math/types.ts'
+import { useModuleActions } from '../../platform/ModuleActionContext.tsx'
 import { platformLocaleEventName, platformLocaleStorageKey, platformSurfaceModeEventName, platformSurfaceStorageKey } from '../../platform/platformLocale.tsx'
+import type { MatrixAnimationFrame } from '../../render/RendererAdapter.ts'
 import { useAppState } from '../../state/useAppState.ts'
 import { useThemeState } from '../../state/useThemeState.ts'
 import { decodeUrlState, updateBrowserUrl } from '../../state/urlState.ts'
@@ -57,14 +59,46 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
   const [activeHelpTopicId, setActiveHelpTopicId] = useState<MatrixHelpTopicId | null>(null)
   const centerStageRef = useRef<HTMLElement | null>(null)
   const exporterRef = useRef<() => string | null>(() => null)
+  const animationRef = useRef<AnimationState>(initialAnimation)
+  const animationProgressRef = useRef(initialAnimation.progress)
+  const frameRenderersRef = useRef(new Set<(frame: MatrixAnimationFrame) => void>())
   const copy = appCopy[locale]
   const learningCopy = matrixLearningCopy[locale]
+  const prefersReducedMotion = usePrefersReducedMotion()
+  const matrixDraftSignature = useMemo(
+    () => matrixPlaybackSignature(appState.maps, appState.validation.valid),
+    [appState.maps, appState.validation.valid],
+  )
+  const [playbackSignature, setPlaybackSignature] = useState(() => matrixDraftSignature)
+  const hasUnplayedMatrixEdit = playbackSignature !== matrixDraftSignature
+  const displayedAnimation = useMemo(
+    () => (hasUnplayedMatrixEdit ? { ...animation, playing: false, progress: 0, stepIndex: 0 } : animation),
+    [animation, hasUnplayedMatrixEdit],
+  )
 
   useEffect(() => {
     localStorage.setItem(matrixLocaleStorageKey, locale)
     localStorage.setItem(platformLocaleStorageKey, locale)
     window.dispatchEvent(new CustomEvent(platformLocaleEventName, { detail: locale }))
   }, [locale])
+
+  useEffect(() => {
+    animationRef.current = animation
+  }, [animation])
+
+  useEffect(() => {
+    animationProgressRef.current = animation.progress
+  }, [animation.progress])
+
+  useEffect(() => {
+    if (!hasUnplayedMatrixEdit) {
+      return
+    }
+    animationProgressRef.current = 0
+    setAnimation((current) =>
+      current.playing || current.progress !== 0 || current.stepIndex !== 0 ? { ...current, playing: false, progress: 0, stepIndex: 0 } : current,
+    )
+  }, [hasUnplayedMatrixEdit])
 
   useEffect(() => {
     const syncLocale = (event: Event) => {
@@ -108,46 +142,22 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
     }))
   }, [stepMaps.length])
 
-  useEffect(() => {
-    if (!animation.playing) {
-      return
+  const activeTarget = displayedAnimation.mode === 'step' ? stepMaps[displayedAnimation.stepIndex] ?? composedMap : composedMap
+  const previousStep = displayedAnimation.mode === 'step' && displayedAnimation.stepIndex > 0 ? stepMaps[displayedAnimation.stepIndex - 1] : null
+  const activeInputDim = activeTarget?.inputDim ?? appState.inputDim
+  const activeOutputDim = activeTarget?.outputDim ?? appState.outputDim
+  const animationStartMatrix = useMemo(() => {
+    if (!activeTarget) {
+      return canonicalBridgeMatrix(appState.outputDim, appState.inputDim)
     }
-    let frame = 0
-    let previous = performance.now()
-    const tick = (now: number) => {
-      const delta = now - previous
-      previous = now
-      setAnimation((current) => {
-        if (!current.playing) {
-          return current
-        }
-        const nextProgress = current.progress + (delta / 1400) * current.speed * basePlaybackSpeed
-        if (nextProgress < 1) {
-          return { ...current, progress: nextProgress }
-        }
-        if (current.mode === 'step' && current.stepIndex < Math.max(0, stepMaps.length - 1)) {
-          return { ...current, progress: 0, stepIndex: current.stepIndex + 1 }
-        }
-        return { ...current, progress: 1, playing: false }
-      })
-      frame = requestAnimationFrame(tick)
-    }
-    frame = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(frame)
-  }, [animation.playing, stepMaps.length])
-
-  const activeTarget = animation.mode === 'step' ? stepMaps[animation.stepIndex] ?? composedMap : composedMap
-  const previousStep = animation.mode === 'step' && animation.stepIndex > 0 ? stepMaps[animation.stepIndex - 1] : null
+    return getAnimationStartMatrix(activeTarget.matrix, activeTarget.outputDim, activeTarget.inputDim, previousStep?.matrix)
+  }, [activeTarget, appState.inputDim, appState.outputDim, previousStep?.matrix])
   const currentMatrix = useMemo(() => {
     if (!activeTarget) {
       return canonicalBridgeMatrix(appState.outputDim, appState.inputDim)
     }
-    const start = getAnimationStartMatrix(activeTarget.matrix, activeTarget.outputDim, activeTarget.inputDim, previousStep?.matrix)
-    return lerpMatrix(start, activeTarget.matrix, smoothstep(animation.progress))
-  }, [activeTarget, animation.progress, appState.inputDim, appState.outputDim, previousStep])
-
-  const activeInputDim = activeTarget?.inputDim ?? appState.inputDim
-  const activeOutputDim = activeTarget?.outputDim ?? appState.outputDim
+    return lerpMatrix(animationStartMatrix, activeTarget.matrix, smoothstep(displayedAnimation.progress))
+  }, [activeTarget, displayedAnimation.progress, animationStartMatrix, appState.inputDim, appState.outputDim])
   const visualMatrix = useMemo(
     () =>
       getThreeVisualMatrix({
@@ -156,9 +166,9 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
         previousMatrix: previousStep?.matrix,
         inputDim: activeInputDim,
         outputDim: activeOutputDim,
-        progress: animation.progress,
+        progress: displayedAnimation.progress,
       }),
-    [activeInputDim, activeOutputDim, activeTarget?.matrix, animation.progress, currentMatrix, previousStep?.matrix],
+    [activeInputDim, activeOutputDim, activeTarget?.matrix, displayedAnimation.progress, currentMatrix, previousStep?.matrix],
   )
   const usesThree = appState.maps.some((map) => map.inputDim === 3 || map.outputDim === 3) || activeInputDim === 3 || activeOutputDim === 3
   const learningTopics = useMemo(
@@ -176,6 +186,74 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
     viewZoom,
     viewPan,
   }
+
+  const buildAnimationFrame = useCallback(
+    (progress: number): MatrixAnimationFrame => {
+      const targetMatrix = activeTarget?.matrix ?? currentMatrix
+      const matrix = activeTarget ? lerpMatrix(animationStartMatrix, targetMatrix, smoothstep(progress)) : currentMatrix
+      return {
+        matrix,
+        visualMatrix: getThreeVisualMatrix({
+          currentMatrix: matrix,
+          targetMatrix,
+          previousMatrix: previousStep?.matrix,
+          inputDim: activeInputDim,
+          outputDim: activeOutputDim,
+          progress,
+        }),
+        progress,
+      }
+    },
+    [activeInputDim, activeOutputDim, activeTarget, animationStartMatrix, currentMatrix, previousStep?.matrix],
+  )
+
+  const emitAnimationFrame = useCallback(
+    (progress: number) => {
+      const frame = buildAnimationFrame(progress)
+      frameRenderersRef.current.forEach((renderer) => renderer(frame))
+    },
+    [buildAnimationFrame],
+  )
+
+  const registerFrameRenderer = useCallback((renderer: (frame: MatrixAnimationFrame) => void) => {
+    frameRenderersRef.current.add(renderer)
+    return () => {
+      frameRenderersRef.current.delete(renderer)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!animation.playing || hasUnplayedMatrixEdit) {
+      return
+    }
+    let frame = 0
+    let previous = performance.now()
+    const tick = (now: number) => {
+      const current = animationRef.current
+      if (!current.playing) {
+        return
+      }
+      const delta = now - previous
+      previous = now
+      const nextProgress = animationProgressRef.current + (delta / 1400) * current.speed * basePlaybackSpeed
+      if (nextProgress < 1) {
+        animationProgressRef.current = nextProgress
+        emitAnimationFrame(nextProgress)
+        frame = requestAnimationFrame(tick)
+        return
+      }
+      if (current.mode === 'step' && current.stepIndex < Math.max(0, stepMaps.length - 1)) {
+        animationProgressRef.current = 0
+        setAnimation((latest) => ({ ...latest, progress: 0, stepIndex: latest.stepIndex + 1 }))
+        return
+      }
+      animationProgressRef.current = 1
+      emitAnimationFrame(1)
+      setAnimation((latest) => ({ ...latest, progress: 1, playing: false }))
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [animation.playing, emitAnimationFrame, hasUnplayedMatrixEdit, stepMaps.length])
 
   const registerExporter = useCallback((exporter: () => string | null) => {
     exporterRef.current = exporter
@@ -202,8 +280,33 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
   }, [appState.maps, appState.vectors, themeState.theme])
 
   const setPlaybackMode = useCallback((mode: PlaybackMode) => {
+    animationProgressRef.current = 0
     setAnimation((current) => ({ ...current, mode, progress: 0, stepIndex: 0 }))
   }, [])
+
+  const playAnimation = useCallback(() => {
+    setPlaybackSignature(matrixDraftSignature)
+    animationProgressRef.current = 0
+    if (prefersReducedMotion) {
+      animationProgressRef.current = 1
+      emitAnimationFrame(1)
+      setAnimation((current) => ({ ...current, playing: false, progress: 1 }))
+      return
+    }
+    setAnimation((current) => ({ ...current, playing: true, progress: 0, stepIndex: 0 }))
+  }, [emitAnimationFrame, matrixDraftSignature, prefersReducedMotion])
+
+  const pauseAnimation = useCallback(() => {
+    const progress = hasUnplayedMatrixEdit ? 0 : animationProgressRef.current
+    emitAnimationFrame(progress)
+    setAnimation((current) => ({ ...current, playing: false, progress }))
+  }, [emitAnimationFrame, hasUnplayedMatrixEdit])
+
+  const resetAnimation = useCallback(() => {
+    setPlaybackSignature(matrixDraftSignature)
+    animationProgressRef.current = 0
+    setAnimation((current) => ({ ...current, playing: false, progress: 0, stepIndex: 0 }))
+  }, [matrixDraftSignature])
 
   const setClampedViewZoom = useCallback((zoom: number) => {
     setViewZoom(clampViewZoom(zoom))
@@ -212,6 +315,17 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
   const openHelpTopic = useCallback((topic: MatrixHelpTopicId) => {
     setActiveHelpTopicId(topic)
   }, [])
+
+  const platformActions = useMemo(
+    () => ({
+      share,
+      exportPng,
+      reset: resetAnimation,
+      openHelp: () => openHelpTopic('overview'),
+    }),
+    [exportPng, openHelpTopic, resetAnimation, share],
+  )
+  useModuleActions(platformActions)
 
   const renderGraphHelpAction = () => (
     <HelpTrigger ariaLabel={learningCopy.openGraph} onClick={() => openHelpTopic('graph')}>
@@ -324,6 +438,7 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
                 cameraView={threeCameraView}
                 onCameraViewChange={setThreeCameraView}
                 registerExporter={registerExporter}
+                registerFrameRenderer={registerFrameRenderer}
                 headerAction={renderGraphHelpAction()}
               />
               {activeInputDim === 3 && activeOutputDim === 2 && (
@@ -333,6 +448,7 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
                   subtitle={copy.views.trueR2Subtitle}
                   onViewPanChange={setViewPan}
                   registerExporter={() => undefined}
+                  registerFrameRenderer={registerFrameRenderer}
                   headerAction={renderGraphHelpAction()}
                 />
               )}
@@ -344,6 +460,7 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
               subtitle={copy.views.canvas2dSubtitle}
               onViewPanChange={setViewPan}
               registerExporter={registerExporter}
+              registerFrameRenderer={registerFrameRenderer}
               headerAction={renderGraphHelpAction()}
             />
           )}
@@ -362,11 +479,11 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
 
       <AnimationControls
         copy={copy.controls}
-        animation={animation}
+        animation={displayedAnimation}
         viewOptions={appState.viewOptions}
-        onPlay={() => setAnimation((current) => ({ ...current, playing: true }))}
-        onPause={() => setAnimation((current) => ({ ...current, playing: false }))}
-        onReset={() => setAnimation((current) => ({ ...current, playing: false, progress: 0, stepIndex: 0 }))}
+        onPlay={playAnimation}
+        onPause={pauseAnimation}
+        onReset={resetAnimation}
         onSpeedChange={(speed) => setAnimation((current) => ({ ...current, speed }))}
         viewZoom={viewZoom}
         onViewZoomChange={setClampedViewZoom}
@@ -392,6 +509,35 @@ function loadLocale(): Locale {
     return globalLocale
   }
   return localStorage.getItem(matrixLocaleStorageKey) === 'zh' ? 'zh' : 'en'
+}
+
+function usePrefersReducedMotion(): boolean {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) {
+      return
+    }
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setPrefersReducedMotion(media.matches)
+    const update = () => setPrefersReducedMotion(media.matches)
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
+
+  return prefersReducedMotion
+}
+
+function matrixPlaybackSignature(maps: LinearMap[], valid: boolean): string {
+  return JSON.stringify({
+    valid,
+    maps: maps.map((map) => ({
+      id: map.id,
+      inputDim: map.inputDim,
+      outputDim: map.outputDim,
+      matrix: map.matrix,
+    })),
+  })
 }
 
 function getAnimationStartMatrix(target: Matrix, outputDim: 2 | 3, inputDim: 2 | 3, previous?: Matrix): Matrix {
@@ -421,10 +567,9 @@ function getThreeVisualMatrix({
   progress: number
 }): Matrix {
   if (inputDim === 3 && outputDim === 2) {
+    const visualStartMatrix = previousMatrix ? embeddedMatrixFor3D(previousMatrix, outputDim, inputDim) : identityMatrix(3)
     const visualTarget = embeddedMatrixFor3D(targetMatrix, outputDim, inputDim)
-    const previousShape = previousMatrix ? matrixShape(previousMatrix) : null
-    const visualStart = previousMatrix && previousShape?.rows === 3 && previousShape.cols === 3 ? previousMatrix : identityMatrix(3)
-    return lerpMatrix(visualStart, visualTarget, smoothstep(progress))
+    return lerpMatrix(visualStartMatrix, visualTarget, smoothstep(progress))
   }
 
   return embeddedMatrixFor3D(currentMatrix, outputDim, inputDim)

@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { AppCopy } from '../i18n.ts'
 import type { ThreeCameraView } from '../math/types.ts'
-import type { ThreeRenderPayload } from '../render/RendererAdapter.ts'
+import type { MatrixAnimationFrame, ThreeRenderPayload } from '../render/RendererAdapter.ts'
 import { Three3DRenderer } from '../render/three3d/Three3DRenderer.ts'
 
 type Props = ThreeRenderPayload & {
@@ -12,20 +12,32 @@ type Props = ThreeRenderPayload & {
   cameraView: ThreeCameraView
   onCameraViewChange: (view: ThreeCameraView) => void
   registerExporter: (exporter: () => string | null) => void
+  registerFrameRenderer?: (renderer: (frame: MatrixAnimationFrame) => void) => () => void
   headerAction?: ReactNode
 }
 
 const cameraViews: ThreeCameraView[] = ['free', 'x', 'y', 'z']
 
-export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewChange, registerExporter, headerAction, ...payload }: Props) {
+export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewChange, registerExporter, registerFrameRenderer, headerAction, ...payload }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null)
   const rendererRef = useRef<Three3DRenderer | null>(null)
+  const payloadRef = useRef(payload)
+  const [webglUnavailable, setWebglUnavailable] = useState(false)
+
+  useEffect(() => {
+    payloadRef.current = payload
+  }, [payload])
 
   useEffect(() => {
     if (!hostRef.current || rendererRef.current) {
       return
     }
-    rendererRef.current = new Three3DRenderer(hostRef.current)
+    try {
+      rendererRef.current = new Three3DRenderer(hostRef.current)
+    } catch {
+      setWebglUnavailable(true)
+      return
+    }
     registerExporter(() => rendererRef.current?.exportPng() ?? null)
     return () => {
       rendererRef.current?.dispose()
@@ -34,14 +46,32 @@ export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewCha
   }, [registerExporter])
 
   useEffect(() => {
-    rendererRef.current?.render(payload, cameraView)
-  }, [cameraView, payload])
+    if (!webglUnavailable) {
+      rendererRef.current?.render(payload, cameraView)
+    }
+  }, [cameraView, payload, webglUnavailable])
 
   useEffect(() => {
     const onResize = () => rendererRef.current?.render(payload, cameraView)
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [cameraView, payload])
+
+  useEffect(() => {
+    if (!registerFrameRenderer || webglUnavailable) {
+      return
+    }
+    return registerFrameRenderer((frame) => {
+      rendererRef.current?.render(
+        {
+          ...payloadRef.current,
+          matrix: frame.matrix,
+          visualMatrix: frame.visualMatrix,
+        },
+        cameraView,
+      )
+    })
+  }, [cameraView, registerFrameRenderer, webglUnavailable])
 
   return (
     <section className="view-panel">
@@ -66,7 +96,9 @@ export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewCha
           </div>
         </div>
       </header>
-      <div ref={hostRef} className="three-host" aria-label={title} />
+      <div ref={hostRef} className={`three-host${webglUnavailable ? ' three-host-fallback' : ''}`} role="img" aria-label={title}>
+        {webglUnavailable && <p>{copy.webglUnavailable}</p>}
+      </div>
     </section>
   )
 }

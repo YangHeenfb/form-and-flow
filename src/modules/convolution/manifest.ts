@@ -1,7 +1,7 @@
 import type { ModuleDefinition } from '../../platform/moduleTypes.ts'
-import { ConvolutionModule } from './ConvolutionModule.tsx'
 
 const base = '/modules/convolution'
+const loadConvolutionModule = () => import('./ConvolutionModule.tsx').then(({ ConvolutionModule }) => ({ default: ConvolutionModule }))
 
 export const convolutionManifest: ModuleDefinition = {
   id: 'convolution',
@@ -13,7 +13,7 @@ export const convolutionManifest: ModuleDefinition = {
   routeBase: base,
   order: 6,
   previewKind: 'convolution',
-  component: ConvolutionModule,
+  loadComponent: loadConvolutionModule,
   relatedConcepts: ['fourier-transform', 'convolution-theorem', 'filtering'],
   lessons: [
     lesson('discrete', 'Discrete Convolution'),
@@ -35,7 +35,7 @@ function lesson(id: string, title: string) {
     difficulty: 'intermediate' as const,
     estimatedMinutes: 12,
     learningGoals: ['See flip, shift, overlap, multiply, sum', 'Connect convolution across contexts'],
-    component: ConvolutionModule,
+    loadComponent: loadConvolutionModule,
     relatedConcepts: ['fourier-transform', 'convolution-theorem', 'filtering'],
   }
 }

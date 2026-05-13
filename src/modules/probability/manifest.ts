@@ -1,7 +1,7 @@
 import type { ModuleDefinition } from '../../platform/moduleTypes.ts'
-import { ProbabilityModule } from './ProbabilityModule.tsx'
 
 const base = '/modules/probability'
+const loadProbabilityModule = () => import('./ProbabilityModule.tsx').then(({ ProbabilityModule }) => ({ default: ProbabilityModule }))
 
 export const probabilityManifest: ModuleDefinition = {
   id: 'probability',
@@ -13,7 +13,7 @@ export const probabilityManifest: ModuleDefinition = {
   routeBase: base,
   order: 5,
   previewKind: 'probability',
-  component: ProbabilityModule,
+  loadComponent: loadProbabilityModule,
   lessons: [
     lesson('conditional-probability', 'Conditional Probability', 'Compare P(A | B) with P(B | A) inside a population grid.'),
     lesson('bayes', 'Bayes Rule', 'Update a hypothesis after evidence using natural frequencies.'),
@@ -35,6 +35,6 @@ function lesson(id: string, title: string, description: string) {
     difficulty: 'beginner' as const,
     estimatedMinutes: 12,
     learningGoals: ['Connect probability formulas to visible quantities', 'Use sliders and simulation to test intuition'],
-    component: ProbabilityModule,
+    loadComponent: loadProbabilityModule,
   }
 }

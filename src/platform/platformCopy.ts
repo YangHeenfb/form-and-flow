@@ -14,6 +14,8 @@ type PlatformCopy = {
     explore: string
     allModules: string
     lessons: string
+    help: string
+    reset: string
     share: string
     exportPng: string
     switchLanguage: string
@@ -23,6 +25,8 @@ type PlatformCopy = {
     collapse: string
     expand: string
     homeAria: string
+    helpAria: string
+    resetAria: string
     shareAria: string
     exportAria: string
   }
@@ -33,6 +37,7 @@ type PlatformCopy = {
   }
   moduleDetail: {
     learningGoals: string
+    enterLesson: string
   }
   comingSoon: {
     eyebrow: string
@@ -63,6 +68,8 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       explore: 'Explore',
       allModules: 'All Modules',
       lessons: 'Lessons',
+      help: 'Help',
+      reset: 'Reset',
       share: 'Share',
       exportPng: 'Export PNG',
       switchLanguage: '中文',
@@ -72,6 +79,8 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       collapse: 'Collapse module navigation',
       expand: 'Expand module navigation',
       homeAria: 'Visual Math Lab home',
+      helpAria: 'Open current module help',
+      resetAria: 'Reset current module',
       shareAria: 'Share current page',
       exportAria: 'Export current visualization',
     },
@@ -82,6 +91,7 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
     },
     moduleDetail: {
       learningGoals: 'Learning goals',
+      enterLesson: 'Enter lesson',
     },
     comingSoon: {
       eyebrow: 'Module Slot',
@@ -128,6 +138,8 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       explore: '浏览',
       allModules: '全部模块',
       lessons: '章节',
+      help: '帮助',
+      reset: '重置',
       share: '分享',
       exportPng: '导出 PNG',
       switchLanguage: 'EN',
@@ -137,6 +149,8 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       collapse: '收起模块导航',
       expand: '展开模块导航',
       homeAria: 'Visual Math Lab 首页',
+      helpAria: '打开当前模块帮助',
+      resetAria: '重置当前模块',
       shareAria: '分享当前页面',
       exportAria: '导出当前可视化',
     },
@@ -147,6 +161,7 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
     },
     moduleDetail: {
       learningGoals: '学习目标',
+      enterLesson: '进入章节',
     },
     comingSoon: {
       eyebrow: '模块槽位',

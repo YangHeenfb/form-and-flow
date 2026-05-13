@@ -19,8 +19,12 @@ export class Canvas2DRenderer {
 
     const rect = canvas.getBoundingClientRect()
     const devicePixelRatio = window.devicePixelRatio || 1
-    canvas.width = Math.max(1, Math.floor(rect.width * devicePixelRatio))
-    canvas.height = Math.max(1, Math.floor(rect.height * devicePixelRatio))
+    const nextWidth = Math.max(1, Math.floor(rect.width * devicePixelRatio))
+    const nextHeight = Math.max(1, Math.floor(rect.height * devicePixelRatio))
+    if (canvas.width !== nextWidth || canvas.height !== nextHeight) {
+      canvas.width = nextWidth
+      canvas.height = nextHeight
+    }
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
 
     const width = rect.width

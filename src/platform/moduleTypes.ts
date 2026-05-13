@@ -1,5 +1,9 @@
 import type { ComponentType } from 'react'
 
+export type ModuleComponent = ComponentType<any>
+
+export type ModuleComponentLoader = () => Promise<{ default: ModuleComponent }>
+
 export type ModuleCategory =
   | 'linear-algebra'
   | 'calculus'
@@ -29,7 +33,7 @@ export type LessonDefinition = {
   difficulty: LessonDifficulty
   estimatedMinutes?: number
   learningGoals: string[]
-  component?: ComponentType<any>
+  loadComponent?: ModuleComponentLoader
   relatedConcepts?: string[]
 }
 
@@ -45,7 +49,7 @@ export type ModuleDefinition = {
   icon?: string
   accentColor?: string
   lessons: LessonDefinition[]
-  component?: ComponentType<any>
+  loadComponent?: ModuleComponentLoader
   previewKind?: string
   relatedConcepts?: string[]
 }
