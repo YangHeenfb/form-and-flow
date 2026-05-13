@@ -17,6 +17,7 @@ type Props = RenderPayload & {
   registerExporter: (exporter: () => string | null) => void
   registerFrameRenderer?: (renderer: (frame: MatrixAnimationFrame) => void) => () => void
   headerAction?: ReactNode
+  stageAction?: ReactNode
 }
 
 type DragState = {
@@ -26,7 +27,7 @@ type DragState = {
   startPan: ViewPan
 }
 
-export function Canvas2DView({ title, subtitle, onViewPanChange, registerExporter, registerFrameRenderer, headerAction, ...payload }: Props) {
+export function Canvas2DView({ title, subtitle, onViewPanChange, registerExporter, registerFrameRenderer, headerAction, stageAction, ...payload }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const dragRef = useRef<DragState | null>(null)
   const payloadRef = useRef(payload)
@@ -139,18 +140,21 @@ export function Canvas2DView({ title, subtitle, onViewPanChange, registerExporte
         </div>
         {headerAction && <div className="view-header-actions">{headerAction}</div>}
       </header>
-      <canvas
-        ref={canvasRef}
-        className={`canvas-2d ${isPanning ? 'is-panning' : ''}`}
-        role="img"
-        aria-label={title}
-        onPointerDown={startPan}
-        onPointerMove={updatePan}
-        onPointerUp={endPan}
-        onPointerCancel={endPan}
-      >
-        {subtitle}
-      </canvas>
+      <div className="view-stage">
+        <canvas
+          ref={canvasRef}
+          className={`canvas-2d ${isPanning ? 'is-panning' : ''}`}
+          role="img"
+          aria-label={title}
+          onPointerDown={startPan}
+          onPointerMove={updatePan}
+          onPointerUp={endPan}
+          onPointerCancel={endPan}
+        >
+          {subtitle}
+        </canvas>
+        {stageAction}
+      </div>
     </section>
   )
 }

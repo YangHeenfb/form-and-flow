@@ -36,6 +36,8 @@ export type AppCopy = {
     theme: string
     explanation: string
     controls: string
+    share: string
+    exportPng: string
     autoHideHud: string
     closePanel: string
   }
@@ -77,6 +79,7 @@ export type AppCopy = {
     play: string
     pause: string
     reset: string
+    resetView: string
     exportPng: string
     speed: string
     zoom: string
@@ -200,6 +203,8 @@ export const appCopy: Record<Locale, AppCopy> = {
       theme: 'Theme',
       explanation: 'Explanation',
       controls: 'Controls',
+      share: 'Share',
+      exportPng: 'Export PNG',
       autoHideHud: 'Auto-hide HUD',
       closePanel: 'Close panel',
     },
@@ -249,7 +254,8 @@ export const appCopy: Record<Locale, AppCopy> = {
     controls: {
       play: 'Play',
       pause: 'Pause',
-      reset: 'Reset',
+      reset: 'Reset animation',
+      resetView: 'Reset view',
       exportPng: 'Export PNG',
       speed: 'Speed',
       zoom: 'Zoom',
@@ -358,6 +364,8 @@ export const appCopy: Record<Locale, AppCopy> = {
       theme: '主题',
       explanation: '解释',
       controls: '控制',
+      share: '分享',
+      exportPng: '导出 PNG',
       autoHideHud: '自动隐藏控制栏',
       closePanel: '关闭面板',
     },
@@ -407,7 +415,8 @@ export const appCopy: Record<Locale, AppCopy> = {
     controls: {
       play: '播放',
       pause: '暂停',
-      reset: '重置',
+      reset: '重置动画',
+      resetView: '重置视图',
       exportPng: '导出 PNG',
       speed: '速度',
       zoom: '缩放',

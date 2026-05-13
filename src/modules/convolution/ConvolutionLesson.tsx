@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode, type RefObject } from 'react'
-import { Download, Pause, Play, RotateCcw, Share2 } from 'lucide-react'
+import { Download, Pause, Play, RotateCcw } from 'lucide-react'
 import { drawGrid, GraphCanvas, worldToScreen, type GraphTheme, type GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton, type HelpTopic } from '../../core/ui/LearningHelp.tsx'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../i18n.ts'
+import { LessonStageActions } from '../../platform/LessonStageActions.tsx'
 import { ModuleFocusFrame } from '../../platform/ModuleFocusFrame.tsx'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
 import type { BoundaryMode, ConvolutionMode, NumericSample, OperationMode, TermContribution } from './convolutionTypes.ts'
@@ -606,6 +607,11 @@ function LessonFrame({
       {({ focusButton }) => (
     <section className="convolution-lesson">
       <aside className="convolution-controls platform-card">
+        <div className="calculus-learning-entry learning-help-entry">
+          <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={helpLabels.beginner}>
+            {helpLabels.beginner}
+          </HelpTrigger>
+        </div>
         <h2>{ui.controls}</h2>
         {controls}
       </aside>
@@ -616,26 +622,19 @@ function LessonFrame({
             <p className="eyebrow">{ui.moduleEyebrow}</p>
             <h1>{copy.title}</h1>
           </div>
-          <div className="calculus-actions">
-            {focusButton}
-            <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={helpLabels.beginner}>
-              {helpLabels.beginner}
-            </HelpTrigger>
-            <button type="button" onClick={onShare}>
-              <Share2 size={16} />
-              {ui.share}
-            </button>
-            <button type="button" onClick={onExport}>
-              <Download size={16} />
-              {ui.exportPng}
-            </button>
-          </div>
         </div>
         <div className="convolution-stage" data-convolution-export={lessonId}>
           {canvas}
-          <HelpTrigger variant="graph" onClick={() => setHelpMode({ kind: 'graph' })} ariaLabel={helpLabels.graph}>
-            {helpLabels.graph}
-          </HelpTrigger>
+          <LessonStageActions
+            graphLabel={helpLabels.graph}
+            graphAriaLabel={helpLabels.graph}
+            onGraphHelp={() => setHelpMode({ kind: 'graph' })}
+            focusButton={focusButton}
+            shareLabel={ui.share}
+            onShare={onShare}
+            exportLabel={ui.exportPng}
+            onExport={onExport}
+          />
         </div>
         <div className="convolution-playback platform-card">{playback}</div>
       </main>

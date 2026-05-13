@@ -70,6 +70,19 @@ export class Three3DRenderer {
     return this.renderer.domElement.toDataURL('image/png')
   }
 
+  resetCamera(): void {
+    this.cameraView = 'free'
+    this.controls.enabled = true
+    this.camera.position.set(5, 4, 6)
+    this.camera.up.set(0, 1, 0)
+    this.camera.zoom = 1
+    this.controls.target.set(0, 0, 0)
+    this.controls.update()
+    this.camera.lookAt(0, 0, 0)
+    this.camera.updateProjectionMatrix()
+    this.renderer.render(this.scene, this.camera)
+  }
+
   dispose(): void {
     this.controls.dispose()
     this.renderer.dispose()

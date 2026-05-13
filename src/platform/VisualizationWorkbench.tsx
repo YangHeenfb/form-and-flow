@@ -249,13 +249,16 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
 
         <div className="visualization-standard-layout">
           <aside className="left-panel visualization-standard-left">{leftPanel}</aside>
-          <section className="center-stage visualization-stage" ref={setStageNode}>
-            {stage}
-          </section>
+          <div className="visualization-center-column">
+            <section className="center-stage visualization-stage" ref={setStageNode}>
+              {stage}
+            </section>
+            {!isExpanded && <OverlayTransport>{transport}</OverlayTransport>}
+          </div>
           <div className="visualization-standard-right">{rightPanel}</div>
         </div>
 
-        <OverlayTransport>{transport}</OverlayTransport>
+        {isExpanded && <OverlayTransport>{transport}</OverlayTransport>}
 
         {isExpanded && activePanel && (
           <OverlayDrawer title={activePanel.title} side={activePanel.side} closeLabel={labels.closePanel} onClose={closePanel}>

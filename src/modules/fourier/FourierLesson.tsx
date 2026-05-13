@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Download, Pause, Play, RotateCcw, Share2 } from 'lucide-react'
+import { Pause, Play, RotateCcw } from 'lucide-react'
 import { GraphCanvas } from '../../core/graph2d/GraphCanvas.tsx'
 import type { GraphTheme, GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
@@ -8,6 +8,7 @@ import { HelpTrigger, LearningDrawer, TermButton, type HelpTopic } from '../../c
 import { expressionToTex } from '../../core/ui/mathNotation.ts'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../i18n.ts'
+import { LessonStageActions } from '../../platform/LessonStageActions.tsx'
 import { ModuleFocusFrame } from '../../platform/ModuleFocusFrame.tsx'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
 import { calculusFunctionNames, completeBareFunctionInput, normalizeMathInput } from '../calculus/shared/mathInput.ts'
@@ -119,7 +120,7 @@ const fourierCopy: Record<FourierLocale, {
       exportPng: 'Export PNG',
       play: 'Play',
       pause: 'Pause',
-      reset: 'Reset',
+      reset: 'Reset animation',
       seeing: 'What you are seeing',
       why: 'Why it matters',
       formula: 'Current formula',
@@ -205,7 +206,7 @@ const fourierCopy: Record<FourierLocale, {
       exportPng: '导出 PNG',
       play: '播放',
       pause: '暂停',
-      reset: '重置',
+      reset: '重置动画',
       seeing: '你正在看到什么',
       why: '为什么重要',
       formula: '当前公式',
@@ -504,6 +505,11 @@ export function FourierLesson({ lessonId }: Props) {
       {({ focusButton }) => (
     <section className="fourier-lesson">
       <aside className="fourier-controls platform-card">
+        <div className="calculus-learning-entry learning-help-entry">
+          <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={ui.beginnerHelp}>
+            {ui.beginnerHelp}
+          </HelpTrigger>
+        </div>
         <h2>{ui.signal}</h2>
         <label>
           {ui.preset}
@@ -648,20 +654,6 @@ export function FourierLesson({ lessonId }: Props) {
             <p className="eyebrow">{ui.lesson}</p>
             <h1>{copy.title}</h1>
           </div>
-          <div className="fourier-actions">
-            {focusButton}
-            <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={ui.beginnerHelp}>
-              {ui.beginnerHelp}
-            </HelpTrigger>
-            <button type="button" onClick={share}>
-              <Share2 size={16} />
-              {ui.share}
-            </button>
-            <button type="button" onClick={exportPng}>
-              <Download size={16} />
-              {ui.exportPng}
-            </button>
-          </div>
         </div>
         <div className="graph-help-stage">
           <GraphCanvas
@@ -673,9 +665,16 @@ export function FourierLesson({ lessonId }: Props) {
             yMax={1.25}
             draw={draw}
           />
-          <HelpTrigger variant="graph" onClick={() => setHelpMode({ kind: 'graph' })} ariaLabel={ui.graphHelp}>
-            {ui.graphHelp}
-          </HelpTrigger>
+          <LessonStageActions
+            graphLabel={ui.graphHelp}
+            graphAriaLabel={ui.graphHelp}
+            onGraphHelp={() => setHelpMode({ kind: 'graph' })}
+            focusButton={focusButton}
+            shareLabel={ui.share}
+            onShare={share}
+            exportLabel={ui.exportPng}
+            onExport={exportPng}
+          />
         </div>
         <div className="fourier-playback platform-card">
           <button type="button" className="primary-button" aria-label={playing ? ui.pause : ui.play} onClick={() => setPlaying((current) => !current)}>

@@ -12,14 +12,16 @@ type Props = ThreeRenderPayload & {
   subtitle: string
   cameraView: ThreeCameraView
   onCameraViewChange: (view: ThreeCameraView) => void
+  viewResetKey?: number
   registerExporter: (exporter: () => string | null) => void
   registerFrameRenderer?: (renderer: (frame: MatrixAnimationFrame) => void) => () => void
   headerAction?: ReactNode
+  stageAction?: ReactNode
 }
 
 const cameraViews: ThreeCameraView[] = ['free', 'x', 'y', 'z']
 
-export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewChange, registerExporter, registerFrameRenderer, headerAction, ...payload }: Props) {
+export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewChange, viewResetKey, registerExporter, registerFrameRenderer, headerAction, stageAction, ...payload }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null)
   const rendererRef = useRef<Three3DRenderer | null>(null)
   const payloadRef = useRef(payload)
@@ -60,6 +62,13 @@ export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewCha
       rendererRef.current?.render(payload, cameraView)
     }
   }, [cameraView, payload, webglUnavailable])
+
+  useEffect(() => {
+    rendererRef.current?.resetCamera()
+    if (!webglUnavailable) {
+      rendererRef.current?.render(payloadRef.current, cameraViewRef.current)
+    }
+  }, [viewResetKey, webglUnavailable])
 
   useResizeObserver(hostRef, renderCurrent)
 
@@ -102,8 +111,11 @@ export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewCha
           {headerAction}
         </div>
       </header>
-      <div ref={hostRef} className={`three-host${webglUnavailable ? ' three-host-fallback' : ''}`} role="img" aria-label={title}>
-        {webglUnavailable && <p>{copy.webglUnavailable}</p>}
+      <div className="view-stage">
+        <div ref={hostRef} className={`three-host${webglUnavailable ? ' three-host-fallback' : ''}`} role="img" aria-label={title}>
+          {webglUnavailable && <p>{copy.webglUnavailable}</p>}
+        </div>
+        {stageAction}
       </div>
     </section>
   )

@@ -1,4 +1,4 @@
-import { Download, Pause, Play, RotateCcw } from 'lucide-react'
+import { LocateFixed, Pause, Play, RotateCcw } from 'lucide-react'
 import type { AppCopy } from '../i18n.ts'
 import type { AnimationState, PlaybackMode, ViewOptions } from '../math/types.ts'
 
@@ -9,12 +9,10 @@ type Props = {
   onPlay: () => void
   onPause: () => void
   onReset: () => void
+  onResetView: () => void
   onSpeedChange: (speed: number) => void
-  viewZoom: number
-  onViewZoomChange: (zoom: number) => void
   onModeChange: (mode: PlaybackMode) => void
   onViewOptionChange: (key: keyof ViewOptions, value: boolean) => void
-  onExport: () => void
 }
 
 const viewOptionKeys: Array<keyof ViewOptions> = ['showGrid', 'showBasis', 'showUnitShape', 'showVectors', 'showTrails']
@@ -26,12 +24,10 @@ export function AnimationControls({
   onPlay,
   onPause,
   onReset,
+  onResetView,
   onSpeedChange,
-  viewZoom,
-  onViewZoomChange,
   onModeChange,
   onViewOptionChange,
-  onExport,
 }: Props) {
   return (
     <footer className="transport">
@@ -44,9 +40,9 @@ export function AnimationControls({
           <RotateCcw size={17} />
           {copy.reset}
         </button>
-        <button type="button" onClick={onExport}>
-          <Download size={17} />
-          {copy.exportPng}
+        <button type="button" onClick={onResetView}>
+          <LocateFixed size={17} />
+          {copy.resetView}
         </button>
       </div>
       <label className="speed-control">
@@ -60,18 +56,6 @@ export function AnimationControls({
           onChange={(event) => onSpeedChange(Number(event.target.value))}
         />
         <strong>{animation.speed.toFixed(2)}x</strong>
-      </label>
-      <label className="zoom-control">
-        <span>{copy.zoom}</span>
-        <input
-          type="range"
-          min="0.25"
-          max="2.5"
-          step="0.05"
-          value={viewZoom}
-          onChange={(event) => onViewZoomChange(Number(event.target.value))}
-        />
-        <strong>{viewZoom.toFixed(2)}x</strong>
       </label>
       <div className="segmented compact-segmented" role="group" aria-label={copy.playbackMode}>
         <button type="button" className={animation.mode === 'combined' ? 'active' : ''} onClick={() => onModeChange('combined')}>

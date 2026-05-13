@@ -22,6 +22,7 @@ import {
 } from '../../math/matrix.ts'
 import type { AnimationState, LinearMap, Matrix, PlaybackMode, ThreeCameraView, ViewOptions, ViewPan } from '../../math/types.ts'
 import { useModuleActions } from '../../platform/ModuleActionContext.tsx'
+import { LessonStageActions } from '../../platform/LessonStageActions.tsx'
 import { platformLocaleEventName, platformLocaleStorageKey, platformSurfaceModeEventName, platformSurfaceStorageKey } from '../../platform/platformLocale.tsx'
 import { VisualizationWorkbench, type VisualizationWorkbenchHandle } from '../../platform/VisualizationWorkbench.tsx'
 import type { OverlayPanelDefinition, VisualizationWorkbenchStatus } from '../../platform/visualizationLayoutTypes.ts'
@@ -58,6 +59,7 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
   const [threeCameraView, setThreeCameraView] = useState<ThreeCameraView>('free')
   const [viewZoom, setViewZoom] = useState(1)
   const [viewPan, setViewPan] = useState<ViewPan>({ x: 0, y: 0 })
+  const [viewResetKey, setViewResetKey] = useState(0)
   const [activeHelpTopicId, setActiveHelpTopicId] = useState<MatrixHelpTopicId | null>(null)
   const centerStageRef = useRef<HTMLElement | null>(null)
   const workbenchRef = useRef<VisualizationWorkbenchHandle | null>(null)
@@ -314,8 +316,11 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
     setAnimation((current) => ({ ...current, playing: false, progress: 0, stepIndex: 0 }))
   }, [matrixDraftSignature])
 
-  const setClampedViewZoom = useCallback((zoom: number) => {
-    setViewZoom(clampViewZoom(zoom))
+  const resetView = useCallback(() => {
+    setViewZoom(1)
+    setViewPan({ x: 0, y: 0 })
+    setThreeCameraView('free')
+    setViewResetKey((current) => current + 1)
   }, [])
 
   const openHelpTopic = useCallback((topic: MatrixHelpTopicId) => {
@@ -324,21 +329,11 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
 
   const platformActions = useMemo(
     () => ({
-      share,
-      exportPng,
-      reset: resetAnimation,
-      openHelp: () => openHelpTopic('overview'),
       isVisualizationExpanded: workbenchStatus.mode === 'focus',
     }),
-    [exportPng, openHelpTopic, resetAnimation, share, workbenchStatus.mode],
+    [workbenchStatus.mode],
   )
   useModuleActions(platformActions)
-
-  const renderGraphHelpAction = () => (
-    <HelpTrigger ariaLabel={learningCopy.openGraph} onClick={() => openHelpTopic('graph')}>
-      {learningCopy.openGraph}
-    </HelpTrigger>
-  )
 
   const renderFocusAction = () => {
     const isFocusMode = workbenchStatus.mode === 'focus'
@@ -359,11 +354,17 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
     )
   }
 
-  const renderGraphHeaderActions = () => (
-    <>
-      {renderGraphHelpAction()}
-      {renderFocusAction()}
-    </>
+  const renderStageActions = () => (
+    <LessonStageActions
+      graphLabel={learningCopy.openGraph}
+      graphAriaLabel={learningCopy.openGraph}
+      onGraphHelp={() => openHelpTopic('graph')}
+      focusButton={renderFocusAction()}
+      shareLabel={copy.visualization.share}
+      onShare={() => void share()}
+      exportLabel={copy.visualization.exportPng}
+      onExport={exportPng}
+    />
   )
 
   const handleViewWheel = useCallback((event: WheelEvent) => {
@@ -456,9 +457,10 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
             subtitle={copy.views.subtitle(activeInputDim, activeOutputDim)}
             cameraView={threeCameraView}
             onCameraViewChange={setThreeCameraView}
+            viewResetKey={viewResetKey}
             registerExporter={registerExporter}
             registerFrameRenderer={registerFrameRenderer}
-            headerAction={renderGraphHeaderActions()}
+            stageAction={renderStageActions()}
           />
           {activeInputDim === 3 && activeOutputDim === 2 && (
             <Canvas2DView
@@ -468,7 +470,6 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
               onViewPanChange={setViewPan}
               registerExporter={() => undefined}
               registerFrameRenderer={registerFrameRenderer}
-              headerAction={renderGraphHeaderActions()}
             />
           )}
         </>
@@ -480,7 +481,7 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
           onViewPanChange={setViewPan}
           registerExporter={registerExporter}
           registerFrameRenderer={registerFrameRenderer}
-          headerAction={renderGraphHeaderActions()}
+          stageAction={renderStageActions()}
         />
       )}
     </>
@@ -494,12 +495,10 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
       onPlay={playAnimation}
       onPause={pauseAnimation}
       onReset={resetAnimation}
+      onResetView={resetView}
       onSpeedChange={(speed) => setAnimation((current) => ({ ...current, speed }))}
-      viewZoom={viewZoom}
-      onViewZoomChange={setClampedViewZoom}
       onModeChange={setPlaybackMode}
       onViewOptionChange={setViewOption}
-      onExport={exportPng}
     />
   )
 

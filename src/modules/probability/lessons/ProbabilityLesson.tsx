@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react'
-import { Download, Pause, Play, RotateCcw, Share2, Shuffle } from 'lucide-react'
+import { Pause, Play, RotateCcw, Shuffle } from 'lucide-react'
 import { Formula, renderMathText } from '../../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton } from '../../../core/ui/LearningHelp.tsx'
 import { SelectMenu } from '../../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../../i18n.ts'
+import { LessonStageActions } from '../../../platform/LessonStageActions.tsx'
 import { ModuleFocusFrame } from '../../../platform/ModuleFocusFrame.tsx'
 import { usePlatformLocale } from '../../../platform/platformLocale.tsx'
 import { convolutionManifest } from '../../convolution/manifest.ts'
@@ -965,23 +966,19 @@ export function ProbabilityLesson({ lessonId }: Props) {
             <p className="eyebrow">{ui.controls.lesson}</p>
             <h1>{copy.title}</h1>
           </div>
-          <div className="calculus-actions">
-            {focusButton}
-            <button type="button" onClick={() => shareState()}>
-              <Share2 size={16} />
-              {ui.controls.share}
-            </button>
-            <button type="button" onClick={exportPng}>
-              <Download size={16} />
-              {ui.controls.exportPng}
-            </button>
-          </div>
         </div>
         <div className="graph-help-stage probability-graph-stage">
           <ProbabilityCanvas ariaLabel={`${copy.title} ${ui.canvasAriaSuffix}`} draw={draw} />
-          <HelpTrigger variant="graph" ariaLabel={learningCopy.openGraph} onClick={() => openHelpTopic('graph')}>
-            {learningCopy.openGraph}
-          </HelpTrigger>
+          <LessonStageActions
+            graphLabel={learningCopy.openGraph}
+            graphAriaLabel={learningCopy.openGraph}
+            onGraphHelp={() => openHelpTopic('graph')}
+            focusButton={focusButton}
+            shareLabel={ui.controls.share}
+            onShare={() => shareState()}
+            exportLabel={ui.controls.exportPng}
+            onExport={exportPng}
+          />
         </div>
         <div className="probability-playback platform-card">
           <button type="button" className="primary-button" aria-label={playing ? ui.controls.pause : ui.controls.play} onClick={() => setPlaying((current) => !current)}>

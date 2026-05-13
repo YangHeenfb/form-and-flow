@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Download, Pause, Play, RotateCcw, Share2 } from 'lucide-react'
+import { LocateFixed, Pause, Play, RotateCcw } from 'lucide-react'
 import { GraphCanvas, drawGrid, line, worldToScreen } from '../../core/graph2d/GraphCanvas.tsx'
 import type { GraphTheme, GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
@@ -8,6 +8,7 @@ import { expressionToTex } from '../../core/ui/mathNotation.ts'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../i18n.ts'
 import { ModuleFocusFrame } from '../../platform/ModuleFocusFrame.tsx'
+import { LessonStageActions } from '../../platform/LessonStageActions.tsx'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
 import { compileCalculusExpression, calculusPresets, presetFunction } from './calculusPresets.ts'
 import { calculusLearningCopy, conceptTopicForLesson, getCalculusHelpTopics } from './learningHelp.tsx'
@@ -90,7 +91,7 @@ const calculusCopy: Record<CalculusLocale, {
       method: 'method',
       play: 'Play',
       pause: 'Pause',
-      reset: 'Reset',
+      reset: 'Reset animation',
       resetView: 'Reset view',
       lesson: 'Lesson',
       share: 'Share',
@@ -163,7 +164,7 @@ const calculusCopy: Record<CalculusLocale, {
       method: '方法',
       play: '播放',
       pause: '暂停',
-      reset: '重置',
+      reset: '重置动画',
       resetView: '重置视图',
       lesson: '章节',
       share: '分享',
@@ -432,17 +433,6 @@ export function CalculusLesson({ lessonId }: Props) {
             <p className="eyebrow">{ui.lesson}</p>
             <h1>{copy.title}</h1>
           </div>
-          <div className="calculus-actions">
-            {focusButton}
-            <button type="button" onClick={share}>
-              <Share2 size={16} />
-              {ui.share}
-            </button>
-            <button type="button" onClick={exportPng}>
-              <Download size={16} />
-              {ui.exportPng}
-            </button>
-          </div>
         </div>
         <div className="graph-help-stage calculus-graph-stage">
           <GraphCanvas
@@ -455,9 +445,16 @@ export function CalculusLesson({ lessonId }: Props) {
             draw={draw}
             onViewportChange={setView}
           />
-          <HelpTrigger variant="graph" ariaLabel={learningCopy.openGraph} onClick={() => openHelpTopic('graph')}>
-            {learningCopy.openGraph}
-          </HelpTrigger>
+          <LessonStageActions
+            graphLabel={learningCopy.openGraph}
+            graphAriaLabel={learningCopy.openGraph}
+            onGraphHelp={() => openHelpTopic('graph')}
+            focusButton={focusButton}
+            shareLabel={ui.share}
+            onShare={share}
+            exportLabel={ui.exportPng}
+            onExport={exportPng}
+          />
         </div>
         <div className="calculus-playback platform-card">
           <button type="button" className="primary-button" aria-label={playing ? ui.pause : ui.play} onClick={() => setPlaying((current) => !current)}>
@@ -469,6 +466,7 @@ export function CalculusLesson({ lessonId }: Props) {
             {ui.reset}
           </button>
           <button type="button" onClick={() => setView({ xMin: -5, xMax: 5, yMin: -3, yMax: 3 })}>
+            <LocateFixed size={16} />
             {ui.resetView}
           </button>
           <Range label={ui.ranges.speed} labelTex={locale === 'zh' ? '\\text{速度}' : '\\text{speed}'} value={speed} min={0.25} max={3} step={0.25} onChange={setSpeed} />
