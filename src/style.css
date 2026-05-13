@@ -2879,13 +2879,30 @@ dt {
   margin-left: auto;
 }
 
-:where(
+:is(
   .calculus-playback,
   .convolution-playback,
+  .diffeq-playback,
   .fourier-playback,
   .probability-playback,
-  .complex-playback,
   .optimization-playback,
+  .playback-control-cluster
+) {
+  justify-content: flex-start;
+  gap: 14px clamp(24px, 8vw, 156px);
+  flex-wrap: wrap;
+}
+
+.playback-control-cluster {
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+:where(
+  .complex-playback,
   .vector-field-playback,
   .fourier-series-playback,
   .group-playback,
@@ -2902,6 +2919,7 @@ dt {
   .convolution-playback,
   .fourier-playback,
   .probability-playback,
+  .playback-control-cluster,
   .complex-playback,
   .optimization-playback,
   .vector-field-playback,
@@ -2909,7 +2927,7 @@ dt {
   .group-playback,
   .topology-playback,
   .number-theory-playback
-) :where(.transport-buttons, .fourier-series-play-buttons, .topology-button-row) {
+) :where(.transport-buttons, .calculus-playback-buttons, .fourier-series-play-buttons, .topology-button-row, .neural-button-row) {
   display: flex;
   align-items: center;
   gap: 10px;

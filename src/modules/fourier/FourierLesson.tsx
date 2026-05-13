@@ -677,14 +677,16 @@ export function FourierLesson({ lessonId }: Props) {
           />
         </div>
         <div className="fourier-playback platform-card">
-          <button type="button" className="primary-button" aria-label={playing ? ui.pause : ui.play} onClick={() => setPlaying((current) => !current)}>
-            {playing ? <Pause size={16} /> : <Play size={16} />}
-            {playing ? ui.pause : ui.play}
-          </button>
-          <button type="button" onClick={() => resetLesson(lessonKey, selectedPreset.defaultFrequency, setSelectedFrequency, setCoefficientCount, setCutoff, setPlayhead)}>
-            <RotateCcw size={16} />
-            {ui.reset}
-          </button>
+          <div className="transport-buttons">
+            <button type="button" className="primary-button" aria-label={playing ? ui.pause : ui.play} onClick={() => setPlaying((current) => !current)}>
+              {playing ? <Pause size={16} /> : <Play size={16} />}
+              {playing ? ui.pause : ui.play}
+            </button>
+            <button type="button" onClick={() => resetLesson(lessonKey, selectedPreset.defaultFrequency, setSelectedFrequency, setCoefficientCount, setCutoff, setPlayhead)}>
+              <RotateCcw size={16} />
+              {ui.reset}
+            </button>
+          </div>
           <Range label={ui.controls.speed} value={playbackSpeed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setPlaybackSpeed} />
         </div>
       </main>

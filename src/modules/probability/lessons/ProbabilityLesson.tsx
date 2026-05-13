@@ -981,14 +981,16 @@ export function ProbabilityLesson({ lessonId }: Props) {
           />
         </div>
         <div className="probability-playback platform-card">
-          <button type="button" className="primary-button" aria-label={playing ? ui.controls.pause : ui.controls.play} onClick={() => setPlaying((current) => !current)}>
-            {playing ? <Pause size={16} /> : <Play size={16} />}
-            {playing ? ui.controls.pause : ui.controls.play}
-          </button>
-          <button type="button" onClick={resetLesson}>
-            <RotateCcw size={16} />
-            {ui.controls.reset}
-          </button>
+          <div className="transport-buttons">
+            <button type="button" className="primary-button" aria-label={playing ? ui.controls.pause : ui.controls.play} onClick={() => setPlaying((current) => !current)}>
+              {playing ? <Pause size={16} /> : <Play size={16} />}
+              {playing ? ui.controls.pause : ui.controls.play}
+            </button>
+            <button type="button" onClick={resetLesson}>
+              <RotateCcw size={16} />
+              {ui.controls.reset}
+            </button>
+          </div>
           <Range label={ui.controls.speed} value={speed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setSpeed} />
         </div>
       </main>

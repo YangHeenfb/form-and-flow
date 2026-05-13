@@ -668,18 +668,20 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
           />
         </div>
         <div className="calculus-playback diffeq-playback platform-card">
-          <button type="button" className="primary-button" aria-label={playing ? ui.pause : ui.play} onClick={() => setPlaying((current) => !current)}>
-            {playing ? <Pause size={16} /> : <Play size={16} />}
-            {playing ? ui.pause : ui.play}
-          </button>
-          <button type="button" onClick={() => resetLesson()}>
-            <RotateCcw size={16} />
-            {ui.reset}
-          </button>
-          <button type="button" onClick={() => setView(defaultViewForLesson(lessonId, phasePreset))}>
-            <LocateFixed size={16} />
-            {ui.resetView}
-          </button>
+          <div className="transport-buttons">
+            <button type="button" className="primary-button" aria-label={playing ? ui.pause : ui.play} onClick={() => setPlaying((current) => !current)}>
+              {playing ? <Pause size={16} /> : <Play size={16} />}
+              {playing ? ui.pause : ui.play}
+            </button>
+            <button type="button" onClick={() => resetLesson()}>
+              <RotateCcw size={16} />
+              {ui.reset}
+            </button>
+            <button type="button" onClick={() => setView(defaultViewForLesson(lessonId, phasePreset))}>
+              <LocateFixed size={16} />
+              {ui.resetView}
+            </button>
+          </div>
           <Range label={ui.ranges.speed} labelTex={locale === 'zh' ? '\\text{速度}' : '\\text{speed}'} value={speed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setSpeed} />
         </div>
       </main>
