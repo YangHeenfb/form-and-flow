@@ -1,0 +1,157 @@
+.module-focus-frame {
+  min-width: 0;
+  min-height: 0;
+}
+
+.platform-shell.visualization-expanded .module-focus-frame {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.module-focus-toggle {
+  min-height: 34px;
+  padding: 0 10px;
+  border-color: color-mix(in srgb, var(--focus) 38%, var(--panel-border));
+  background: color-mix(in srgb, var(--focus) 12%, var(--control-bg));
+}
+
+.module-focus-toggle[aria-pressed='true'] {
+  color: var(--focus-contrast, #0b1412);
+  border-color: var(--focus);
+  background: var(--focus);
+}
+
+.group-title-actions,
+.neural-title-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 12px;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+}
+
+.module-focus-frame.is-focus .neural-title-actions .neural-legend {
+  display: none;
+}
+
+.module-focus-frame.is-focus :is(
+  .calculus-lesson,
+  .convolution-lesson,
+  .fourier-lesson,
+  .probability-lesson,
+  .complex-lesson,
+  .optimization-lesson,
+  .vector-field-lesson,
+  .topology-lesson,
+  .fourier-series-lesson,
+  .group-lesson,
+  .number-theory-lesson,
+  .neural-lesson
+) {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+  overflow: hidden;
+}
+
+.module-focus-frame.is-focus :is(
+  .calculus-controls,
+  .calculus-explanation,
+  .convolution-controls,
+  .convolution-explanation,
+  .fourier-controls,
+  .fourier-explanation,
+  .probability-controls,
+  .probability-explanation,
+  .complex-controls,
+  .complex-explanation,
+  .optimization-controls,
+  .optimization-explanation,
+  .vector-field-controls,
+  .vector-field-explanation,
+  .topology-controls,
+  .topology-explanation,
+  .fourier-series-controls,
+  .fourier-series-explanation,
+  .group-controls,
+  .group-explanation,
+  .number-theory-controls,
+  .number-theory-explanation,
+  .neural-controls,
+  .neural-explanation,
+  .fourier-series-inline-panel,
+  .neural-activation-grid
+) {
+  display: none;
+}
+
+.module-focus-frame.is-focus :is(
+  .calculus-main,
+  .convolution-main,
+  .fourier-main,
+  .probability-main,
+  .complex-main,
+  .optimization-main,
+  .vector-field-main,
+  .topology-main,
+  .fourier-series-main,
+  .group-main,
+  .number-theory-main,
+  .neural-main
+) {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.module-focus-frame.is-focus :is(
+  .calculus-title-row,
+  .convolution-title-row,
+  .fourier-title-row,
+  .complex-title-row,
+  .optimization-title-row,
+  .vector-field-title-row,
+  .topology-title-row,
+  .fourier-series-title-row,
+  .group-title-row,
+  .number-theory-title-row,
+  .neural-title-row
+) {
+  min-height: 68px;
+  border-bottom: 1px solid var(--panel-border);
+  padding: 12px 16px;
+}
+
+.module-focus-frame.is-focus :is(
+  .graph-help-stage,
+  .convolution-stage,
+  .probability-graph-stage,
+  .complex-stage,
+  .optimization-stage,
+  .vector-field-graph-stage,
+  .topology-stage,
+  .fourier-series-stage,
+  .group-graph-stage,
+  .number-theory-graph-stage,
+  .neural-stage,
+  .neural-graph-stage
+) {
+  min-height: 0;
+}
+
+@media (max-width: 720px) {
+  .module-focus-frame.is-focus .neural-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .module-focus-frame.is-focus .neural-stage-side {
+    display: none;
+  }
+}

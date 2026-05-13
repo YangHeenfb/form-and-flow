@@ -7,6 +7,7 @@ import { HelpTrigger, LearningDrawer, TermButton, type HelpTopic } from '../../c
 import { expressionToTex } from '../../core/ui/mathNotation.ts'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../i18n.ts'
+import { ModuleFocusFrame } from '../../platform/ModuleFocusFrame.tsx'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
 import {
   compileScalarOdeExpression,
@@ -507,6 +508,8 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
 
   return (
     <>
+    <ModuleFocusFrame>
+      {({ focusButton }) => (
     <section className="calculus-lesson diffeq-lesson">
       <aside className="calculus-controls diffeq-controls platform-card">
         {(lessonId === 'slope-fields' || lessonId === 'numerical-methods') && (
@@ -636,6 +639,7 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
             <h1>{copy.title}</h1>
           </div>
           <div className="calculus-actions">
+            {focusButton}
             <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={ui.beginnerHelp}>
               {ui.beginnerHelp}
             </HelpTrigger>
@@ -704,6 +708,8 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
         <p>{copy.watch}</p>
       </aside>
     </section>
+      )}
+    </ModuleFocusFrame>
     <LearningDrawer topic={activeHelpTopic} closeLabel={ui.closeHelp} onClose={() => setHelpMode(null)} />
     </>
   )

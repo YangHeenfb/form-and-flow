@@ -1167,6 +1167,15 @@ dt {
     overflow: visible;
   }
 
+  .visualization-workbench:not(.is-expanded) {
+    display: block;
+    overflow: visible;
+  }
+
+  .visualization-workbench:not(.is-expanded) .visualization-overlay-transport {
+    margin-top: 12px;
+  }
+
   .left-panel,
   .right-panel {
     max-height: none;

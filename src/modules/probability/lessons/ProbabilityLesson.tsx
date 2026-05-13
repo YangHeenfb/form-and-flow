@@ -4,6 +4,7 @@ import { Formula, renderMathText } from '../../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton } from '../../../core/ui/LearningHelp.tsx'
 import { SelectMenu } from '../../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../../i18n.ts'
+import { ModuleFocusFrame } from '../../../platform/ModuleFocusFrame.tsx'
 import { usePlatformLocale } from '../../../platform/platformLocale.tsx'
 import { convolutionManifest } from '../../convolution/manifest.ts'
 import {
@@ -945,6 +946,8 @@ export function ProbabilityLesson({ lessonId }: Props) {
 
   return (
     <>
+    <ModuleFocusFrame>
+      {({ focusButton }) => (
     <section className="probability-lesson">
       <aside className="probability-controls platform-card">
         <div className="probability-learning-entry learning-help-entry">
@@ -963,6 +966,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
             <h1>{copy.title}</h1>
           </div>
           <div className="calculus-actions">
+            {focusButton}
             <button type="button" onClick={() => shareState()}>
               <Share2 size={16} />
               {ui.controls.share}
@@ -1040,6 +1044,8 @@ export function ProbabilityLesson({ lessonId }: Props) {
         <p>{copy.watch}</p>
       </aside>
     </section>
+      )}
+    </ModuleFocusFrame>
     <LearningDrawer topic={activeHelpTopic} closeLabel={learningCopy.close} onClose={() => setActiveHelpTopicId(null)} />
     </>
   )

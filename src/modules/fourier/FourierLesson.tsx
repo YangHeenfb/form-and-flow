@@ -8,6 +8,7 @@ import { HelpTrigger, LearningDrawer, TermButton, type HelpTopic } from '../../c
 import { expressionToTex } from '../../core/ui/mathNotation.ts'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../i18n.ts'
+import { ModuleFocusFrame } from '../../platform/ModuleFocusFrame.tsx'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
 import { calculusFunctionNames, completeBareFunctionInput, normalizeMathInput } from '../calculus/shared/mathInput.ts'
 import type { FilterConfig, FilterType, FourierCoefficient, ReconstructionMode, Spectrum, WindingPoint } from './fourierTypes.ts'
@@ -499,6 +500,8 @@ export function FourierLesson({ lessonId }: Props) {
 
   return (
     <>
+    <ModuleFocusFrame>
+      {({ focusButton }) => (
     <section className="fourier-lesson">
       <aside className="fourier-controls platform-card">
         <h2>{ui.signal}</h2>
@@ -646,6 +649,7 @@ export function FourierLesson({ lessonId }: Props) {
             <h1>{copy.title}</h1>
           </div>
           <div className="fourier-actions">
+            {focusButton}
             <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={ui.beginnerHelp}>
               {ui.beginnerHelp}
             </HelpTrigger>
@@ -713,6 +717,8 @@ export function FourierLesson({ lessonId }: Props) {
         <p>{copy.watch}</p>
       </aside>
     </section>
+      )}
+    </ModuleFocusFrame>
     <LearningDrawer topic={activeHelpTopic} closeLabel={ui.closeHelp} onClose={() => setHelpMode(null)} />
     </>
   )
@@ -721,7 +727,9 @@ export function FourierLesson({ lessonId }: Props) {
 function Range({ label, value, min, max, step, onChange }: { label: string; value: number; min: number; max: number; step: number; onChange: (value: number) => void }) {
   return (
     <label>
-      {label}: <strong>{round(value)}</strong>
+      <span className="range-label">
+        {label}: <strong>{round(value)}</strong>
+      </span>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
     </label>
   )

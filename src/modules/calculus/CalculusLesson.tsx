@@ -7,6 +7,7 @@ import { HelpTrigger, LearningDrawer, TermButton } from '../../core/ui/LearningH
 import { expressionToTex } from '../../core/ui/mathNotation.ts'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../i18n.ts'
+import { ModuleFocusFrame } from '../../platform/ModuleFocusFrame.tsx'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
 import { compileCalculusExpression, calculusPresets, presetFunction } from './calculusPresets.ts'
 import { calculusLearningCopy, conceptTopicForLesson, getCalculusHelpTopics } from './learningHelp.tsx'
@@ -328,6 +329,8 @@ export function CalculusLesson({ lessonId }: Props) {
 
   return (
     <>
+    <ModuleFocusFrame>
+      {({ focusButton }) => (
     <section className="calculus-lesson">
       <aside className="calculus-controls platform-card">
         <div className="calculus-learning-entry learning-help-entry">
@@ -430,6 +433,7 @@ export function CalculusLesson({ lessonId }: Props) {
             <h1>{copy.title}</h1>
           </div>
           <div className="calculus-actions">
+            {focusButton}
             <button type="button" onClick={share}>
               <Share2 size={16} />
               {ui.share}
@@ -513,6 +517,8 @@ export function CalculusLesson({ lessonId }: Props) {
         <p>{copy.watch}</p>
       </aside>
     </section>
+      )}
+    </ModuleFocusFrame>
     <LearningDrawer topic={activeHelpTopic} closeLabel={learningCopy.close} onClose={() => setActiveHelpTopicId(null)} />
     </>
   )
@@ -533,7 +539,9 @@ function HelpLabel({
 function Range({ label, labelTex, value, min, max, step, onChange }: { label: string; labelTex?: string; value: number; min: number; max: number; step: number; onChange: (value: number) => void }) {
   return (
     <label>
-      {labelTex ? <Formula tex={labelTex} /> : label}: <strong>{round(value)}</strong>
+      <span className="range-label">
+        {labelTex ? <Formula tex={labelTex} /> : label}: <strong>{round(value)}</strong>
+      </span>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
     </label>
   )

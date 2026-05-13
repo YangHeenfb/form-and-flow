@@ -5,6 +5,7 @@ import { Formula } from '../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton, type HelpTopic } from '../../core/ui/LearningHelp.tsx'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../i18n.ts'
+import { ModuleFocusFrame } from '../../platform/ModuleFocusFrame.tsx'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
 import type { BoundaryMode, ConvolutionMode, NumericSample, OperationMode, TermContribution } from './convolutionTypes.ts'
 import { convolutionLessonCopy, convolutionUiCopy, type ConvolutionLessonId, type ConvolutionUiCopy } from './convolutionCopy.ts'
@@ -601,6 +602,8 @@ function LessonFrame({
   const activeHelpTopic = helpMode ? getConvolutionHelpTopic(helpMode, lessonId, locale) : null
   return (
     <>
+    <ModuleFocusFrame>
+      {({ focusButton }) => (
     <section className="convolution-lesson">
       <aside className="convolution-controls platform-card">
         <h2>{ui.controls}</h2>
@@ -614,6 +617,7 @@ function LessonFrame({
             <h1>{copy.title}</h1>
           </div>
           <div className="calculus-actions">
+            {focusButton}
             <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={helpLabels.beginner}>
               {helpLabels.beginner}
             </HelpTrigger>
@@ -658,6 +662,8 @@ function LessonFrame({
         <p>{copy.watch}</p>
       </aside>
     </section>
+      )}
+    </ModuleFocusFrame>
     <LearningDrawer topic={activeHelpTopic} closeLabel={helpLabels.close} onClose={() => setHelpMode(null)} />
     </>
   )
