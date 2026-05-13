@@ -58,10 +58,22 @@ export function AnimationControls({
         <strong>{animation.speed.toFixed(2)}x</strong>
       </label>
       <div className="segmented compact-segmented" role="group" aria-label={copy.playbackMode}>
-        <button type="button" className={animation.mode === 'combined' ? 'active' : ''} onClick={() => onModeChange('combined')}>
+        <button
+          type="button"
+          className={animation.mode === 'combined' ? 'active' : ''}
+          aria-label={`${copy.combined}: ${copy.combinedHelp}`}
+          title={copy.combinedHelp}
+          onClick={() => onModeChange('combined')}
+        >
           {copy.combined}
         </button>
-        <button type="button" className={animation.mode === 'step' ? 'active' : ''} onClick={() => onModeChange('step')}>
+        <button
+          type="button"
+          className={animation.mode === 'step' ? 'active' : ''}
+          aria-label={`${copy.step}: ${copy.stepHelp}`}
+          title={copy.stepHelp}
+          onClick={() => onModeChange('step')}
+        >
           {copy.step}
         </button>
       </div>

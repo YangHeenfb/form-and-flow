@@ -89,13 +89,14 @@ export function MatrixInput({ copy, map, index, canMoveUp, canMoveDown, onChange
       <div className="matrix-grid" style={{ gridTemplateColumns: `repeat(${map.inputDim}, minmax(0, 1fr))` }}>
         {map.matrix.map((row, rowIndex) =>
           row.map((value, colIndex) => (
-            <label key={`${map.id}-${rowIndex}-${colIndex}`}>
+            <label key={`${map.id}-${rowIndex}-${colIndex}`} title={copy.entryTooltip(rowIndex, colIndex)}>
               <span>
                 <Formula tex={`a_{${rowIndex + 1}${colIndex + 1}}`} />
               </span>
               <input
                 type="number"
                 step="0.5"
+                aria-label={copy.entryTooltip(rowIndex, colIndex)}
                 value={Number.isFinite(value) ? value : 0}
                 onChange={(event) => setEntry(rowIndex, colIndex, Number(event.target.value))}
               />

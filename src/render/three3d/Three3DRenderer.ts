@@ -210,7 +210,7 @@ export class Three3DRenderer {
       .filter((vector) => vector.dim === payload.inputDim)
       .forEach((vector) => {
         const output = applyMatrixToVector(payload.visualMatrix, vector.values) as Point3
-        this.scene.add(arrow(output, vector.color ?? payload.theme.colors.inputVector, vector.name))
+        this.scene.add(emphasizedVectorArrow(output, vector.color ?? payload.theme.colors.inputVector, vector.name))
       })
   }
 }
@@ -220,7 +220,12 @@ function transformPoint(matrix: Matrix, values: number[], inputDim: number): Poi
   return [output[0] ?? 0, output[1] ?? 0, output[2] ?? 0]
 }
 
-function arrow(end: Point3, color: string, name: string): THREE.Object3D {
+function arrow(
+  end: Point3,
+  color: string,
+  name: string,
+  options: { headLength?: number; headWidth?: number } = {},
+): THREE.Object3D {
   const vector = new THREE.Vector3(...end)
   const length = vector.length()
   if (length < 1e-6) {
@@ -231,9 +236,101 @@ function arrow(end: Point3, color: string, name: string): THREE.Object3D {
     dot.name = name
     return dot
   }
-  const helper = new THREE.ArrowHelper(vector.clone().normalize(), new THREE.Vector3(0, 0, 0), length, color, 0.18, 0.1)
+  const helper = new THREE.ArrowHelper(
+    vector.clone().normalize(),
+    new THREE.Vector3(0, 0, 0),
+    length,
+    color,
+    options.headLength ?? 0.18,
+    options.headWidth ?? 0.1,
+  )
   helper.name = name
   return helper
+}
+
+function emphasizedVectorArrow(end: Point3, color: string, name: string): THREE.Object3D {
+  const group = new THREE.Group()
+  group.name = name
+  group.renderOrder = 20
+  const vector = new THREE.Vector3(...end)
+  const length = vector.length()
+  const arrowObject = arrow(end, color, `${name}-arrow`, { headLength: 0.28, headWidth: 0.16 })
+  group.add(arrowObject)
+
+  const endpoint = new THREE.Mesh(
+    new THREE.SphereGeometry(0.09, 18, 18),
+    new THREE.MeshBasicMaterial({ color, depthTest: false, depthWrite: false }),
+  )
+  endpoint.position.set(...end)
+  endpoint.name = `${name}-endpoint`
+  endpoint.renderOrder = 21
+  group.add(endpoint)
+
+  const labelOffset = length < 1e-6 ? new THREE.Vector3(0.22, 0.22, 0.22) : vector.clone().normalize().multiplyScalar(0.28)
+  const label = labelSprite(`T(${name})`, color)
+  label.position.copy(vector.clone().add(labelOffset))
+  label.renderOrder = 22
+  group.add(label)
+
+  keepVisible(group)
+  return group
+}
+
+function labelSprite(text: string, color: string): THREE.Sprite {
+  const canvas = document.createElement('canvas')
+  canvas.width = 192
+  canvas.height = 72
+  const context = canvas.getContext('2d')
+  if (context) {
+    context.clearRect(0, 0, canvas.width, canvas.height)
+    context.fillStyle = 'rgba(13, 20, 28, 0.78)'
+    context.strokeStyle = color
+    context.lineWidth = 3
+    roundedRect(context, 8, 10, 176, 48, 12)
+    context.fill()
+    context.stroke()
+    context.font = '600 28px system-ui, -apple-system, BlinkMacSystemFont, sans-serif'
+    context.textAlign = 'center'
+    context.textBaseline = 'middle'
+    context.fillStyle = '#ffffff'
+    context.fillText(text, canvas.width / 2, 35)
+  }
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false })
+  const sprite = new THREE.Sprite(material)
+  sprite.name = `${text}-label`
+  sprite.scale.set(0.76, 0.29, 1)
+  return sprite
+}
+
+function roundedRect(context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number): void {
+  context.beginPath()
+  context.moveTo(x + radius, y)
+  context.lineTo(x + width - radius, y)
+  context.quadraticCurveTo(x + width, y, x + width, y + radius)
+  context.lineTo(x + width, y + height - radius)
+  context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
+  context.lineTo(x + radius, y + height)
+  context.quadraticCurveTo(x, y + height, x, y + height - radius)
+  context.lineTo(x, y + radius)
+  context.quadraticCurveTo(x, y, x + radius, y)
+  context.closePath()
+}
+
+function keepVisible(object: THREE.Object3D): void {
+  object.traverse((child) => {
+    child.renderOrder = Math.max(child.renderOrder, 20)
+    const material = (child as THREE.Mesh | THREE.Line).material
+    if (!material) {
+      return
+    }
+    const materials = Array.isArray(material) ? material : [material]
+    materials.forEach((item) => {
+      item.depthTest = false
+      item.depthWrite = false
+    })
+  })
 }
 
 function lineSegments(points: Point3[], color: string, opacity: number, lineWidth = 1): THREE.LineSegments {

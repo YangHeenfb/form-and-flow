@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { canonicalBridgeMatrix, validateMapSequence } from '../math/matrix.ts'
 import { presets2d } from '../math/presets2d.ts'
 import { presets3d, presetsR2ToR3, presetsR3ToR2 } from '../math/presets3d.ts'
@@ -79,6 +79,19 @@ export function useAppState() {
   const inputDim = maps[0]?.inputDim ?? 2
   const outputDim = maps.at(-1)?.outputDim ?? inputDim
   const mapKind = mapKindFromDims(inputDim, outputDim)
+
+  useEffect(() => {
+    setVectors((current) => {
+      if (current.every((vector) => vector.dim === inputDim && vector.values.length === inputDim)) {
+        return current
+      }
+      return current.map((vector) => ({
+        ...vector,
+        dim: inputDim,
+        values: resizeVector(vector.values, inputDim),
+      }))
+    })
+  }, [inputDim])
 
   const setMapKind = useCallback((kind: MapKind) => {
     const dims = dimsFromMapKind(kind)

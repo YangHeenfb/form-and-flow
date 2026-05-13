@@ -182,6 +182,26 @@ describe('rectangular linear maps', () => {
     expect(html.toLowerCase()).not.toContain('determinant')
   })
 
+  it('separates determinant sign from area scale for square matrices', () => {
+    const flip: LinearMap = {
+      id: 'F',
+      name: 'F',
+      inputDim: 2,
+      outputDim: 2,
+      matrix: [
+        [-1, 0],
+        [0, 1],
+      ],
+    }
+    const validation = validateMapSequence([flip])
+    const html = renderToStaticMarkup(
+      <ExplanationPanel maps={[flip]} composedMap={flip} stepMaps={[flip]} vectors={[]} validation={validation} />,
+    )
+    expect(html).toContain('Determinant and Area')
+    expect(html).toContain('Area scale')
+    expect(html).toContain('Negative determinant')
+  })
+
   it('displays rank and nullity for non-square matrices', () => {
     const validation = validateMapSequence([A])
     const html = renderToStaticMarkup(
