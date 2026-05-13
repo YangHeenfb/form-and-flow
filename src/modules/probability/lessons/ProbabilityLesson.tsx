@@ -989,7 +989,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
             <RotateCcw size={16} />
             {ui.controls.reset}
           </button>
-          <Range label={ui.controls.speed} value={speed} min={0.25} max={3} step={0.25} onChange={setSpeed} />
+          <Range label={ui.controls.speed} value={speed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setSpeed} />
         </div>
       </main>
 
@@ -1275,14 +1275,25 @@ function normalizeCustom(setA: (value: number) => void, setB: (value: number) =>
   setC(normalized[2] ?? 0)
 }
 
-function Range({ label, value, min, max, step, onChange }: { label: string; value: number; min: number; max: number; step: number; onChange: (value: number) => void }) {
+function Range({ label, value, min, max, step, valueSuffix, onChange }: { label: string; value: number; min: number; max: number; step: number; valueSuffix?: string; onChange: (value: number) => void }) {
+  const constrainedValue = Math.min(max, Math.max(min, value))
+  if (valueSuffix) {
+    return (
+      <label className="speed-control">
+        <span>{renderMathText(label)}</span>
+        <input type="range" min={min} max={max} step={step} value={constrainedValue} onChange={(event) => onChange(Number(event.target.value))} />
+        <strong>{`${constrainedValue.toFixed(2)}${valueSuffix}`}</strong>
+      </label>
+    )
+  }
+
   return (
     <label className="probability-range">
       <span>
         <span className="probability-range-label">{renderMathText(label)}:</span>
         <strong>{formatNumber(value)}</strong>
       </span>
-      <input type="range" min={min} max={max} step={step} value={Math.min(max, Math.max(min, value))} onChange={(event) => onChange(Number(event.target.value))} />
+      <input type="range" min={min} max={max} step={step} value={constrainedValue} onChange={(event) => onChange(Number(event.target.value))} />
     </label>
   )
 }

@@ -733,7 +733,13 @@ dt {
 }
 
 .compact-segmented {
-  min-width: 210px;
+  width: max-content;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.compact-segmented button {
+  flex: 0 0 auto;
 }
 
 .camera-view-control {
@@ -1140,15 +1146,28 @@ dt {
 
 .speed-control,
 .zoom-control {
-  grid-template-columns: auto minmax(140px, 280px) 48px;
+  grid-template-columns: max-content minmax(120px, 1fr) 52px;
   align-items: center;
   color: var(--text-main);
+}
+
+.speed-control strong,
+.zoom-control strong {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .speed-control input,
 .zoom-control input {
   width: 100%;
   padding: 0;
+}
+
+.transport > .speed-control {
+  width: 290px;
+  max-width: 100%;
+  flex: 0 1 290px;
 }
 
 .view-toggles {
@@ -1284,7 +1303,6 @@ dt {
     left: 8px;
   }
 
-  .speed-control,
   .zoom-control {
     grid-template-columns: 1fr;
   }
@@ -1339,7 +1357,15 @@ dt {
   .fourier-title-row,
   .fourier-actions,
   .fourier-playback,
-  .probability-playback {
+  .probability-playback,
+  .complex-playback,
+  .optimization-playback,
+  .vector-field-playback,
+  .fourier-series-playback,
+  .group-playback,
+  .topology-playback,
+  .number-theory-playback,
+  .neural-playback {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1733,17 +1759,14 @@ dt {
 }
 
 .fourier-playback {
-  justify-content: space-between;
-  align-items: center;
-  gap: 14px;
+  justify-content: flex-start;
   min-height: 82px;
+  flex-wrap: wrap;
 }
 
 .fourier-playback label {
-  min-width: 240px;
   color: var(--text-muted);
   display: grid;
-  gap: 4px;
 }
 
 .fourier-explanation {
@@ -2058,10 +2081,26 @@ dt {
 }
 
 .calculus-playback {
-  justify-content: space-between;
   align-items: center;
-  gap: 14px;
+  flex-direction: row;
+  justify-content: flex-start;
   min-height: 82px;
+  flex-wrap: wrap;
+  gap: 14px clamp(24px, 8vw, 156px);
+}
+
+.calculus-playback-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+}
+
+.calculus-playback > .speed-control {
+  width: 290px;
+  max-width: 100%;
+  flex: 0 1 290px;
 }
 
 .calculus-playback button,
@@ -2078,10 +2117,8 @@ dt {
 }
 
 .calculus-playback label {
-  min-width: 260px;
   color: var(--text-muted);
   display: grid;
-  gap: 4px;
 }
 
 .calculus-explanation {
@@ -2289,12 +2326,8 @@ dt {
 
 .convolution-playback {
   min-height: 82px;
-  justify-content: space-between;
+  justify-content: flex-start;
   flex-wrap: wrap;
-}
-
-.convolution-playback .range-control {
-  min-width: 260px;
 }
 
 .sequence-row {
@@ -2559,12 +2592,11 @@ dt {
 
 .probability-playback {
   min-height: 78px;
-  justify-content: space-between;
+  justify-content: flex-start;
   flex-wrap: wrap;
 }
 
 .probability-playback label {
-  min-width: 230px;
   color: var(--text-muted);
 }
 
@@ -2750,14 +2782,6 @@ dt {
     justify-content: flex-start;
   }
 
-  .calculus-playback label,
-  .convolution-playback .range-control,
-  .fourier-playback label,
-  .probability-playback label {
-    min-width: min(240px, 100%);
-    flex: 1 1 200px;
-  }
-
   .image-kernel-stage {
     grid-template-columns: 1fr;
   }
@@ -2853,6 +2877,60 @@ dt {
 
 .lesson-row small {
   margin-left: auto;
+}
+
+:where(
+  .calculus-playback,
+  .convolution-playback,
+  .fourier-playback,
+  .probability-playback,
+  .complex-playback,
+  .optimization-playback,
+  .vector-field-playback,
+  .fourier-series-playback,
+  .group-playback,
+  .topology-playback,
+  .number-theory-playback
+) {
+  justify-content: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+:where(
+  .calculus-playback,
+  .convolution-playback,
+  .fourier-playback,
+  .probability-playback,
+  .complex-playback,
+  .optimization-playback,
+  .vector-field-playback,
+  .fourier-series-playback,
+  .group-playback,
+  .topology-playback,
+  .number-theory-playback
+) :where(.transport-buttons, .fourier-series-play-buttons, .topology-button-row) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+}
+
+:where(
+  .calculus-playback,
+  .convolution-playback,
+  .fourier-playback,
+  .probability-playback,
+  .optimization-playback,
+  .vector-field-playback,
+  .fourier-series-playback,
+  .group-playback,
+  .topology-playback
+) .speed-control {
+  width: 290px;
+  max-width: 100%;
+  flex: 0 1 290px;
 }
 
 @media (prefers-reduced-motion: reduce) {

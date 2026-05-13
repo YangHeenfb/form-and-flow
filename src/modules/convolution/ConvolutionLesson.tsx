@@ -1185,7 +1185,7 @@ function PlaybackControls({
           {ui.reset}
         </button>
       </div>
-      <Range label={ui.speed} value={speed} min={0.25} max={4} step={0.25} onChange={onSpeed} />
+      <Range label={ui.speed} value={speed} min={0.25} max={4} step={0.05} valueSuffix="x" onChange={onSpeed} />
     </>
   )
 }
@@ -1204,7 +1204,17 @@ function SelectControl({ label, value, options, onChange }: { label: string; val
   )
 }
 
-function Range({ label, value, min, max, step, onChange }: { label: string; value: number; min: number; max: number; step: number; onChange: (value: number) => void }) {
+function Range({ label, value, min, max, step, valueSuffix, onChange }: { label: string; value: number; min: number; max: number; step: number; valueSuffix?: string; onChange: (value: number) => void }) {
+  if (valueSuffix) {
+    return (
+      <label className="speed-control">
+        <span>{label}</span>
+        <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+        <strong>{`${value.toFixed(2)}${valueSuffix}`}</strong>
+      </label>
+    )
+  }
+
   return (
     <label className="range-control">
       <span>

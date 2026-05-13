@@ -685,7 +685,7 @@ export function FourierLesson({ lessonId }: Props) {
             <RotateCcw size={16} />
             {ui.reset}
           </button>
-          <Range label={ui.controls.speed} value={playbackSpeed} min={0.25} max={3} step={0.25} onChange={setPlaybackSpeed} />
+          <Range label={ui.controls.speed} value={playbackSpeed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setPlaybackSpeed} />
         </div>
       </main>
 
@@ -723,7 +723,17 @@ export function FourierLesson({ lessonId }: Props) {
   )
 }
 
-function Range({ label, value, min, max, step, onChange }: { label: string; value: number; min: number; max: number; step: number; onChange: (value: number) => void }) {
+function Range({ label, value, min, max, step, valueSuffix, onChange }: { label: string; value: number; min: number; max: number; step: number; valueSuffix?: string; onChange: (value: number) => void }) {
+  if (valueSuffix) {
+    return (
+      <label className="speed-control">
+        <span className="range-label">{label}</span>
+        <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+        <strong>{`${value.toFixed(2)}${valueSuffix}`}</strong>
+      </label>
+    )
+  }
+
   return (
     <label>
       <span className="range-label">

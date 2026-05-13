@@ -680,7 +680,7 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
             <LocateFixed size={16} />
             {ui.resetView}
           </button>
-          <Range label={ui.ranges.speed} labelTex={locale === 'zh' ? '\\text{速度}' : '\\text{speed}'} value={speed} min={0.25} max={3} step={0.25} onChange={setSpeed} />
+          <Range label={ui.ranges.speed} labelTex={locale === 'zh' ? '\\text{速度}' : '\\text{speed}'} value={speed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setSpeed} />
         </div>
       </main>
 
@@ -742,7 +742,17 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
   }
 }
 
-function Range({ label, labelTex, value, min, max, step, onChange }: { label: string; labelTex?: string; value: number; min: number; max: number; step: number; onChange: (value: number) => void }) {
+function Range({ label, labelTex, value, min, max, step, valueSuffix, onChange }: { label: string; labelTex?: string; value: number; min: number; max: number; step: number; valueSuffix?: string; onChange: (value: number) => void }) {
+  if (valueSuffix) {
+    return (
+      <label className="speed-control">
+        <span className="range-label">{labelTex ? <Formula tex={labelTex} /> : label}</span>
+        <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+        <strong>{`${value.toFixed(2)}${valueSuffix}`}</strong>
+      </label>
+    )
+  }
+
   return (
     <label>
       <span className="range-label">
