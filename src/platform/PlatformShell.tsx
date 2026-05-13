@@ -62,7 +62,10 @@ function PlatformShellContent({ currentModule, currentLessonId, children }: Prop
 
   return (
     <PlatformLocaleContext.Provider value={{ locale, setLocale }}>
-      <main className={`platform-shell${showModuleSidebar ? '' : ' no-sidebar'}${sidebarOpen ? '' : ' sidebar-collapsed'}`} style={surfaceVariables(surfaceMode)}>
+      <main
+        className={`platform-shell${showModuleSidebar ? '' : ' no-sidebar'}${sidebarOpen ? '' : ' sidebar-collapsed'}${moduleActions.isVisualizationExpanded ? ' visualization-expanded' : ''}`}
+        style={surfaceVariables(surfaceMode)}
+      >
         <header className="platform-topbar">
           <a className="platform-brand" href="/modules" aria-label={copy.homeAria}>
             <span className="brand-mark">VM</span>

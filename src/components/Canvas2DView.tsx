@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Dispatch, PointerEvent, ReactNode, SetStateAction } from 'react'
 import type { ViewPan } from '../math/types.ts'
+import { useResizeObserver } from '../platform/useElementSize.ts'
 import type { MatrixAnimationFrame, RenderPayload } from '../render/RendererAdapter.ts'
 import { Canvas2DRenderer } from '../render/canvas2d/Canvas2DRenderer.ts'
 
@@ -36,6 +37,26 @@ export function Canvas2DView({ title, subtitle, onViewPanChange, registerExporte
     payloadRef.current = payload
   }, [payload])
 
+  const clampCurrentPan = useCallback(() => {
+    const canvas = canvasRef.current
+    if (!canvas) {
+      return
+    }
+    const rect = canvas.getBoundingClientRect()
+    onViewPanChange((current) => {
+      const next = clampViewPan(current, rect, payloadRef.current.viewZoom)
+      return pansEqual(current, next) ? current : next
+    })
+  }, [onViewPanChange])
+
+  const renderCurrent = useCallback(() => {
+    const canvas = canvasRef.current
+    if (!canvas) {
+      return
+    }
+    renderer.render(canvas, payloadRef.current)
+  }, [renderer])
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) {
@@ -46,26 +67,13 @@ export function Canvas2DView({ title, subtitle, onViewPanChange, registerExporte
   }, [payload, registerExporter, renderer])
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) {
-      return
-    }
-    const rect = canvas.getBoundingClientRect()
-    onViewPanChange((current) => {
-      const next = clampViewPan(current, rect, payload.viewZoom)
-      return pansEqual(current, next) ? current : next
-    })
-  }, [onViewPanChange, payload.viewPan, payload.viewZoom])
+    clampCurrentPan()
+  }, [clampCurrentPan, payload.viewPan, payload.viewZoom])
 
-  useEffect(() => {
-    const onResize = () => {
-      if (canvasRef.current) {
-        renderer.render(canvasRef.current, payload)
-      }
-    }
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [payload, renderer])
+  useResizeObserver(canvasRef, () => {
+    clampCurrentPan()
+    renderCurrent()
+  })
 
   useEffect(() => {
     if (!registerFrameRenderer) {

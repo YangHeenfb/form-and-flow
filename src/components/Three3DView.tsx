@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { AppCopy } from '../i18n.ts'
 import type { ThreeCameraView } from '../math/types.ts'
+import { useResizeObserver } from '../platform/useElementSize.ts'
 import type { MatrixAnimationFrame, ThreeRenderPayload } from '../render/RendererAdapter.ts'
 import { Three3DRenderer } from '../render/three3d/Three3DRenderer.ts'
 
@@ -22,11 +23,20 @@ export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewCha
   const hostRef = useRef<HTMLDivElement | null>(null)
   const rendererRef = useRef<Three3DRenderer | null>(null)
   const payloadRef = useRef(payload)
+  const cameraViewRef = useRef(cameraView)
   const [webglUnavailable, setWebglUnavailable] = useState(false)
 
   useEffect(() => {
     payloadRef.current = payload
   }, [payload])
+
+  useEffect(() => {
+    cameraViewRef.current = cameraView
+  }, [cameraView])
+
+  const renderCurrent = useCallback(() => {
+    rendererRef.current?.render(payloadRef.current, cameraViewRef.current)
+  }, [])
 
   useEffect(() => {
     if (!hostRef.current || rendererRef.current) {
@@ -51,11 +61,7 @@ export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewCha
     }
   }, [cameraView, payload, webglUnavailable])
 
-  useEffect(() => {
-    const onResize = () => rendererRef.current?.render(payload, cameraView)
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [cameraView, payload])
+  useResizeObserver(hostRef, renderCurrent)
 
   useEffect(() => {
     if (!registerFrameRenderer || webglUnavailable) {
@@ -81,7 +87,6 @@ export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewCha
           <p>{subtitle}</p>
         </div>
         <div className="view-header-actions">
-          {headerAction}
           <div className="camera-view-control segmented" role="group" aria-label={copy.cameraLabel}>
             {cameraViews.map((view) => (
               <button
@@ -94,6 +99,7 @@ export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewCha
               </button>
             ))}
           </div>
+          {headerAction}
         </div>
       </header>
       <div ref={hostRef} className={`three-host${webglUnavailable ? ' three-host-fallback' : ''}`} role="img" aria-label={title}>

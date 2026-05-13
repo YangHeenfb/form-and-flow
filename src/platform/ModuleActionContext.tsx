@@ -5,6 +5,8 @@ export type ModuleActions = {
   exportPng?: () => void
   reset?: () => void
   openHelp?: () => void
+  enterFocus?: () => void
+  isVisualizationExpanded?: boolean
 }
 
 type ModuleActionContextValue = {

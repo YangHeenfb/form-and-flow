@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Languages, Moon, Share2, Sun } from 'lucide-react'
+import { Focus, Languages, Moon, Share2, Sun } from 'lucide-react'
 import { AnimationControls } from '../../components/AnimationControls.tsx'
 import { Canvas2DView } from '../../components/Canvas2DView.tsx'
 import { ExplanationPanel } from '../../components/ExplanationPanel.tsx'
@@ -23,6 +23,8 @@ import {
 import type { AnimationState, LinearMap, Matrix, PlaybackMode, ThreeCameraView, ViewOptions, ViewPan } from '../../math/types.ts'
 import { useModuleActions } from '../../platform/ModuleActionContext.tsx'
 import { platformLocaleEventName, platformLocaleStorageKey, platformSurfaceModeEventName, platformSurfaceStorageKey } from '../../platform/platformLocale.tsx'
+import { VisualizationWorkbench, type VisualizationWorkbenchHandle } from '../../platform/VisualizationWorkbench.tsx'
+import type { OverlayPanelDefinition, VisualizationWorkbenchStatus } from '../../platform/visualizationLayoutTypes.ts'
 import type { MatrixAnimationFrame } from '../../render/RendererAdapter.ts'
 import { useAppState } from '../../state/useAppState.ts'
 import { useThemeState } from '../../state/useThemeState.ts'
@@ -58,6 +60,7 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
   const [viewPan, setViewPan] = useState<ViewPan>({ x: 0, y: 0 })
   const [activeHelpTopicId, setActiveHelpTopicId] = useState<MatrixHelpTopicId | null>(null)
   const centerStageRef = useRef<HTMLElement | null>(null)
+  const workbenchRef = useRef<VisualizationWorkbenchHandle | null>(null)
   const exporterRef = useRef<() => string | null>(() => null)
   const animationRef = useRef<AnimationState>(initialAnimation)
   const animationProgressRef = useRef(initialAnimation.progress)
@@ -70,6 +73,9 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
     [appState.maps, appState.validation.valid],
   )
   const [playbackSignature, setPlaybackSignature] = useState(() => matrixDraftSignature)
+  const [workbenchStatus, setWorkbenchStatus] = useState<VisualizationWorkbenchStatus>({
+    mode: 'standard',
+  })
   const hasUnplayedMatrixEdit = playbackSignature !== matrixDraftSignature
   const displayedAnimation = useMemo(
     () => (hasUnplayedMatrixEdit ? { ...animation, playing: false, progress: 0, stepIndex: 0 } : animation),
@@ -322,8 +328,9 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
       exportPng,
       reset: resetAnimation,
       openHelp: () => openHelpTopic('overview'),
+      isVisualizationExpanded: workbenchStatus.mode === 'focus',
     }),
-    [exportPng, openHelpTopic, resetAnimation, share],
+    [exportPng, openHelpTopic, resetAnimation, share, workbenchStatus.mode],
   )
   useModuleActions(platformActions)
 
@@ -331,6 +338,32 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
     <HelpTrigger ariaLabel={learningCopy.openGraph} onClick={() => openHelpTopic('graph')}>
       {learningCopy.openGraph}
     </HelpTrigger>
+  )
+
+  const renderFocusAction = () => {
+    const isFocusMode = workbenchStatus.mode === 'focus'
+    const label = isFocusMode ? copy.visualization.exitFocus : copy.visualization.focus
+
+    return (
+      <button
+        className="visualization-header-focus-toggle"
+        type="button"
+        aria-label={label}
+        aria-pressed={isFocusMode}
+        title={label}
+        onClick={() => workbenchRef.current?.toggleFocus()}
+      >
+        <Focus size={16} />
+        {label}
+      </button>
+    )
+  }
+
+  const renderGraphHeaderActions = () => (
+    <>
+      {renderGraphHelpAction()}
+      {renderFocusAction()}
+    </>
   )
 
   const handleViewWheel = useCallback((event: WheelEvent) => {
@@ -354,6 +387,137 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
       appState.setViewOption(key, value)
     },
     [appState],
+  )
+
+  const matrixPanel = (
+    <>
+      <section className="panel-section matrix-learning-entry learning-help-entry">
+        <HelpTrigger ariaLabel={learningCopy.openOverview} onClick={() => openHelpTopic('overview')}>
+          {learningCopy.openOverview}
+        </HelpTrigger>
+      </section>
+
+      <MatrixSequencePanel
+        copy={copy}
+        locale={locale}
+        maps={appState.maps}
+        validation={appState.validation}
+        onAdd={appState.addMap}
+        onApplyPreset={appState.applyPreset}
+        onUpdate={appState.updateMap}
+        onDelete={appState.deleteMap}
+        onMove={appState.moveMap}
+      />
+    </>
+  )
+
+  const vectorPanel = (
+    <VectorPanel
+      copy={copy}
+      vectors={appState.vectors}
+      requiredDim={appState.inputDim}
+      onAdd={appState.addVector}
+      onUpdate={appState.updateVector}
+      onDelete={appState.deleteVector}
+    />
+  )
+
+  const themePanel = (
+    <ThemePanel
+      copy={copy.themePanel}
+      theme={themeState.theme}
+      onColorPresetChange={themeState.setColorPreset}
+      onColorChange={themeState.setColor}
+      onIncludeThemeChange={themeState.setIncludeThemeInShareLink}
+    />
+  )
+
+  const explanationPanel = (
+    <ExplanationPanel
+      locale={locale}
+      maps={appState.maps}
+      composedMap={composedMap}
+      stepMaps={stepMaps}
+      vectors={appState.vectors}
+      validation={appState.validation}
+      onOpenHelpTopic={openHelpTopic}
+    />
+  )
+
+  const stage = (
+    <>
+      {usesThree ? (
+        <>
+          <Three3DView
+            {...renderPayload}
+            visualMatrix={visualMatrix}
+            copy={copy.threeView}
+            title={copy.views.title(activeInputDim, activeOutputDim)}
+            subtitle={copy.views.subtitle(activeInputDim, activeOutputDim)}
+            cameraView={threeCameraView}
+            onCameraViewChange={setThreeCameraView}
+            registerExporter={registerExporter}
+            registerFrameRenderer={registerFrameRenderer}
+            headerAction={renderGraphHeaderActions()}
+          />
+          {activeInputDim === 3 && activeOutputDim === 2 && (
+            <Canvas2DView
+              {...renderPayload}
+              title={copy.views.trueR2Title}
+              subtitle={copy.views.trueR2Subtitle}
+              onViewPanChange={setViewPan}
+              registerExporter={() => undefined}
+              registerFrameRenderer={registerFrameRenderer}
+              headerAction={renderGraphHeaderActions()}
+            />
+          )}
+        </>
+      ) : (
+        <Canvas2DView
+          {...renderPayload}
+          title={copy.views.canvas2dTitle}
+          subtitle={copy.views.canvas2dSubtitle}
+          onViewPanChange={setViewPan}
+          registerExporter={registerExporter}
+          registerFrameRenderer={registerFrameRenderer}
+          headerAction={renderGraphHeaderActions()}
+        />
+      )}
+    </>
+  )
+
+  const transport = (
+    <AnimationControls
+      copy={copy.controls}
+      animation={displayedAnimation}
+      viewOptions={appState.viewOptions}
+      onPlay={playAnimation}
+      onPause={pauseAnimation}
+      onReset={resetAnimation}
+      onSpeedChange={(speed) => setAnimation((current) => ({ ...current, speed }))}
+      viewZoom={viewZoom}
+      onViewZoomChange={setClampedViewZoom}
+      onModeChange={setPlaybackMode}
+      onViewOptionChange={setViewOption}
+      onExport={exportPng}
+    />
+  )
+
+  const overlayPanels: OverlayPanelDefinition[] = [
+    { id: 'matrices', title: copy.visualization.matrices, content: matrixPanel, side: 'left' },
+    { id: 'vectors', title: copy.visualization.vectors, content: vectorPanel, side: 'left' },
+    { id: 'theme', title: copy.visualization.theme, content: themePanel, side: 'left' },
+    { id: 'explanation', title: copy.visualization.explanation, content: explanationPanel, side: 'right' },
+    { id: 'controls', title: copy.visualization.controls, content: transport, side: 'bottom' },
+  ]
+
+  const shortcutActions = useMemo(
+    () => ({
+      togglePlay: displayedAnimation.playing ? pauseAnimation : playAnimation,
+      reset: resetAnimation,
+      openHelp: () => openHelpTopic('overview'),
+    }),
+    [displayedAnimation.playing, openHelpTopic, pauseAnimation, playAnimation, resetAnimation],
   )
 
   return (
@@ -390,106 +554,25 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
         </header>
       )}
 
-      <div className="workspace">
-        <aside className="left-panel">
-          <section className="panel-section matrix-learning-entry learning-help-entry">
-            <HelpTrigger ariaLabel={learningCopy.openOverview} onClick={() => openHelpTopic('overview')}>
-                {learningCopy.openOverview}
-              </HelpTrigger>
-          </section>
-
-          <MatrixSequencePanel
-            copy={copy}
-            locale={locale}
-            maps={appState.maps}
-            validation={appState.validation}
-            onAdd={appState.addMap}
-            onApplyPreset={appState.applyPreset}
-            onUpdate={appState.updateMap}
-            onDelete={appState.deleteMap}
-            onMove={appState.moveMap}
-          />
-          <VectorPanel
-            copy={copy}
-            vectors={appState.vectors}
-            requiredDim={appState.inputDim}
-            onAdd={appState.addVector}
-            onUpdate={appState.updateVector}
-            onDelete={appState.deleteVector}
-          />
-          <ThemePanel
-            copy={copy.themePanel}
-            theme={themeState.theme}
-            onColorPresetChange={themeState.setColorPreset}
-            onColorChange={themeState.setColor}
-            onIncludeThemeChange={themeState.setIncludeThemeInShareLink}
-          />
-        </aside>
-
-        <section className="center-stage" ref={centerStageRef}>
-          {usesThree ? (
-            <>
-              <Three3DView
-                {...renderPayload}
-                visualMatrix={visualMatrix}
-                copy={copy.threeView}
-                title={copy.views.title(activeInputDim, activeOutputDim)}
-                subtitle={copy.views.subtitle(activeInputDim, activeOutputDim)}
-                cameraView={threeCameraView}
-                onCameraViewChange={setThreeCameraView}
-                registerExporter={registerExporter}
-                registerFrameRenderer={registerFrameRenderer}
-                headerAction={renderGraphHelpAction()}
-              />
-              {activeInputDim === 3 && activeOutputDim === 2 && (
-                <Canvas2DView
-                  {...renderPayload}
-                  title={copy.views.trueR2Title}
-                  subtitle={copy.views.trueR2Subtitle}
-                  onViewPanChange={setViewPan}
-                  registerExporter={() => undefined}
-                  registerFrameRenderer={registerFrameRenderer}
-                  headerAction={renderGraphHelpAction()}
-                />
-              )}
-            </>
-          ) : (
-            <Canvas2DView
-              {...renderPayload}
-              title={copy.views.canvas2dTitle}
-              subtitle={copy.views.canvas2dSubtitle}
-              onViewPanChange={setViewPan}
-              registerExporter={registerExporter}
-              registerFrameRenderer={registerFrameRenderer}
-              headerAction={renderGraphHelpAction()}
-            />
-          )}
-        </section>
-
-        <ExplanationPanel
-          locale={locale}
-          maps={appState.maps}
-          composedMap={composedMap}
-          stepMaps={stepMaps}
-          vectors={appState.vectors}
-          validation={appState.validation}
-          onOpenHelpTopic={openHelpTopic}
-        />
-      </div>
-
-      <AnimationControls
-        copy={copy.controls}
-        animation={displayedAnimation}
-        viewOptions={appState.viewOptions}
-        onPlay={playAnimation}
-        onPause={pauseAnimation}
-        onReset={resetAnimation}
-        onSpeedChange={(speed) => setAnimation((current) => ({ ...current, speed }))}
-        viewZoom={viewZoom}
-        onViewZoomChange={setClampedViewZoom}
-        onModeChange={setPlaybackMode}
-        onViewOptionChange={setViewOption}
-        onExport={exportPng}
+      <VisualizationWorkbench
+        ref={workbenchRef}
+        title={copy.top.title}
+        subtitle={copy.top.eyebrow}
+        labels={copy.visualization}
+        leftPanel={
+          <>
+            {matrixPanel}
+            {vectorPanel}
+            {themePanel}
+          </>
+        }
+        stage={stage}
+        rightPanel={explanationPanel}
+        transport={transport}
+        overlayPanels={overlayPanels}
+        stageRef={centerStageRef}
+        shortcutActions={shortcutActions}
+        onStatusChange={setWorkbenchStatus}
       />
       <LearningDrawer topic={activeHelpTopic} closeLabel={learningCopy.close} onClose={() => setActiveHelpTopicId(null)} />
     </main>

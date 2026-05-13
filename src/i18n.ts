@@ -28,6 +28,17 @@ export type AppCopy = {
     trueR2Title: string
     trueR2Subtitle: string
   }
+  visualization: {
+    focus: string
+    exitFocus: string
+    matrices: string
+    vectors: string
+    theme: string
+    explanation: string
+    controls: string
+    autoHideHud: string
+    closePanel: string
+  }
   matrixSequence: {
     title: string
     add: string
@@ -181,6 +192,17 @@ export const appCopy: Record<Locale, AppCopy> = {
       trueR2Title: `True ${spacePlain(2)} Output Coordinates`,
       trueR2Subtitle: 'The final vector Av is drawn as (x, y); the 3D bridge embeds it as (x, y, 0).',
     },
+    visualization: {
+      focus: 'Focus',
+      exitFocus: 'Exit focus',
+      matrices: 'Matrices',
+      vectors: 'Vectors',
+      theme: 'Theme',
+      explanation: 'Explanation',
+      controls: 'Controls',
+      autoHideHud: 'Auto-hide HUD',
+      closePanel: 'Close panel',
+    },
     matrixSequence: {
       title: 'Matrix Sequence',
       add: 'Add',
@@ -327,6 +349,17 @@ export const appCopy: Record<Locale, AppCopy> = {
       canvas2dSubtitle: '网格、基向量、单位方格和向量都使用当前动画矩阵 T(t)。',
       trueR2Title: `真实 ${spacePlain(2)} 输出坐标`,
       trueR2Subtitle: '最终向量 Av 按 (x, y) 绘制；三维桥接视图把它嵌入为 (x, y, 0)。',
+    },
+    visualization: {
+      focus: '专注视图',
+      exitFocus: '退出专注视图',
+      matrices: '矩阵',
+      vectors: '向量',
+      theme: '主题',
+      explanation: '解释',
+      controls: '控制',
+      autoHideHud: '自动隐藏控制栏',
+      closePanel: '关闭面板',
     },
     matrixSequence: {
       title: '矩阵序列',
