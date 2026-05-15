@@ -99,6 +99,8 @@ const continuousPresetOptions: { id: ContinuousPresetId; label: string; tex: str
   { id: 'bumps', label: 'two bumps', tex: 'e^{-(t+0.75)^2/(2\\sigma^2)}+0.65e^{-(t-0.85)^2/(2(0.65\\sigma)^2)}' },
 ]
 
+const discretePlaybackSpeedScale = 0.8
+
 export function ConvolutionLesson({ lessonId }: { lessonId: ConvolutionLessonId }) {
   if (lessonId === 'discrete') return <DiscreteConvolutionLesson />
   if (lessonId === 'probability') return <ProbabilitySumLesson />
@@ -130,7 +132,7 @@ function DiscreteConvolutionLesson() {
   const currentValue = output[currentK] ?? 0
   const formula = operationFormula('discrete', operation, ui)
 
-  useAnimationStep(playing, speed, () => setK((value) => (value >= maxK ? 0 : value + 1)))
+  useAnimationStep(playing, speed * discretePlaybackSpeedScale, () => setK((value) => (value >= maxK ? 0 : value + 1)))
 
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme) => {
@@ -1155,7 +1157,7 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
           title: '离散卷积图像读法',
           summary: '从上到下读：上方看 a 和 b 的相对位置，中间看当前重叠项的乘积，下方看输出序列 y。',
           sections: [
-            { title: '上方', body: '青色柱是 a，紫色柱是 b。卷积模式下，紫色 b 已经先被翻转，再随着 k 平移。' },
+            { title: '上方', body: '青色柱是 a，紫色柱是 b。当前重叠项会变亮，但不会改变 a / b 的颜色。卷积模式下，紫色 b 已经先被翻转，再随着 k 平移。' },
             { title: '中间', body: '这里只显示当前 k 下真正重叠的项。每根柱代表一对 a[i] 和 b[k-i] 的乘积。' },
             { title: '下方', body: '黄色输出 y 的高亮柱就是当前 y[k]。它等于中间所有重叠乘积相加。' },
           ],
@@ -1165,7 +1167,7 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
           title: 'How to read discrete convolution',
           summary: 'Read top to bottom: relative positions of a and b, current overlap products, then output y.',
           sections: [
-            { title: 'Top', body: 'Teal bars are a and purple bars are b. In convolution mode, b is flipped before it slides with k.' },
+            { title: 'Top', body: 'Teal bars are a and purple bars are b. Current overlaps become brighter, but a and b keep their colors. In convolution mode, b is flipped before it slides with k.' },
             { title: 'Middle', body: 'This band shows only the values that overlap for the current k. Each bar is one product a[i] times b[k-i].' },
             { title: 'Bottom', body: 'The highlighted yellow output bar is y[k]. It equals the sum of the middle overlap products.' },
           ],
@@ -2002,7 +2004,7 @@ function drawAlignedBars(
     const x = xForPosition(position) - barWidth / 2
     const y = value >= 0 ? baseline - height : baseline
     const active = activeIndexes.has(index)
-    ctx.fillStyle = active ? theme.accent : color
+    ctx.fillStyle = color
     ctx.globalAlpha = active ? 1 : 0.28
     ctx.fillRect(x, y, barWidth, Math.max(2, height))
     ctx.globalAlpha = 1
