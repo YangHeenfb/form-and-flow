@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Download, Share2 } from 'lucide-react'
+import { Download } from 'lucide-react'
 import { HelpTrigger } from '../core/ui/LearningHelp.tsx'
 
 type LessonStageActionsProps = {
@@ -7,8 +7,6 @@ type LessonStageActionsProps = {
   graphAriaLabel?: string
   onGraphHelp: () => void
   focusButton: ReactNode
-  shareLabel: string
-  onShare: () => void
   exportLabel: string
   onExport: () => void
 }
@@ -18,8 +16,6 @@ export function LessonStageActions({
   graphAriaLabel,
   onGraphHelp,
   focusButton,
-  shareLabel,
-  onShare,
   exportLabel,
   onExport,
 }: LessonStageActionsProps) {
@@ -29,10 +25,6 @@ export function LessonStageActions({
         {graphLabel}
       </HelpTrigger>
       {focusButton}
-      <button className="visualization-header-action" type="button" onClick={onShare}>
-        <Share2 size={16} />
-        {shareLabel}
-      </button>
       <button className="visualization-header-action" type="button" onClick={onExport}>
         <Download size={16} />
         {exportLabel}

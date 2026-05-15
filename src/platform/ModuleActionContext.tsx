@@ -1,7 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 export type ModuleActions = {
-  share?: () => void | Promise<void>
   exportPng?: () => void
   reset?: () => void
   openHelp?: () => void

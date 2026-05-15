@@ -66,7 +66,6 @@ const calculusCopy: Record<CalculusLocale, {
     reset: string
     resetView: string
     lesson: string
-    share: string
     exportPng: string
     seeing: string
     why: string
@@ -94,7 +93,6 @@ const calculusCopy: Record<CalculusLocale, {
       reset: 'Reset animation',
       resetView: 'Reset view',
       lesson: 'Lesson',
-      share: 'Share',
       exportPng: 'Export PNG',
       seeing: 'What you are seeing',
       why: 'Why it matters',
@@ -167,7 +165,6 @@ const calculusCopy: Record<CalculusLocale, {
       reset: '重置动画',
       resetView: '重置视图',
       lesson: '章节',
-      share: '分享',
       exportPng: '导出 PNG',
       seeing: '你正在看到什么',
       why: '为什么重要',
@@ -303,22 +300,6 @@ export function CalculusLesson({ lessonId }: Props) {
     [a, b, degree, fn, h, lessonId, locale, method, n, selectedPreset, x0],
   )
 
-  const share = () => {
-    const params = new URLSearchParams()
-    params.set('preset', presetId)
-    params.set('f', expression)
-    params.set('x0', String(round(x0)))
-    params.set('h', String(round(h)))
-    params.set('a', String(round(a)))
-    params.set('b', String(round(b)))
-    params.set('n', String(Math.round(n)))
-    params.set('degree', String(Math.round(degree)))
-    params.set('method', method)
-    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`
-    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`)
-    void navigator.clipboard?.writeText(url)
-  }
-
   const exportPng = () => {
     const canvas = document.querySelector<HTMLCanvasElement>('.calculus-canvas')
     if (!canvas) return
@@ -450,8 +431,6 @@ export function CalculusLesson({ lessonId }: Props) {
             graphAriaLabel={learningCopy.openGraph}
             onGraphHelp={() => openHelpTopic('graph')}
             focusButton={focusButton}
-            shareLabel={ui.share}
-            onShare={share}
             exportLabel={ui.exportPng}
             onExport={exportPng}
           />
