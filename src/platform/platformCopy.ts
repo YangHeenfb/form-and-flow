@@ -249,11 +249,6 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       shortTitle: '傅里叶',
       description: '观察信号如何在时间域和频率域之间转换。',
       lessons: {
-        winding: {
-          title: '缠绕信号',
-          description: '把信号绕到圆上，观察平均点的变化。',
-          learningGoals: ['理解频率成分', '把视觉运动和数值频谱联系起来'],
-        },
         spectrum: {
           title: '频率频谱',
           description: '扫描多个频率来构建频谱。',

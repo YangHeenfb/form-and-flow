@@ -1719,11 +1719,56 @@ dt {
   gap: 12px;
 }
 
+.fourier-controls .calculus-learning-entry {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.fourier-control-heading {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fourier-control-heading h2,
+.fourier-control-heading h3 {
+  min-width: 0;
+  margin: 0;
+}
+
+.fourier-control-help-button {
+  width: 32px;
+  min-height: 32px;
+  flex: 0 0 32px;
+  padding: 0;
+  border-radius: 999px;
+  color: var(--text-muted);
+  border-color: color-mix(in srgb, var(--focus) 26%, var(--panel-border));
+  background: color-mix(in srgb, var(--focus) 7%, var(--control-bg));
+}
+
+.fourier-control-help-button:hover {
+  color: var(--text-main);
+  border-color: color-mix(in srgb, var(--focus) 56%, var(--panel-border));
+  background: color-mix(in srgb, var(--focus) 13%, var(--control-bg-strong));
+}
+
 .fourier-controls label,
+.fourier-range-control,
 .fourier-control-group {
   display: grid;
   gap: 6px;
   color: var(--text-muted);
+}
+
+.fourier-range-heading {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .fourier-control-group {

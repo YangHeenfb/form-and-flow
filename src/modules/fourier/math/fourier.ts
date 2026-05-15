@@ -83,6 +83,29 @@ export function selectTopCoefficients(coefficients: FourierCoefficient[], count:
   return sortCoefficientsByMagnitude(coefficients).slice(0, Math.max(0, Math.floor(count)))
 }
 
+export function selectPairedFrequencyBlocks(coefficients: FourierCoefficient[], blockCount: number): FourierCoefficient[] {
+  const count = Math.max(0, Math.floor(blockCount))
+  if (count === 0) return []
+
+  const groups = new Map<number, FourierCoefficient[]>()
+  coefficients.forEach((coefficient) => {
+    const frequencyBlock = Math.abs(coefficient.frequency) < 1e-9 ? 0 : Math.abs(coefficient.frequency)
+    groups.set(frequencyBlock, [...(groups.get(frequencyBlock) ?? []), coefficient])
+  })
+
+  const selectedBlocks = [...groups.entries()]
+    .map(([frequencyBlock, group]) => ({
+      frequencyBlock,
+      group,
+      strength: group.reduce((sum, coefficient) => sum + coefficient.magnitude, 0),
+    }))
+    .sort((a, b) => b.strength - a.strength || a.frequencyBlock - b.frequencyBlock)
+    .slice(0, count)
+
+  const selectedFrequencies = new Set(selectedBlocks.flatMap((block) => block.group.map((coefficient) => coefficient.frequency)))
+  return coefficients.filter((coefficient) => selectedFrequencies.has(coefficient.frequency))
+}
+
 export function getFrequencyBins(maxHarmonic: number): number[] {
   const harmonic = Math.max(0, Math.floor(maxHarmonic))
   const bins: number[] = []
