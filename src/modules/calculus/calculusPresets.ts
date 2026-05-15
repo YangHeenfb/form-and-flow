@@ -1,5 +1,6 @@
 import { compileExpression } from '../../core/math/expression.ts'
 import type { CompiledExpression } from '../../core/math/expression.ts'
+import type { TaylorPresetId } from './math/calculus.ts'
 import { normalizeMathInput } from './shared/mathInput.ts'
 
 export type FunctionPreset = {
@@ -9,7 +10,7 @@ export type FunctionPreset = {
   defaultX0?: number
   defaultA?: number
   defaultB?: number
-  taylorId?: string
+  taylorId?: TaylorPresetId
 }
 
 export const calculusPresets: FunctionPreset[] = [

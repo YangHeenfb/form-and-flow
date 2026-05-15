@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from 'react'
 import { LocateFixed, Pause, Play, RotateCcw } from 'lucide-react'
 import { GraphCanvas, drawGrid, line, worldToScreen } from '../../core/graph2d/GraphCanvas.tsx'
 import type { GraphTheme, GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
@@ -17,12 +17,15 @@ import { calculusFunctionNames, completeBareFunctionInput, normalizeMathInput } 
 import {
   approximateDerivative,
   buildTaylorCoefficientsForPreset,
+  derivativeDiagnostic,
+  estimateMaxError,
+  finiteDifference,
   makeAccumulationFunction,
   referenceIntegral,
   riemannSum,
   taylorPolynomialValue,
 } from './math/calculus.ts'
-import type { RiemannMethod, RealFunction } from './math/calculus.ts'
+import type { RiemannMethod, RealFunction, TaylorPresetId } from './math/calculus.ts'
 
 type Props = {
   lessonId: string
@@ -49,6 +52,7 @@ type CalculusLocale = Locale
 type ValueRow = {
   label: string
   labelTex?: string
+  helpTopic?: CalculusHelpTopicId
   value: string
 }
 
@@ -121,35 +125,35 @@ const calculusCopy: Record<CalculusLocale, {
     lessons: {
       derivative: {
         title: 'Derivative',
-        what: 'The secant line through two nearby points rotates toward the tangent line.',
-        why: 'The derivative is the limiting slope of nearby secant lines.',
-        formula: "f'(x0) ≈ (f(x0+h)-f(x0))/h",
-        formulaTex: "f'(x_0) \\approx \\frac{f(x_0+h)-f(x_0)}{h}",
-        watch: 'At corners or jumps, left and right slopes may disagree.',
+        what: 'Start with the average change between two points. As the second point moves closer, the secant line can settle into the tangent direction.',
+        why: 'The derivative is the stable slope you get only when the left and right approaches agree.',
+        formula: 'm_h=(f(x0+h)-f(x0))/h',
+        formulaTex: 'm_h=\\frac{f(x_0+h)-f(x_0)}{h}',
+        watch: 'At corners or jumps, the derivative is undefined when left and right slopes disagree.',
       },
       integral: {
         title: 'Integral / Riemann Sums',
-        what: 'Rectangles or trapezoids approximate the signed area under the curve.',
-        why: 'A definite integral is the limiting value of many small area pieces.',
+        what: 'Each small rectangle or trapezoid represents a contribution from one slice of the interval.',
+        why: 'A definite integral adds those signed contributions: above the axis counts positive, below counts negative.',
         formula: '∫[a,b] f(x) dx',
         formulaTex: '\\int_a^b f(x)\\,dx',
         watch: 'Areas below the x-axis contribute negative signed area.',
       },
       'fundamental-theorem': {
         title: 'Fundamental Theorem Connector',
-        what: 'The upper graph shows height; the lower graph shows accumulated area.',
-        why: 'The rate of change of accumulated area is the current function height.',
+        what: 'The highlighted area in the upper graph is what creates the current point on A(x) below.',
+        why: 'When x moves a tiny step, the new area is about current height times that tiny width, so A(x) changes at rate f(x).',
         formula: "A(x)=∫[a,x] f(t)dt, A'(x)≈f(x)",
         formulaTex: "A(x)=\\int_a^x f(t)\\,dt,\\quad A'(x)\\approx f(x)",
         watch: 'This is a numerical demonstration, not a formal proof.',
       },
       taylor: {
         title: 'Taylor Polynomial',
-        what: 'A polynomial matches the function near the selected center.',
-        why: 'Taylor approximation uses local derivative information to build a local model.',
+        what: 'A Taylor polynomial uses an easier polynomial to imitate the function near the selected center.',
+        why: 'Degree 0 matches height, degree 1 also matches direction, degree 2 starts matching curvature, and higher degrees try to match more local information.',
         formula: 'Pₙ(x)=Σ f⁽ᵏ⁾(c)/k! · (x-c)ᵏ',
         formulaTex: 'P_n(x)=\\sum_{k=0}^{n}\\frac{f^{(k)}(c)}{k!}(x-c)^k',
-        watch: 'Higher degree usually helps near the center, but can fail far away.',
+        watch: 'Taylor is local: farther from the center, even a higher degree polynomial may get worse.',
       },
     },
   },
@@ -194,35 +198,35 @@ const calculusCopy: Record<CalculusLocale, {
     lessons: {
       derivative: {
         title: '导数',
-        what: '穿过两个邻近点的割线会逐渐转向切线。',
-        why: '导数就是邻近割线斜率趋近的极限。',
-        formula: "f'(x0) ≈ (f(x0+h)-f(x0))/h",
-        formulaTex: "f'(x_0) \\approx \\frac{f(x_0+h)-f(x_0)}{h}",
-        watch: '在尖角或跳跃处，左右斜率可能不一致。',
+        what: '先看两个点之间的平均变化率；当第二个点靠近第一个点，割线可能稳定到切线方向。',
+        why: '只有从左边和右边靠近时斜率稳定到同一个值，这个值才是导数。',
+        formula: 'm_h=(f(x0+h)-f(x0))/h',
+        formulaTex: 'm_h=\\frac{f(x_0+h)-f(x_0)}{h}',
+        watch: '在尖角或跳跃处，如果左右斜率不一样，导数不存在。',
       },
       integral: {
         title: '积分 / 黎曼和',
-        what: '矩形或梯形正在近似曲线下方的有符号面积。',
-        why: '定积分可以理解为很多小面积片段的极限。',
+        what: '每个小矩形或小梯形代表区间里一小段贡献：上方算正，下方算负。',
+        why: '定积分是在把一段区间里的很多小贡献加起来，得到净的有符号面积。',
         formula: '∫[a,b] f(x) dx',
         formulaTex: '\\int_a^b f(x)\\,dx',
         watch: '函数在 x 轴下方时，有符号面积会贡献负值。',
       },
       'fundamental-theorem': {
         title: '微积分基本定理连接器',
-        what: '上方图像显示当前高度，下方图像显示累积面积。',
-        why: '累积面积的变化率等于当前位置的函数高度。',
+        what: '上图高亮的累积面积，正在生成下图 A(x) 上的当前点。',
+        why: '当 x 往右挪一小步，新增加的面积大约是“当前高度 f(x) × 那一小步宽度”，所以 A(x) 的变化速度就是 f(x)。',
         formula: "A(x)=∫[a,x] f(t)dt, A'(x)≈f(x)",
         formulaTex: "A(x)=\\int_a^x f(t)\\,dt,\\quad A'(x)\\approx f(x)",
         watch: '这里是数值演示，不是严格证明。',
       },
       taylor: {
         title: '泰勒多项式',
-        what: '多项式会在选定中心附近尽量贴合原函数。',
-        why: '泰勒近似用局部导数信息构造局部模型。',
+        what: 'Taylor 多项式用一个容易计算的多项式，在中心点附近模仿原函数。',
+        why: '0 阶只匹配高度，1 阶再匹配方向，2 阶再匹配弯曲程度；阶数越高，它尝试匹配的局部信息越多。',
         formula: 'Pₙ(x)=Σ f⁽ᵏ⁾(c)/k! · (x-c)ᵏ',
         formulaTex: 'P_n(x)=\\sum_{k=0}^{n}\\frac{f^{(k)}(c)}{k!}(x-c)^k',
-        watch: '更高阶通常能改善中心附近的近似，但远离中心时可能失效。',
+        watch: 'Taylor 不是全局复制；离中心越远，中心点的信息越不够用，近似可能变差。',
       },
     },
   },
@@ -253,14 +257,15 @@ export function CalculusLesson({ lessonId }: Props) {
   const activeHelpTopic = activeHelpTopicId ? learningTopics[activeHelpTopicId] : null
   const openHelpTopic = useCallback((topic: CalculusHelpTopicId) => setActiveHelpTopicId(topic), [])
 
-  useEffect(() => {
-    const preset = calculusPresets.find((candidate) => candidate.id === presetId)
+  const applyPresetSelection = useCallback((nextPresetId: string) => {
+    setPresetId(nextPresetId)
+    const preset = calculusPresets.find((candidate) => candidate.id === nextPresetId)
     if (!preset) return
     setExpression(preset.expression)
     setX0(preset.defaultX0 ?? 1)
     setA(preset.defaultA ?? 0)
     setB(preset.defaultB ?? 2)
-  }, [presetId])
+  }, [])
 
   useEffect(() => {
     setView({ xMin: -5, xMax: 5, yMin: -3, yMax: 3 })
@@ -294,7 +299,8 @@ export function CalculusLesson({ lessonId }: Props) {
     return () => cancelAnimationFrame(frame)
   }, [a, b, lessonId, playing, speed])
 
-  const values = getCurrentValues({ lessonId, fn, selectedPreset, x0, h, a, b, n, method, degree }, locale)
+  const values = getCurrentValues({ lessonId, fn, selectedPreset, x0, h, a, b, n, method, degree, view }, locale)
+  const taylorUnavailable = lessonId === 'taylor' && !selectedPreset.taylorId
 
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme) => {
@@ -354,7 +360,7 @@ export function CalculusLesson({ lessonId }: Props) {
                 label: <Formula tex={`f(x)=${expressionToTex(preset.expression)}`} label={preset.label} />,
               })),
             ]}
-            onChange={setPresetId}
+            onChange={applyPresetSelection}
             ariaLabel={ui.preset}
           />
         </label>
@@ -386,6 +392,7 @@ export function CalculusLesson({ lessonId }: Props) {
         </div>
         <p className="input-help">{ui.inputHelp}</p>
         {error && <p className="warning-text">{error}</p>}
+        {taylorUnavailable && <p className="warning-text">{taylorUnavailableMessage(locale)}</p>}
         {lessonId === 'derivative' && (
           <>
             <Range label={`${ui.ranges.point} x0`} labelTex={`${locale === 'zh' ? '\\text{点}\\ ' : '\\text{point}\\ '}x_0`} value={x0} min={-4} max={4} step={0.05} onChange={setX0} />
@@ -394,11 +401,13 @@ export function CalculusLesson({ lessonId }: Props) {
         )}
         {lessonId === 'integral' && (
           <>
-            <Range label={`${ui.ranges.intervalStart} a`} labelTex={`${locale === 'zh' ? '\\text{区间起点}\\ ' : '\\text{interval start}\\ '}a`} value={a} min={-4} max={4} step={0.05} onChange={setA} />
-            <Range label={`${ui.ranges.intervalEnd} b`} labelTex={`${locale === 'zh' ? '\\text{区间终点}\\ ' : '\\text{interval end}\\ '}b`} value={b} min={-4} max={4} step={0.05} onChange={setB} />
-            <Range label={`${ui.ranges.rectangles} n`} labelTex={`${locale === 'zh' ? '\\text{矩形数}\\ ' : '\\text{rectangles}\\ '}n`} value={n} min={1} max={80} step={1} onChange={setN} />
-            <label>
-              {ui.method}
+            <Range label={`${ui.ranges.intervalStart} a`} labelTex={`${locale === 'zh' ? '\\text{区间起点}\\ ' : '\\text{interval start}\\ '}a`} value={a} min={-4} max={4} step={0.05} helpTopic="riemann-sum" onOpenHelpTopic={openHelpTopic} onChange={setA} />
+            <Range label={`${ui.ranges.intervalEnd} b`} labelTex={`${locale === 'zh' ? '\\text{区间终点}\\ ' : '\\text{interval end}\\ '}b`} value={b} min={-4} max={4} step={0.05} helpTopic="riemann-sum" onOpenHelpTopic={openHelpTopic} onChange={setB} />
+            <Range label={`${ui.ranges.rectangles} n`} labelTex={`${locale === 'zh' ? '\\text{矩形数}\\ ' : '\\text{rectangles}\\ '}n`} value={n} min={1} max={80} step={1} helpTopic="riemann-sum" onOpenHelpTopic={openHelpTopic} onChange={setN} />
+            <div className="calculus-field">
+              <HelpLabel topic="riemann-sum" onOpenHelpTopic={openHelpTopic}>
+                {ui.method}
+              </HelpLabel>
               <SelectMenu
                 value={method}
                 options={(['left', 'right', 'midpoint', 'trapezoid'] as RiemannMethod[]).map((nextMethod) => ({
@@ -409,20 +418,20 @@ export function CalculusLesson({ lessonId }: Props) {
                 onChange={setMethod}
                 ariaLabel={ui.method}
               />
-            </label>
+            </div>
           </>
         )}
         {lessonId === 'fundamental-theorem' && (
           <>
-            <Range label={`${ui.ranges.areaStart} a`} labelTex={`${locale === 'zh' ? '\\text{面积起点}\\ ' : '\\text{area start}\\ '}a`} value={a} min={-4} max={4} step={0.05} onChange={setA} />
-            <Range label={`${ui.ranges.current} x`} labelTex={`${locale === 'zh' ? '\\text{当前位置}\\ ' : '\\text{current}\\ '}x`} value={x0} min={-4} max={4} step={0.05} onChange={setX0} />
-            <Range label={`${ui.ranges.animationEnd} b`} labelTex={`${locale === 'zh' ? '\\text{动画终点}\\ ' : '\\text{animation end}\\ '}b`} value={b} min={-4} max={4} step={0.05} onChange={setB} />
+            <Range label={`${ui.ranges.areaStart} a`} labelTex={`${locale === 'zh' ? '\\text{面积起点}\\ ' : '\\text{area start}\\ '}a`} value={a} min={-4} max={4} step={0.05} helpTopic="accumulation" onOpenHelpTopic={openHelpTopic} onChange={setA} />
+            <Range label={`${ui.ranges.current} x`} labelTex={`${locale === 'zh' ? '\\text{当前位置}\\ ' : '\\text{current}\\ '}x`} value={x0} min={-4} max={4} step={0.05} helpTopic="accumulation" onOpenHelpTopic={openHelpTopic} onChange={setX0} />
+            <Range label={`${ui.ranges.animationEnd} b`} labelTex={`${locale === 'zh' ? '\\text{动画终点}\\ ' : '\\text{animation end}\\ '}b`} value={b} min={-4} max={4} step={0.05} helpTopic="accumulation" onOpenHelpTopic={openHelpTopic} onChange={setB} />
           </>
         )}
         {lessonId === 'taylor' && (
           <>
-            <Range label={`${ui.ranges.center} c`} labelTex={`${locale === 'zh' ? '\\text{中心}\\ ' : '\\text{center}\\ '}c`} value={x0} min={-4} max={4} step={0.05} onChange={setX0} />
-            <Range label={ui.ranges.degree} labelTex={locale === 'zh' ? '\\text{阶数}' : '\\text{degree}'} value={degree} min={0} max={10} step={1} onChange={setDegree} />
+            <Range label={`${ui.ranges.center} c`} labelTex={`${locale === 'zh' ? '\\text{中心}\\ ' : '\\text{center}\\ '}c`} value={x0} min={-4} max={4} step={0.05} helpTopic="taylor" onOpenHelpTopic={openHelpTopic} onChange={setX0} />
+            <Range label={ui.ranges.degree} labelTex={locale === 'zh' ? '\\text{阶数}' : '\\text{degree}'} value={degree} min={0} max={10} step={1} helpTopic="taylor" onOpenHelpTopic={openHelpTopic} onChange={setDegree} />
           </>
         )}
       </aside>
@@ -502,15 +511,15 @@ export function CalculusLesson({ lessonId }: Props) {
           </HelpLabel>
         </h2>
         <dl>
-          {values.map(({ label, labelTex, value }) => (
+          {values.map(({ label, labelTex, helpTopic, value }) => (
             <div key={label}>
-              <dt>{labelTex ? <Formula tex={labelTex} /> : label}</dt>
+              <dt>{renderValueLabel(label, labelTex, helpTopic, openHelpTopic)}</dt>
               <dd>{value}</dd>
             </div>
           ))}
         </dl>
         <h2>
-          <HelpLabel topic="approximation" onOpenHelpTopic={openHelpTopic}>
+          <HelpLabel topic={watchTopicForLesson(lessonId)} onOpenHelpTopic={openHelpTopic}>
             {ui.watch}
           </HelpLabel>
         </h2>
@@ -536,32 +545,73 @@ function HelpLabel({
   return <TermButton onClick={() => onOpenHelpTopic(topic)}>{children}</TermButton>
 }
 
-function Range({ label, labelTex, value, min, max, step, valueSuffix, onChange }: { label: string; labelTex?: string; value: number; min: number; max: number; step: number; valueSuffix?: string; onChange: (value: number) => void }) {
+function renderValueLabel(label: string, labelTex: string | undefined, helpTopic: CalculusHelpTopicId | undefined, onOpenHelpTopic: (topic: CalculusHelpTopicId) => void) {
+  const content = labelTex ? <Formula tex={labelTex} /> : label
+  return helpTopic ? <HelpLabel topic={helpTopic} onOpenHelpTopic={onOpenHelpTopic}>{content}</HelpLabel> : content
+}
+
+function Range({
+  label,
+  labelTex,
+  value,
+  min,
+  max,
+  step,
+  valueSuffix,
+  helpTopic,
+  onOpenHelpTopic,
+  onChange,
+}: {
+  label: string
+  labelTex?: string
+  value: number
+  min: number
+  max: number
+  step: number
+  valueSuffix?: string
+  helpTopic?: CalculusHelpTopicId
+  onOpenHelpTopic?: (topic: CalculusHelpTopicId) => void
+  onChange: (value: number) => void
+}) {
+  const id = useId()
+  const labelContent = labelTex ? <Formula tex={labelTex} /> : label
+  const labelNode = makeRangeLabel(id, label, labelContent, helpTopic, onOpenHelpTopic)
+
   if (valueSuffix) {
     return (
-      <label className="speed-control">
-        <span className="range-label">{labelTex ? <Formula tex={labelTex} /> : label}</span>
-        <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+      <div className="range-control speed-control">
+        <span className="range-label">{labelNode}</span>
+        <input id={id} type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
         <strong>{`${value.toFixed(2)}${valueSuffix}`}</strong>
-      </label>
+      </div>
     )
   }
 
   return (
-    <label>
-      <span className="range-label">
-        {labelTex ? <Formula tex={labelTex} /> : label}: <strong>{round(value)}</strong>
-      </span>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
-    </label>
+    <div className="range-control">
+      <span className="range-label">{labelNode}: <strong>{round(value)}</strong></span>
+      <input id={id} type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+    </div>
   )
+}
+
+function makeRangeLabel(id: string, label: string, labelContent: ReactNode, helpTopic?: CalculusHelpTopicId, onOpenHelpTopic?: (topic: CalculusHelpTopicId) => void) {
+  if (helpTopic && onOpenHelpTopic) {
+    return (
+      <>
+        <TermButton onClick={() => onOpenHelpTopic(helpTopic)}>{labelContent}</TermButton>
+        <label className="sr-only" htmlFor={id}>{label}</label>
+      </>
+    )
+  }
+  return <label htmlFor={id}>{labelContent}</label>
 }
 
 function drawCalculusScene(
   ctx: CanvasRenderingContext2D,
   viewport: GraphViewport,
   theme: GraphTheme,
-  state: { lessonId: string; locale: CalculusLocale; fn: RealFunction; selectedPreset: { taylorId?: string }; x0: number; h: number; a: number; b: number; n: number; method: RiemannMethod; degree: number },
+  state: { lessonId: string; locale: CalculusLocale; fn: RealFunction; selectedPreset: { taylorId?: TaylorPresetId }; x0: number; h: number; a: number; b: number; n: number; method: RiemannMethod; degree: number },
 ) {
   drawGrid(ctx, viewport, theme)
   if (state.lessonId === 'fundamental-theorem') {
@@ -608,7 +658,7 @@ function drawPoint(ctx: CanvasRenderingContext2D, viewport: GraphViewport, x: nu
 function drawDerivative(ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme, state: { fn: RealFunction; x0: number; h: number }) {
   const y0 = state.fn(state.x0)
   const y1 = state.fn(state.x0 + state.h)
-  const derivative = approximateDerivative(state.fn, state.x0) ?? 0
+  const derivative = derivativeDiagnostic(state.fn, state.x0).value
   if (isFiniteNumber(y0)) drawPoint(ctx, viewport, state.x0, y0, theme.secondary)
   if (isFiniteNumber(y1)) drawPoint(ctx, viewport, state.x0 + state.h, y1, theme.accent)
   if (isFiniteNumber(y0) && isFiniteNumber(y1)) {
@@ -617,7 +667,7 @@ function drawDerivative(ctx: CanvasRenderingContext2D, viewport: GraphViewport, 
     line(ctx, viewport, state.x0 - 2, y0 - ((y1 - y0) / state.h) * 2, state.x0 + 2, y0 + ((y1 - y0) / state.h) * 2)
     ctx.setLineDash([])
   }
-  if (isFiniteNumber(y0)) {
+  if (isFiniteNumber(y0) && isFiniteNumber(derivative)) {
     ctx.strokeStyle = theme.warning
     line(ctx, viewport, state.x0 - 2, y0 - derivative * 2, state.x0 + 2, y0 + derivative * 2)
   }
@@ -630,6 +680,24 @@ function drawIntegral(ctx: CanvasRenderingContext2D, viewport: GraphViewport, th
   for (let index = 0; index < state.n; index += 1) {
     const left = state.a + index * dx
     const right = left + dx
+    if (state.method === 'trapezoid') {
+      const yLeft = state.fn(left)
+      const yRight = state.fn(right)
+      if (!isFiniteNumber(yLeft) || !isFiniteNumber(yRight)) continue
+      const bottomLeft = worldToScreen(viewport, left, 0)
+      const topLeft = worldToScreen(viewport, left, yLeft)
+      const topRight = worldToScreen(viewport, right, yRight)
+      const bottomRight = worldToScreen(viewport, right, 0)
+      ctx.beginPath()
+      ctx.moveTo(bottomLeft.x, bottomLeft.y)
+      ctx.lineTo(topLeft.x, topLeft.y)
+      ctx.lineTo(topRight.x, topRight.y)
+      ctx.lineTo(bottomRight.x, bottomRight.y)
+      ctx.closePath()
+      ctx.fill()
+      ctx.stroke()
+      continue
+    }
     const sample = state.method === 'left' ? left : state.method === 'right' ? right : (left + right) / 2
     const y = state.fn(sample)
     if (!isFiniteNumber(y)) continue
@@ -637,18 +705,21 @@ function drawIntegral(ctx: CanvasRenderingContext2D, viewport: GraphViewport, th
     const bottom = worldToScreen(viewport, left, 0)
     const topRight = worldToScreen(viewport, right, y)
     ctx.beginPath()
-    ctx.rect(topLeft.x, Math.min(topLeft.y, bottom.y), topRight.x - topLeft.x, Math.abs(bottom.y - topLeft.y))
+    ctx.rect(Math.min(topLeft.x, topRight.x), Math.min(topLeft.y, bottom.y), Math.abs(topRight.x - topLeft.x), Math.abs(bottom.y - topLeft.y))
     ctx.fill()
     ctx.stroke()
   }
 }
 
-function drawTaylor(ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme, state: { fn: RealFunction; selectedPreset: { taylorId?: string }; x0: number; degree: number }) {
-  const presetId = state.selectedPreset.taylorId ?? 'sin'
-  const coefficients = buildTaylorCoefficientsForPreset(presetId, state.x0, state.degree)
-  drawFunction(ctx, viewport, (x) => taylorPolynomialValue(coefficients, state.x0, x), theme.warning, 2)
+function drawTaylor(ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme, state: { fn: RealFunction; selectedPreset: { taylorId?: TaylorPresetId }; x0: number; degree: number; locale: CalculusLocale }) {
   const y = state.fn(state.x0)
   if (isFiniteNumber(y)) drawPoint(ctx, viewport, state.x0, y, theme.warning)
+  const presetId = state.selectedPreset.taylorId
+  if (!presetId) {
+    return
+  }
+  const coefficients = buildTaylorCoefficientsForPreset(presetId, state.x0, state.degree)
+  drawFunction(ctx, viewport, (x) => taylorPolynomialValue(coefficients, state.x0, x), theme.warning, 2)
 }
 
 function drawSplitFtc(ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme, state: { locale: CalculusLocale; fn: RealFunction; a: number; x0: number }) {
@@ -665,8 +736,11 @@ function drawSplitFtc(ctx: CanvasRenderingContext2D, viewport: GraphViewport, th
   ctx.rect(0, 0, viewport.width, paneHeight)
   ctx.clip()
   drawGrid(ctx, topViewport, theme)
+  drawAreaUnderCurve(ctx, topViewport, state.fn, state.a, state.x0, theme)
   drawFunction(ctx, topViewport, state.fn, theme.primary, 2)
   const y = state.fn(state.x0)
+  drawVerticalMarker(ctx, topViewport, state.a, 'a', theme.muted, theme)
+  drawVerticalMarker(ctx, topViewport, state.x0, 'x', theme.warning, theme)
   if (isFiniteNumber(y)) drawPoint(ctx, topViewport, state.x0, y, theme.primary)
   drawPaneLabel(ctx, 'f(x)', theme)
   ctx.restore()
@@ -679,7 +753,14 @@ function drawSplitFtc(ctx: CanvasRenderingContext2D, viewport: GraphViewport, th
   drawGrid(ctx, bottomViewport, theme)
   drawFunction(ctx, bottomViewport, accumulation, theme.warning, 2)
   const area = accumulation(state.x0)
+  const currentHeight = state.fn(state.x0)
   if (isFiniteNumber(area)) drawPoint(ctx, bottomViewport, state.x0, area, theme.warning)
+  if (isFiniteNumber(area) && isFiniteNumber(currentHeight)) {
+    ctx.strokeStyle = theme.secondary
+    ctx.setLineDash([5, 4])
+    line(ctx, bottomViewport, state.x0 - 1.2, area - currentHeight * 1.2, state.x0 + 1.2, area + currentHeight * 1.2)
+    ctx.setLineDash([])
+  }
   drawPaneLabel(ctx, state.locale === 'zh' ? 'A(x) = 累积面积' : 'A(x) = accumulated area', theme)
   ctx.restore()
 
@@ -691,24 +772,76 @@ function drawSplitFtc(ctx: CanvasRenderingContext2D, viewport: GraphViewport, th
   ctx.stroke()
 }
 
+function drawAreaUnderCurve(ctx: CanvasRenderingContext2D, viewport: GraphViewport, fn: RealFunction, a: number, b: number, theme: GraphTheme) {
+  const samples = 120
+  let started = false
+  ctx.fillStyle = theme.fill
+  ctx.strokeStyle = theme.accent
+  ctx.beginPath()
+  for (let index = 0; index <= samples; index += 1) {
+    const x = a + ((b - a) * index) / samples
+    const y = fn(x)
+    if (!isFiniteNumber(y)) {
+      started = false
+      continue
+    }
+    const base = worldToScreen(viewport, x, 0)
+    const point = worldToScreen(viewport, x, y)
+    if (!started) {
+      ctx.moveTo(base.x, base.y)
+      ctx.lineTo(point.x, point.y)
+      started = true
+    } else {
+      ctx.lineTo(point.x, point.y)
+    }
+  }
+  if (!started) return
+  const end = worldToScreen(viewport, b, 0)
+  ctx.lineTo(end.x, end.y)
+  ctx.closePath()
+  ctx.fill()
+  ctx.stroke()
+}
+
+function drawVerticalMarker(ctx: CanvasRenderingContext2D, viewport: GraphViewport, x: number, label: string, color: string, theme: GraphTheme) {
+  const top = worldToScreen(viewport, x, viewport.yMax)
+  const bottom = worldToScreen(viewport, x, viewport.yMin)
+  ctx.strokeStyle = color
+  ctx.setLineDash([4, 4])
+  ctx.beginPath()
+  ctx.moveTo(top.x, top.y)
+  ctx.lineTo(bottom.x, bottom.y)
+  ctx.stroke()
+  ctx.setLineDash([])
+  ctx.fillStyle = theme.text
+  ctx.font = '12px Inter, system-ui, sans-serif'
+  ctx.fillText(label, top.x + 5, Math.max(18, top.y + 18))
+}
+
 function drawPaneLabel(ctx: CanvasRenderingContext2D, label: string, theme: GraphTheme) {
   ctx.fillStyle = theme.text
   ctx.font = '13px Inter, system-ui, sans-serif'
   ctx.fillText(label, 14, 22)
 }
 
-function getCurrentValues(state: { lessonId: string; fn: RealFunction; selectedPreset: { taylorId?: string }; x0: number; h: number; a: number; b: number; n: number; method: RiemannMethod; degree: number }, locale: CalculusLocale): ValueRow[] {
+function getCurrentValues(state: { lessonId: string; fn: RealFunction; selectedPreset: { taylorId?: TaylorPresetId }; x0: number; h: number; a: number; b: number; n: number; method: RiemannMethod; degree: number; view: GraphViewState }, locale: CalculusLocale): ValueRow[] {
   if (state.lessonId === 'derivative') {
-    return [
+    const diagnostic = derivativeDiagnostic(state.fn, state.x0)
+    const rows: ValueRow[] = [
       { label: 'x0', labelTex: 'x_0', value: String(round(state.x0)) },
       { label: 'h', labelTex: 'h', value: String(round(state.h)) },
-      { label: locale === 'zh' ? '导数' : 'derivative', labelTex: "f'(x_0)", value: format(approximateDerivative(state.fn, state.x0), locale) },
+      { label: locale === 'zh' ? '割线斜率' : 'secant slope', labelTex: 'm_h', helpTopic: 'secant-slope', value: format(finiteDifference(state.fn, state.x0, state.h), locale) },
+      { label: locale === 'zh' ? '导数估计' : 'derivative estimate', labelTex: "f'(x_0)", helpTopic: 'derivative-notation', value: diagnostic.reason ? derivativeStatusLabel(diagnostic.reason, locale) : format(diagnostic.value, locale) },
     ]
+    if (diagnostic.reason === 'one-sided-mismatch') {
+      rows.push({ label: locale === 'zh' ? '原因' : 'reason', value: locale === 'zh' ? '左右斜率不一致' : 'left and right slopes disagree' })
+    }
+    return rows
   }
   if (state.lessonId === 'integral') {
     return [
-      { label: locale === 'zh' ? '近似面积' : 'approx area', labelTex: locale === 'zh' ? '\\text{面积}' : '\\text{area}', value: format(riemannSum(state.fn, state.a, state.b, state.n, state.method), locale) },
-      { label: locale === 'zh' ? '参考值' : 'reference', value: format(referenceIntegral(state.fn, state.a, state.b), locale) },
+      { label: locale === 'zh' ? '有符号面积估计' : 'signed area estimate', labelTex: locale === 'zh' ? '\\text{有符号面积}' : '\\text{signed area}', value: format(riemannSum(state.fn, state.a, state.b, state.n, state.method), locale) },
+      { label: locale === 'zh' ? '参考积分' : 'reference integral', value: format(referenceIntegral(state.fn, state.a, state.b), locale) },
       { label: locale === 'zh' ? '方法' : 'method', value: methodLabel(state.method, locale) },
     ]
   }
@@ -720,12 +853,23 @@ function getCurrentValues(state: { lessonId: string; fn: RealFunction; selectedP
       { label: 'f(x)', labelTex: 'f(x)', value: format(state.fn(state.x0), locale) },
     ]
   }
-  const coefficients = buildTaylorCoefficientsForPreset(state.selectedPreset.taylorId ?? 'sin', state.x0, state.degree)
+  const presetId = state.selectedPreset.taylorId
+  if (!presetId) {
+    return [
+      { label: locale === 'zh' ? '中心' : 'center', labelTex: 'c', value: String(round(state.x0)) },
+      { label: locale === 'zh' ? '阶数' : 'degree', labelTex: 'n', value: String(Math.round(state.degree)) },
+      { label: locale === 'zh' ? 'Taylor 状态' : 'Taylor status', value: taylorUnavailableMessage(locale) },
+    ]
+  }
+  const coefficients = buildTaylorCoefficientsForPreset(presetId, state.x0, state.degree)
   const approximation = (x: number) => taylorPolynomialValue(coefficients, state.x0, x)
+  const probeX = state.x0 + 1
   return [
     { label: locale === 'zh' ? '中心' : 'center', labelTex: 'c', value: String(round(state.x0)) },
     { label: locale === 'zh' ? '阶数' : 'degree', labelTex: 'n', value: String(Math.round(state.degree)) },
-    { label: locale === 'zh' ? '最大误差' : 'max error', labelTex: locale === 'zh' ? '\\text{最大误差}' : '\\text{max error}', value: format(Math.abs((state.fn(state.x0 + 1) ?? 0) - approximation(state.x0 + 1)), locale) },
+    { label: locale === 'zh' ? 'Pₙ(c+1)' : 'P_n(c+1)', labelTex: 'P_n(c+1)', value: format(approximation(probeX), locale) },
+    { label: locale === 'zh' ? 'f(c+1)' : 'f(c+1)', labelTex: 'f(c+1)', value: format(state.fn(probeX), locale) },
+    { label: locale === 'zh' ? '视窗最大误差' : 'visible max error', labelTex: locale === 'zh' ? '\\text{视窗最大误差}' : '\\text{visible max error}', value: format(estimateMaxError(state.fn, approximation, state.view.xMin, state.view.xMax, 240), locale) },
   ]
 }
 
@@ -735,6 +879,24 @@ function methodLabel(method: RiemannMethod, locale: CalculusLocale): string {
   if (method === 'right') return '右端点'
   if (method === 'midpoint') return '中点'
   return '梯形'
+}
+
+function derivativeStatusLabel(reason: 'one-sided-mismatch' | 'not-finite', locale: CalculusLocale): string {
+  if (reason === 'one-sided-mismatch') return locale === 'zh' ? '不存在' : 'undefined'
+  return calculusCopy[locale].ui.undefinedValue
+}
+
+function taylorUnavailableMessage(locale: CalculusLocale): string {
+  return locale === 'zh'
+    ? 'Taylor 近似目前只支持 sin、cos、exp、log(1+x)、1/(1-x) 这些预设函数。'
+    : 'Taylor approximation is currently available only for the sin, cos, exp, log(1+x), and 1/(1-x) presets.'
+}
+
+function watchTopicForLesson(lessonId: string): CalculusHelpTopicId {
+  if (lessonId === 'derivative') return 'secant-tangent'
+  if (lessonId === 'integral') return 'signed-area'
+  if (lessonId === 'fundamental-theorem') return 'accumulation'
+  return 'approximation'
 }
 
 function resetLessonControls(
