@@ -62,7 +62,6 @@ import {
   integerParam,
   numberParam,
   readSearchParams,
-  replaceUrl,
   stringParam,
 } from '../shared/useProbabilityUrlState.ts'
 
@@ -208,7 +207,6 @@ type ProbabilityUiCopy = {
   controls: {
     parameters: string
     lesson: string
-    share: string
     exportPng: string
     play: string
     pause: string
@@ -349,7 +347,6 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
     controls: {
       parameters: 'Parameters',
       lesson: 'Lesson',
-      share: 'Share',
       exportPng: 'Export PNG',
       play: 'Play',
       pause: 'Pause',
@@ -511,7 +508,6 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
     controls: {
       parameters: '参数',
       lesson: '章节',
-      share: '分享',
       exportPng: '导出 PNG',
       play: '播放',
       pause: '暂停',
@@ -974,8 +970,6 @@ export function ProbabilityLesson({ lessonId }: Props) {
             graphAriaLabel={learningCopy.openGraph}
             onGraphHelp={() => openHelpTopic('graph')}
             focusButton={focusButton}
-            shareLabel={ui.controls.share}
-            onShare={() => shareState()}
             exportLabel={ui.controls.exportPng}
             onExport={exportPng}
           />
@@ -1176,16 +1170,6 @@ export function ProbabilityLesson({ lessonId }: Props) {
         </button>
       </>
     )
-  }
-
-  function shareState() {
-    if (lessonId === 'conditional-probability') replaceUrl({ mode: conditionMode, target, population, pA, pB, pAB, bGivenA, bGivenNotA })
-    else if (lessonId === 'bayes') replaceUrl({ prior, likelihood, falseAlarm, population, odds: showOdds, frequencies: showFrequencies })
-    else if (lessonId === 'medical-test') replaceUrl({ prevalence, sensitivity, specificity, population, result: selectedTestResult, frequencyMode })
-    else if (lessonId === 'binomial') replaceUrl({ n: trials, p: successProbability, k: selectedK, k2: selectedK2, mode: rangeMode, runs: simulationRuns, seed })
-    else if (lessonId === 'continuous-density') replaceUrl({ dist: continuousId, min: uniformMin, max: uniformMax, mu: normalMu, sigma: normalSigma, lambda, triMode: triangularMode, a: intervalA, b: intervalB, samples: sampleCount, seed, histogram: showHistogram, cdf: showCdf, point: pointMode })
-    else if (lessonId === 'central-limit-theorem') replaceUrl({ source: sourceId, sampleSize, samples: cltSamples, seed, normal: showNormal, standardized })
-    else replaceUrl({ x: xPreset, y: yPreset, x0: xCustom0, x2: xCustom2, x5: xCustom5, y0: yCustom0, y2: yCustom2, y5: yCustom5, sum: selectedSum, pairGrid: showPairGrid })
   }
 
   function resetLesson() {

@@ -7,7 +7,6 @@ type Props = {
   theme: ThemeSettings
   onColorPresetChange: (preset: ColorPreset) => void
   onColorChange: (key: keyof ThemeSettings['colors'], value: string) => void
-  onIncludeThemeChange: (value: boolean) => void
 }
 
 const colorFields: Array<keyof ThemeSettings['colors']> = [
@@ -26,7 +25,6 @@ export function ThemePanel({
   theme,
   onColorPresetChange,
   onColorChange,
-  onIncludeThemeChange,
 }: Props) {
   const lowContrast = hasLowContrast(theme)
 
@@ -61,14 +59,6 @@ export function ThemePanel({
           {copy.lowContrastWarning}
         </p>
       )}
-      <label className="checkbox-line">
-        <input
-          type="checkbox"
-          checked={theme.includeThemeInShareLink}
-          onChange={(event) => onIncludeThemeChange(event.target.checked)}
-        />
-        {copy.includeInShare}
-      </label>
     </section>
   )
 }
