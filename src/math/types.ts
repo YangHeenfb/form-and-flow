@@ -41,7 +41,6 @@ export type ColorPreset = 'neutral' | 'high-contrast'
 export type ThemeSettings = {
   surfaceMode: ThemeSurfaceMode
   colorPreset: ColorPreset
-  includeThemeInShareLink: boolean
   colors: {
     grid: string
     transformedGrid: string

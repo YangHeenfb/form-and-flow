@@ -84,7 +84,6 @@ const fourierCopy: Record<FourierLocale, {
     inputHelp: string
     invalidExpression: string
     lesson: string
-    share: string
     exportPng: string
     play: string
     pause: string
@@ -118,7 +117,6 @@ const fourierCopy: Record<FourierLocale, {
       inputHelp: 'Use t on [0, 1]. x is also accepted as an alias for t.',
       invalidExpression: 'Invalid expression.',
       lesson: 'Lesson',
-      share: 'Share',
       exportPng: 'Export PNG',
       play: 'Play',
       pause: 'Pause',
@@ -206,7 +204,6 @@ const fourierCopy: Record<FourierLocale, {
       inputHelp: '使用归一化时间 t ∈ [0, 1]；也可以用 x 作为 t 的别名。',
       invalidExpression: '表达式无效。',
       lesson: '章节',
-      share: '分享',
       exportPng: '导出 PNG',
       play: '播放',
       pause: '暂停',
@@ -486,29 +483,6 @@ export function FourierLesson({ lessonId }: Props) {
     ],
   )
 
-  const share = () => {
-    const params = new URLSearchParams()
-    params.set('preset', presetId)
-    params.set('f', expression)
-    params.set('freq', String(round(selectedFrequency)))
-    params.set('samples', String(roundedSampleCount))
-    params.set('snap', String(frequencySnap))
-    params.set('fmin', String(round(frequencyMin)))
-    params.set('fmax', String(round(frequencyMax)))
-    params.set('fstep', String(round(frequencyStep)))
-    params.set('harmonic', String(Math.round(maxHarmonic)))
-    params.set('count', String(reconstructionCount))
-    params.set('mode', reconstructionMode)
-    params.set('filter', filterType)
-    params.set('cutoff', String(round(cutoff)))
-    params.set('low', String(round(lowCutoff)))
-    params.set('high', String(round(highCutoff)))
-    params.set('threshold', String(round(threshold)))
-    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`
-    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`)
-    void navigator.clipboard?.writeText(url)
-  }
-
   const exportPng = () => {
     const canvas = document.querySelector<HTMLCanvasElement>('.fourier-canvas')
     if (!canvas) return
@@ -695,8 +669,6 @@ export function FourierLesson({ lessonId }: Props) {
             graphAriaLabel={ui.graphHelp}
             onGraphHelp={() => setHelpMode({ kind: 'graph' })}
             focusButton={focusButton}
-            shareLabel={ui.share}
-            onShare={share}
             exportLabel={ui.exportPng}
             onExport={exportPng}
           />

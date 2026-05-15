@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
-import { BookOpen, Download, Grid3X3, HelpCircle, Languages, Menu, Moon, PanelLeftClose, RotateCcw, Share2, Sun } from 'lucide-react'
+import { BookOpen, Download, Grid3X3, HelpCircle, Languages, Menu, Moon, PanelLeftClose, RotateCcw, Sun } from 'lucide-react'
 import type { ModuleDefinition } from './moduleTypes.ts'
 import { ModuleActionProvider, useModuleActionContext } from './ModuleActionContext.tsx'
 import { moduleRegistry } from './moduleRegistry.ts'
@@ -99,12 +99,6 @@ function PlatformShellContent({ currentModule, currentLessonId, children }: Prop
               <button type="button" aria-label={copy.resetAria} onClick={moduleActions.reset}>
                 <RotateCcw size={17} />
                 {copy.reset}
-              </button>
-            )}
-            {moduleActions.share && (
-              <button type="button" aria-label={copy.shareAria} onClick={() => void moduleActions.share?.()}>
-                <Share2 size={17} />
-                {copy.share}
               </button>
             )}
             {moduleActions.exportPng && (

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Focus, Languages, Moon, Share2, Sun } from 'lucide-react'
+import { Focus, Languages, Moon, Sun } from 'lucide-react'
 import { AnimationControls } from '../../components/AnimationControls.tsx'
 import { Canvas2DView } from '../../components/Canvas2DView.tsx'
 import { ExplanationPanel } from '../../components/ExplanationPanel.tsx'
@@ -29,7 +29,6 @@ import type { OverlayPanelDefinition, VisualizationWorkbenchStatus } from '../..
 import type { MatrixAnimationFrame } from '../../render/RendererAdapter.ts'
 import { useAppState } from '../../state/useAppState.ts'
 import { useThemeState } from '../../state/useThemeState.ts'
-import { decodeUrlState, updateBrowserUrl } from '../../state/urlState.ts'
 import { getMatrixHelpTopics, matrixLearningCopy } from './learningHelp.tsx'
 import type { MatrixHelpTopicId } from './learningHelp.tsx'
 
@@ -51,9 +50,8 @@ type MatrixMotionLabProps = {
 }
 
 export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
-  const loadedShare = useMemo(() => (typeof window === 'undefined' ? null : decodeUrlState(window.location.search)), [])
   const appState = useAppState()
-  const themeState = useThemeState(loadedShare?.theme)
+  const themeState = useThemeState()
   const [locale, setLocale] = useState<Locale>(() => loadLocale())
   const [animation, setAnimation] = useState<AnimationState>(initialAnimation)
   const [threeCameraView, setThreeCameraView] = useState<ThreeCameraView>('free')
@@ -278,15 +276,6 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
     anchor.click()
   }, [])
 
-  const share = useCallback(async () => {
-    const url = updateBrowserUrl({
-      maps: appState.maps,
-      vectors: appState.vectors,
-      theme: themeState.theme.includeThemeInShareLink ? themeState.theme : undefined,
-    })
-    await navigator.clipboard?.writeText(url)
-  }, [appState.maps, appState.vectors, themeState.theme])
-
   const setPlaybackMode = useCallback((mode: PlaybackMode) => {
     animationProgressRef.current = 0
     setAnimation((current) => ({ ...current, mode, progress: 0, stepIndex: 0 }))
@@ -360,8 +349,6 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
       graphAriaLabel={learningCopy.openGraph}
       onGraphHelp={() => openHelpTopic('graph')}
       focusButton={renderFocusAction()}
-      shareLabel={copy.visualization.share}
-      onShare={() => void share()}
       exportLabel={copy.visualization.exportPng}
       onExport={exportPng}
     />
@@ -429,7 +416,6 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
       theme={themeState.theme}
       onColorPresetChange={themeState.setColorPreset}
       onColorChange={themeState.setColor}
-      onIncludeThemeChange={themeState.setIncludeThemeInShareLink}
     />
   )
 
@@ -544,10 +530,6 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
             >
               {themeState.theme.surfaceMode === 'dark' ? <Moon size={17} /> : <Sun size={17} />}
               {themeState.theme.surfaceMode === 'dark' ? copy.top.darkApp : copy.top.lightApp}
-            </button>
-            <button className="share-button" type="button" onClick={share}>
-              <Share2 size={17} />
-              {copy.top.shareUrl}
             </button>
           </div>
         </header>
