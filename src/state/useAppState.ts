@@ -4,7 +4,6 @@ import { presets2d } from '../math/presets2d.ts'
 import { presets3d, presetsR2ToR3, presetsR3ToR2 } from '../math/presets3d.ts'
 import type { LinearMap, MapKind, SpaceDim, VectorState, ViewOptions } from '../math/types.ts'
 import { resizeVector } from '../math/vector.ts'
-import { decodeUrlState } from './urlState.ts'
 
 function id(prefix: string): string {
   return `${prefix}-${globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)}`
@@ -66,13 +65,8 @@ const defaultViewOptions: ViewOptions = {
 }
 
 export function useAppState() {
-  const loaded = typeof window === 'undefined' ? null : decodeUrlState(window.location.search)
-  const [maps, setMaps] = useState<LinearMap[]>(() =>
-    loaded?.maps?.length ? loaded.maps : [clonePreset(presets2d[0], 'A1')],
-  )
-  const [vectors, setVectors] = useState<VectorState[]>(() =>
-    loaded?.vectors?.length ? loaded.vectors : defaultVectors(loaded?.maps?.[0]?.inputDim ?? 2),
-  )
+  const [maps, setMaps] = useState<LinearMap[]>(() => [clonePreset(presets2d[0], 'A1')])
+  const [vectors, setVectors] = useState<VectorState[]>(() => defaultVectors(2))
   const [viewOptions, setViewOptions] = useState<ViewOptions>(defaultViewOptions)
 
   const validation = useMemo(() => validateMapSequence(maps), [maps])

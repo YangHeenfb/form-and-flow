@@ -21,12 +21,6 @@ import {
   decodePolynomialState,
   decodeProbabilityState,
   decodeSignalState,
-  encodeContinuousState,
-  encodeDiscreteState,
-  encodeImageKernelState,
-  encodePolynomialState,
-  encodeProbabilityState,
-  encodeSignalState,
 } from '../modules/convolution/shared/convolutionUrlState.ts'
 
 describe('discrete convolution math', () => {
@@ -130,7 +124,7 @@ describe('continuous convolution numerics', () => {
   })
 })
 
-describe('convolution module registry and URL state', () => {
+describe('convolution module registry and URL params', () => {
   it('registers the convolution module once with all six ready routes', () => {
     const modules = moduleRegistry.filter((module) => module.id === 'convolution')
     expect(modules).toHaveLength(1)
@@ -147,13 +141,13 @@ describe('convolution module registry and URL state', () => {
     expect(moduleRegistry.find((module) => module.id === 'calculus')).toBeTruthy()
   })
 
-  it('round-trips lesson URL states and falls back on invalid params', () => {
-    expect(decodeDiscreteState(encodeDiscreteState({ a: [1, 2], b: [3], mode: 'same', operation: 'correlation', k: 1 })).mode).toBe('same')
-    expect(decodeProbabilityState(encodeProbabilityState({ preset: 'd6-d6', sum: 7 })).sum).toBe(7)
-    expect(decodeSignalState(encodeSignalState({ signal: 'sine', kernel: 'gaussian', mode: 'same', boundary: 'wrap', length: 64, sigma: 1.2, noise: 0.2, seed: 4, index: 3 })).boundary).toBe('wrap')
-    expect(decodeImageKernelState(encodeImageKernelState({ image: 'edge-shapes', kernel: 'sharpen', boundary: 'clamp', operation: 'correlation', normalize: false, preserveAlpha: true, grayscale: false })).kernel).toBe('sharpen')
-    expect(decodePolynomialState(encodePolynomialState({ a: [1, 1], b: [1, 1], k: 2 })).a).toEqual([1, 1])
-    expect(decodeContinuousState(encodeContinuousState({ f: 'rectangle', g: 'gaussian', t: 0.5, samples: 96 })).t).toBe(0.5)
+  it('reads lesson URL params and falls back on invalid params', () => {
+    expect(decodeDiscreteState(new URLSearchParams('a=1,2&b=3&mode=same&operation=correlation&k=1')).mode).toBe('same')
+    expect(decodeProbabilityState(new URLSearchParams('preset=d6-d6&sum=7')).sum).toBe(7)
+    expect(decodeSignalState(new URLSearchParams('signal=sine&kernel=gaussian&mode=same&boundary=wrap&length=64&sigma=1.2&noise=0.2&seed=4&index=3')).boundary).toBe('wrap')
+    expect(decodeImageKernelState(new URLSearchParams('image=edge-shapes&kernel=sharpen&boundary=clamp&operation=correlation&normalize=false&preserveAlpha=true&grayscale=false')).kernel).toBe('sharpen')
+    expect(decodePolynomialState(new URLSearchParams('a=1,1&b=1,1&k=2')).a).toEqual([1, 1])
+    expect(decodeContinuousState(new URLSearchParams('f=rectangle&g=gaussian&t=0.5&samples=96')).t).toBe(0.5)
     expect(decodeDiscreteState(new URLSearchParams('mode=bad&a=')).mode).toBe('full')
     expect(decodeProbabilityState(new URLSearchParams()).sum).toBe(7)
     expect(decodeSignalState(new URLSearchParams()).length).toBe(64)
