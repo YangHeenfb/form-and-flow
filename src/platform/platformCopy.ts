@@ -16,7 +16,6 @@ type PlatformCopy = {
     lessons: string
     help: string
     reset: string
-    share: string
     exportPng: string
     switchLanguage: string
     switchLanguageAria: string
@@ -27,7 +26,6 @@ type PlatformCopy = {
     homeAria: string
     helpAria: string
     resetAria: string
-    shareAria: string
     exportAria: string
   }
   moduleHome: {
@@ -70,7 +68,6 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       lessons: 'Lessons',
       help: 'Help',
       reset: 'Reset',
-      share: 'Share',
       exportPng: 'Export PNG',
       switchLanguage: '中文',
       switchLanguageAria: 'Switch language',
@@ -81,7 +78,6 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       homeAria: 'Visual Math Lab home',
       helpAria: 'Open current module help',
       resetAria: 'Reset current module',
-      shareAria: 'Share current page',
       exportAria: 'Export current visualization',
     },
     moduleHome: {
@@ -140,7 +136,6 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       lessons: '章节',
       help: '帮助',
       reset: '重置',
-      share: '分享',
       exportPng: '导出 PNG',
       switchLanguage: 'EN',
       switchLanguageAria: '切换语言',
@@ -151,7 +146,6 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       homeAria: 'Visual Math Lab 首页',
       helpAria: '打开当前模块帮助',
       resetAria: '重置当前模块',
-      shareAria: '分享当前页面',
       exportAria: '导出当前可视化',
     },
     moduleHome: {

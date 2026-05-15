@@ -91,7 +91,6 @@ const differentialCopy: Record<DifferentialLocale, {
     reset: string
     resetView: string
     lesson: string
-    share: string
     exportPng: string
     seeing: string
     why: string
@@ -125,7 +124,6 @@ const differentialCopy: Record<DifferentialLocale, {
       reset: 'Reset animation',
       resetView: 'Reset view',
       lesson: 'Lesson',
-      share: 'Share',
       exportPng: 'Export PNG',
       seeing: 'What you are seeing',
       why: 'Why it matters',
@@ -227,7 +225,6 @@ const differentialCopy: Record<DifferentialLocale, {
       reset: '重置动画',
       resetView: '重置视图',
       lesson: '章节',
-      share: '分享',
       exportPng: '导出 PNG',
       seeing: '你正在看到什么',
       why: '为什么重要',
@@ -487,17 +484,6 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
     heatTime,
   }, locale)
 
-  const share = () => {
-    const params = new URLSearchParams()
-    params.set('preset', scalarPresetId)
-    params.set('f', expression)
-    params.set('duration', String(round(duration)))
-    params.set('steps', String(Math.round(steps)))
-    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`
-    window.history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`)
-    void navigator.clipboard?.writeText(url)
-  }
-
   const exportPng = () => {
     const canvas = document.querySelector<HTMLCanvasElement>('.diffeq-canvas')
     if (!canvas) return
@@ -661,8 +647,6 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
             graphAriaLabel={ui.graphHelp}
             onGraphHelp={() => setHelpMode({ kind: 'graph' })}
             focusButton={focusButton}
-            shareLabel={ui.share}
-            onShare={share}
             exportLabel={ui.exportPng}
             onExport={exportPng}
           />
