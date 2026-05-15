@@ -45,6 +45,8 @@ type ValueRow = {
   label: string
   labelTex?: string
   value: string
+  note?: ReactNode
+  term?: DifferentialTermId
 }
 
 type LessonCopy = {
@@ -70,6 +72,19 @@ type DifferentialTermId =
   | 'heat-alpha'
   | 'heat-ut'
   | 'heat-uxx'
+  | 'heat-boundary'
+  | 'phase-state'
+  | 'phase-arrow'
+  | 'phase-time'
+  | 'pendulum-theta'
+  | 'pendulum-omega'
+  | 'pendulum-damping'
+  | 'pendulum-gravity'
+  | 'population-prey-growth'
+  | 'population-predation'
+  | 'population-predator-death'
+  | 'population-conversion'
+  | 'population-equilibrium'
 type DifferentialHelpMode = { kind: 'beginner' } | { kind: 'graph' } | { kind: 'term'; term: DifferentialTermId }
 
 const methodOptions: OdeMethod[] = ['euler', 'midpoint', 'rk4']
@@ -179,35 +194,35 @@ const differentialCopy: Record<DifferentialLocale, {
       },
       'phase-portraits': {
         title: 'Phase Portraits & Vector Fields',
-        what: 'Each arrow gives a velocity vector, and trajectories reveal the global motion implied by the system.',
+        what: 'Each point is a system state. Arrows point in the next-motion direction, and the highlighted curve shows the future from the chosen state.',
         why: 'A phase portrait shows the shape of all possible futures without plotting time on a separate axis.',
         formulaTex: "x'=F(x,y),\\quad y'=G(x,y)",
         formulaLabel: "x'=F(x,y), y'=G(x,y)",
-        watch: 'Look for fixed points, spirals, saddles, centers, and stable directions.',
+        watch: 'Look for fixed points, spirals, saddles, centers, and stable directions. Arrow opacity hints speed; arrow length is normalized so the field stays readable.',
       },
       pendulum: {
         title: 'Pendulum & Oscillators',
-        what: 'The pendulum is drawn as a phase portrait for angle and angular velocity, with the current bob shown in the inset.',
+        what: 'The main graph is phase space: horizontal is angle, vertical is angular velocity. The inset shows the real bob position.',
         why: 'A second-order equation becomes a first-order system by tracking position and velocity together.',
         formulaTex: "\\theta'=\\omega,\\quad \\omega'=-g\\sin(\\theta)-c\\omega",
         formulaLabel: "theta'=omega, omega'=-g sin(theta)-c omega",
-        watch: 'Damping removes energy; without damping the trajectory follows nearly closed loops.',
+        watch: 'With no damping, energy stays on one energy curve and small swings look like closed loops. Damping makes the path spiral inward.',
       },
       population: {
         title: 'Population Dynamics',
         what: 'Prey and predator populations move through phase space under the Lotka-Volterra interaction rule.',
-        why: 'Coupled ODEs turn feedback into cycles, equilibria, or collapse depending on parameters.',
+        why: 'This simplified model turns prey-predator feedback into chase-like cycles; richer ecology needs carrying capacity, extinction, migration, and noise.',
         formulaTex: "x'=x(a-by),\\quad y'=y(cx-d)",
         formulaLabel: "prey'=prey(a-b predator), predator'=predator(c prey-d)",
-        watch: 'Changing interaction strength moves the equilibrium and changes the cycle size.',
+        watch: 'Changing parameters moves the equilibrium and reshapes the loops around it. The initial point chooses which loop you start on.',
       },
       'heat-equation': {
         title: 'Heat Equation / Diffusion',
         what: 'The initial temperature profile smooths out over time while the heat strip shows the current rod state.',
-        why: 'The heat equation turns local curvature into flow from hot regions toward cooler neighbors.',
+        why: 'The heat equation turns local differences from nearby temperatures into diffusion from hotter regions toward cooler neighbors.',
         formulaTex: "u_t=\\alpha u_{xx}",
         formulaLabel: 'u_t = alpha u_xx',
-        watch: 'Sharp corners disappear quickly; larger diffusivity smooths the profile faster.',
+        watch: 'Sharp peaks disappear quickly. The rod ends are fixed cold here, so average heat can fall as heat flows out through the ends.',
       },
     },
   },
@@ -281,35 +296,35 @@ const differentialCopy: Record<DifferentialLocale, {
       },
       'phase-portraits': {
         title: '相图与向量场',
-        what: '每个箭头表示速度向量，轨迹展示系统规则推出的整体运动。',
+        what: '每个点都是一个系统状态。箭头指向下一步运动方向，高亮曲线显示从当前状态出发的未来。',
         why: '相图不用单独画时间轴，也能看出所有可能未来的形状。',
         formulaTex: "x'=F(x,y),\\quad y'=G(x,y)",
         formulaLabel: "x'=F(x,y), y'=G(x,y)",
-        watch: '观察固定点、螺旋、鞍点、中心和稳定方向。',
+        watch: '观察固定点、螺旋、鞍点、中心和稳定方向。箭头深浅提示速度大小；箭头长度做了归一化，方便读方向。',
       },
       pendulum: {
         title: '摆与振子',
-        what: '摆被画成角度和角速度的相图，右上角同时显示当前摆锤位置。',
+        what: '主图是相空间：横轴是角度，纵轴是角速度。右上角小图显示真实摆锤位置。',
         why: '二阶方程可以通过同时追踪位置和速度，改写成一阶系统。',
         formulaTex: "\\theta'=\\omega,\\quad \\omega'=-g\\sin(\\theta)-c\\omega",
         formulaLabel: "theta'=omega, omega'=-g sin(theta)-c omega",
-        watch: '阻尼会移除能量；没有阻尼时，轨迹接近闭合环。',
+        watch: '没有阻尼时，能量基本保持，轨迹沿同一条能量线走；小摆动看起来像闭合环。加入阻尼后，轨迹会向稳定点收缩。',
       },
       population: {
         title: '种群动力学',
         what: '猎物和捕食者数量在 Lotka-Volterra 规则下沿相空间运动。',
-        why: '耦合 ODE 会把反馈变成周期、平衡或崩塌，具体取决于参数。',
+        why: '这个简化模型展示追赶式反馈：猎物多了会养活更多捕食者，捕食者多了又会压低猎物。环境上限、灭绝、迁移等属于更复杂模型。',
         formulaTex: "x'=x(a-by),\\quad y'=y(cx-d)",
         formulaLabel: "prey'=prey(a-b predator), predator'=predator(c prey-d)",
-        watch: '改变交互强度会移动平衡点，也会改变循环幅度。',
+        watch: '改变参数会移动平衡点，也会改变轨迹围绕平衡点的形状。初始位置决定从哪一条轨迹开始。',
       },
       'heat-equation': {
         title: '热方程 / 扩散',
         what: '初始温度曲线会随时间变平滑，热量色带显示当前杆上的状态。',
-        why: '热方程把局部曲率转化为从热处流向冷处的扩散。',
+        why: '热方程把一个点和附近温度的差异转化为扩散：高处向低处流，低处被附近补热。',
         formulaTex: "u_t=\\alpha u_{xx}",
         formulaLabel: 'u_t = alpha u_xx',
-        watch: '尖锐边缘会很快消失；扩散率越大，曲线越快变平。',
+        watch: '尖峰会很快变平。这里把杆两端固定为冷端，所以热量会从两端流走，平均温可能下降。',
       },
     },
   },
@@ -693,21 +708,24 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
         <p>{copy.why}</p>
         <h2>{ui.formula}</h2>
         <p className="formula-text formula-card">
-          <Formula tex={currentFormulaTex(lessonId, scalarPreset, phasePreset, copy.formulaTex)} block label={copy.formulaLabel} />
+          <Formula tex={currentFormulaTex(lessonId, expressionTex, phasePreset, copy.formulaTex)} block label={copy.formulaLabel} />
         </p>
-        {lessonId === 'heat-equation' && <HeatVariableTerms locale={locale} onTerm={(term) => setHelpMode({ kind: 'term', term })} />}
+        <LessonTermLinks lessonId={lessonId} locale={locale} onTerm={(term) => setHelpMode({ kind: 'term', term })} />
         <Legend lessonId={lessonId} locale={locale} />
         <h2>{ui.values}</h2>
         <dl>
-          {values.map(({ label, labelTex, value }) => (
-            <div key={label}>
-              <dt>{labelTex ? <Formula tex={labelTex} /> : label}</dt>
-              <dd>{value}</dd>
+          {values.map((row) => (
+            <div key={`${row.label}-${row.labelTex ?? ''}`}>
+              <dt>{renderValueLabel(row, (term) => setHelpMode({ kind: 'term', term }))}</dt>
+              <dd>
+                <span>{row.value}</span>
+                {row.note && <small className="diffeq-value-note">{row.note}</small>}
+              </dd>
             </div>
           ))}
         </dl>
         <h2>{ui.watch}</h2>
-        <p>{copy.watch}</p>
+        <p>{renderWatchText(lessonId, locale, scalarPresetId, copy.watch)}</p>
       </aside>
     </section>
       )}
@@ -781,29 +799,95 @@ function Legend({ lessonId, locale }: { lessonId: string; locale: DifferentialLo
   )
 }
 
-function HeatVariableTerms({ locale, onTerm }: { locale: DifferentialLocale; onTerm: (term: DifferentialTermId) => void }) {
+function LessonTermLinks({ lessonId, locale, onTerm }: { lessonId: string; locale: DifferentialLocale; onTerm: (term: DifferentialTermId) => void }) {
+  const links = lessonTermLinks(lessonId, locale)
+  if (!links.length) return null
+
   return (
-    <div className="diffeq-variable-terms" aria-label={locale === 'zh' ? '热方程变量解释' : 'Heat equation variable explanations'}>
-      <span>{locale === 'zh' ? '变量' : 'Variables'}</span>
-      <TermButton onClick={() => onTerm('heat-u')}>
-        <Formula tex="u" />
-      </TermButton>
-      <TermButton onClick={() => onTerm('heat-alpha')}>
-        <Formula tex="\\alpha" />
-      </TermButton>
-      <TermButton onClick={() => onTerm('heat-ut')}>
-        <Formula tex="u_t" />
-      </TermButton>
-      <TermButton onClick={() => onTerm('heat-uxx')}>
-        <Formula tex="u_{xx}" />
-      </TermButton>
+    <div className="diffeq-variable-terms" aria-label={locale === 'zh' ? '术语解释' : 'Term explanations'}>
+      <span>{termGroupLabel(lessonId, locale)}</span>
+      {links.map((link) => (
+        <TermButton key={link.term} onClick={() => onTerm(link.term)}>
+          {link.tex ? <Formula tex={link.tex} /> : link.label}
+        </TermButton>
+      ))}
     </div>
+  )
+}
+
+function lessonTermLinks(lessonId: string, locale: DifferentialLocale): { term: DifferentialTermId; label: string; tex?: string }[] {
+  if (lessonId === 'numerical-methods') {
+    return [
+      { term: 'step-size', label: 'h', tex: 'h' },
+      { term: 'euler', label: 'Euler' },
+      { term: 'midpoint', label: locale === 'zh' ? '中点法' : 'midpoint' },
+      { term: 'rk4', label: 'RK4' },
+    ]
+  }
+  if (lessonId === 'phase-portraits') {
+    return [
+      { term: 'phase-state', label: locale === 'zh' ? '状态点' : 'state point' },
+      { term: 'phase-arrow', label: locale === 'zh' ? '箭头' : 'arrows' },
+      { term: 'phase-time', label: locale === 'zh' ? '时间方向' : 'time direction' },
+    ]
+  }
+  if (lessonId === 'pendulum') {
+    return [
+      { term: 'pendulum-theta', label: 'theta', tex: '\\theta' },
+      { term: 'pendulum-omega', label: 'omega', tex: '\\omega' },
+      { term: 'pendulum-damping', label: 'c', tex: 'c' },
+      { term: 'pendulum-gravity', label: 'g', tex: 'g' },
+    ]
+  }
+  if (lessonId === 'population') {
+    return [
+      { term: 'population-prey-growth', label: 'a', tex: 'a' },
+      { term: 'population-predation', label: 'b', tex: 'b' },
+      { term: 'population-predator-death', label: 'd', tex: 'd' },
+      { term: 'population-conversion', label: 'c', tex: 'c' },
+      { term: 'population-equilibrium', label: locale === 'zh' ? '平衡点' : 'equilibrium' },
+    ]
+  }
+  if (lessonId === 'heat-equation') {
+    return [
+      { term: 'heat-u', label: 'u', tex: 'u' },
+      { term: 'heat-alpha', label: 'alpha', tex: '\\alpha' },
+      { term: 'heat-ut', label: 'u_t', tex: 'u_t' },
+      { term: 'heat-uxx', label: 'u_xx', tex: 'u_{xx}' },
+      { term: 'heat-boundary', label: locale === 'zh' ? '冷端假设' : 'cold ends' },
+    ]
+  }
+  return []
+}
+
+function termGroupLabel(lessonId: string, locale: DifferentialLocale): string {
+  if (lessonId === 'heat-equation') return locale === 'zh' ? '变量 / 假设' : 'Variables / assumptions'
+  if (lessonId === 'numerical-methods') return locale === 'zh' ? '方法 / 步长' : 'Methods / step'
+  if (lessonId === 'phase-portraits') return locale === 'zh' ? '图像语言' : 'Graph language'
+  return locale === 'zh' ? '参数' : 'Parameters'
+}
+
+function renderValueLabel(row: ValueRow, onTerm: (term: DifferentialTermId) => void) {
+  const term = row.term
+  return (
+    <>
+      {term ? (
+        <TermButton onClick={() => onTerm(term)}>{row.label}</TermButton>
+      ) : (
+        <span>{row.label}</span>
+      )}
+      {row.labelTex && (
+        <span className="diffeq-value-formula">
+          <Formula tex={row.labelTex} />
+        </span>
+      )}
+    </>
   )
 }
 
 function renderDifferentialWhat(lessonId: string, locale: DifferentialLocale, fallback: string, onTerm: (term: DifferentialTermId) => void): ReactNode {
   const term = (id: DifferentialTermId, labelText: string) => (
-    <TermButton key={id} onClick={() => onTerm(id)}>
+    <TermButton key={`${id}-${labelText}`} onClick={() => onTerm(id)}>
       {labelText}
     </TermButton>
   )
@@ -835,11 +919,35 @@ function renderDifferentialWhat(lessonId: string, locale: DifferentialLocale, fa
   if (lessonId === 'phase-portraits') {
     return locale === 'zh' ? (
       <>
-        每个箭头表示当前位置的速度向量，也就是同时给出 {term('y-prime', "x' 和 y'")}。轨迹展示系统从某个初始状态出发后的整体运动。
+        主图里的点是 {term('phase-state', '状态')}，不是物体的真实空间位置。箭头给出 {term('phase-arrow', '下一步方向')}：长度做了归一化，深浅才提示速度大小。轨迹展示系统从一个初始状态出发后的运动。
       </>
     ) : (
       <>
-        Each arrow is a velocity vector, giving {term('y-prime', "x' and y'")} at that state. A trajectory shows the motion produced by one initial state.
+        A point on the graph is a {term('phase-state', 'state')}, not a physical location. Arrows give the {term('phase-arrow', 'next-motion direction')}: length is normalized, while opacity hints speed. A trajectory shows the motion from one initial state.
+      </>
+    )
+  }
+
+  if (lessonId === 'pendulum') {
+    return locale === 'zh' ? (
+      <>
+        主图横轴是角度 {term('pendulum-theta', 'θ')}，纵轴是角速度 {term('pendulum-omega', 'ω')}。一个点代表“现在摆到哪里、转得多快”；右上角小图才是摆锤在真实空间里的位置。
+      </>
+    ) : (
+      <>
+        The horizontal axis is angle {term('pendulum-theta', 'theta')}; the vertical axis is angular velocity {term('pendulum-omega', 'omega')}. One point means “where the pendulum is and how fast it is turning”; the inset shows the physical bob.
+      </>
+    )
+  }
+
+  if (lessonId === 'population') {
+    return locale === 'zh' ? (
+      <>
+        横轴是猎物数量 {term('phase-state', 'x')}，纵轴是捕食者数量 {term('phase-state', 'y')}。轨迹不是地理路线，而是两个种群数量随时间变化时，在状态平面留下的路线。
+      </>
+    ) : (
+      <>
+        The horizontal axis is prey {term('phase-state', 'x')}; the vertical axis is predators {term('phase-state', 'y')}. The trajectory is not a map route; it is the path traced by the two population counts over time.
       </>
     )
   }
@@ -847,15 +955,30 @@ function renderDifferentialWhat(lessonId: string, locale: DifferentialLocale, fa
   if (lessonId === 'heat-equation') {
     return locale === 'zh' ? (
       <>
-        每个位置的温度写作 {term('heat-u', 'u(x,t)')}。参数 {term('heat-alpha', 'α')} 控制扩散速度，而公式里的 {term('heat-uxx', 'uₓₓ')} 表示曲线的局部弯曲程度。
+        每个位置的温度写作 {term('heat-u', 'u(x,t)')}。黄色曲线是当前温度，灰色曲线是初始温度；参数 {term('heat-alpha', 'α')} 控制扩散速度，两端采用 {term('heat-boundary', '冷端假设')}。
       </>
     ) : (
       <>
-        The temperature at each position is {term('heat-u', 'u(x,t)')}. The parameter {term('heat-alpha', 'alpha')} controls diffusion speed, and {term('heat-uxx', 'u_xx')} measures local curvature.
+        The temperature at each position is {term('heat-u', 'u(x,t)')}. The yellow curve is current temperature; the gray curve is the initial temperature. The parameter {term('heat-alpha', 'alpha')} controls diffusion speed, with {term('heat-boundary', 'cold-end boundary conditions')}.
       </>
     )
   }
 
+  return fallback
+}
+
+function renderWatchText(lessonId: string, locale: DifferentialLocale, scalarPresetId: string, fallback: string): ReactNode {
+  if (lessonId === 'slope-fields' && scalarPresetId === 'logistic') {
+    return locale === 'zh' ? (
+      <>
+        这个 logistic 例子里 {formula('y=0')} 和 {formula('y=4')} 是平衡位置。只要 {formula('0<y<4')}，曲线会往上走；超过 {formula('4')} 后，增长率变负，曲线会往下回落。
+      </>
+    ) : (
+      <>
+        In this logistic example, {formula('y=0')} and {formula('y=4')} are equilibria. When {formula('0<y<4')}, the curve moves upward; above {formula('4')}, growth becomes negative and the curve falls back.
+      </>
+    )
+  }
   return fallback
 }
 
@@ -886,8 +1009,20 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
               items: [
                 'Euler：只看当前位置的斜率，直接沿这个方向走一步；直觉最强，但容易越走越偏。',
                 '中点法：先按当前斜率试走半步，在半步位置重新看斜率，再用这个更接近中间的斜率走完整一步。',
-                'RK4：在一步里看 4 次斜率，把起点、中间、终点附近的信息加权平均，通常同样步数下更准。',
+                'RK4：在一步里看 4 次斜率，把起点、中间、终点附近的信息加权平均，通常同样步数下更稳。',
               ],
+            },
+            {
+              title: '不要把 RK4 当成真答案',
+              body: '三条线都在猜同一条真正的解曲线。黄色 RK4 只是这里更可靠的参考，不是严格解析解。',
+            },
+            {
+              title: '步数和 h 的关系',
+              body: (
+                <>
+                  你设定总时间和步数，单步长度就是 {formula('h=\\Delta t/n')}。步数越多，{formula('h')} 越小；小步通常更准，但要计算更多次。
+                </>
+              ),
             },
             {
               title: '怎么探索',
@@ -913,8 +1048,20 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
               items: [
                 'Euler uses only the slope at the current point, so it is simple but drifts easily.',
                 'Midpoint takes a half-step guess, checks the slope there, then uses that middle slope for the full step.',
-                'RK4 samples four slopes inside one step and blends them, so it is usually much more accurate for the same step count.',
+                'RK4 samples four slopes inside one step and blends them, so it is usually steadier for the same step count.',
               ],
+            },
+            {
+              title: 'RK4 is not the exact answer',
+              body: 'All three paths are approximating the same true solution curve. The yellow RK4 curve is just a more reliable reference here, not an analytic solution.',
+            },
+            {
+              title: 'Steps and h',
+              body: (
+                <>
+                  You set total time and step count, so one step has length {formula('h=\\Delta t/n')}. More steps make {formula('h')} smaller; smaller steps are usually more accurate but cost more computation.
+                </>
+              ),
             },
             {
               title: 'How to explore',
@@ -982,6 +1129,248 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
         }
   }
 
+  if (lessonId === 'phase-portraits') {
+    return locale === 'zh'
+      ? {
+          eyebrow: '从零开始',
+          title: '相图不是普通坐标图',
+          summary: '相图把系统的状态放在平面上；时间没有单独画成横轴，而是藏在轨迹前进方向里。',
+          sections: [
+            {
+              title: '点代表状态',
+              body: (
+                <>
+                  图上的一个点 {formula('(x,y)')} 表示两个状态变量当前的数值。它通常不是物体在真实空间里的位置。
+                </>
+              ),
+            },
+            {
+              title: '箭头代表下一步方向',
+              body: (
+                <>
+                  规则 {formula("x'=F(x,y),\\ y'=G(x,y)")} 告诉你从这个状态下一瞬间会往哪里走。本图把箭头长度归一化，所以主要读方向；箭头越深，速度大小通常越大。
+                </>
+              ),
+            },
+            {
+              title: '看长期趋势',
+              body: '从初始点出发，轨迹会沿箭头移动。整张图让你看出会靠近固定点、绕圈、逃走，还是被某个方向拉开。',
+            },
+          ],
+        }
+      : {
+          eyebrow: 'Start from zero',
+          title: 'A phase portrait is not an ordinary coordinate plot',
+          summary: 'A phase portrait places the system state in the plane. Time is not a separate horizontal axis; it is carried by the direction of motion.',
+          sections: [
+            {
+              title: 'A point is a state',
+              body: (
+                <>
+                  A point {formula('(x,y)')} means the current values of two state variables. It is usually not a physical location.
+                </>
+              ),
+            },
+            {
+              title: 'Arrows show the next direction',
+              body: (
+                <>
+                  The rule {formula("x'=F(x,y),\\ y'=G(x,y)")} tells which way the state moves next. This graph normalizes arrow length, so read direction first; darker arrows usually mean higher speed.
+                </>
+              ),
+            },
+            {
+              title: 'Read the long-term behavior',
+              body: 'Starting from the initial point, the trajectory follows the arrows. The whole field shows whether motion approaches a fixed point, loops, escapes, or stretches along a direction.',
+            },
+          ],
+        }
+  }
+
+  if (lessonId === 'pendulum') {
+    return locale === 'zh'
+      ? {
+          eyebrow: '从零开始',
+          title: '摆图里为什么有两个坐标',
+          summary: '摆的真实位置只靠角度还不够；要预测下一刻，还必须知道它正在往哪边转、转得多快。',
+          sections: [
+            {
+              title: '两个状态变量',
+              body: (
+                <>
+                  横轴 {formula('\\theta')} 是角度，纵轴 {formula('\\omega')} 是角速度。一个点代表“角度是多少、转得多快”。
+                </>
+              ),
+            },
+            {
+              title: '公式的动作语言',
+              body: (
+                <>
+                  {formula("\\theta'=\\omega")} 说角速度会改变角度；{formula("\\omega'=-g\\sin(\\theta)-c\\omega")} 说重力把摆拉回中间，阻尼 {formula('c')} 让速度逐渐损失。
+                </>
+              ),
+            },
+            {
+              title: '能量图像',
+              body: '没有阻尼时，轨迹沿着同一条能量线走；有阻尼时，能量不断减少，所以轨迹向稳定点缩进去。',
+            },
+          ],
+        }
+      : {
+          eyebrow: 'Start from zero',
+          title: 'Why the pendulum graph has two coordinates',
+          summary: 'Angle alone is not enough to predict a pendulum. You also need to know which way it is turning and how fast.',
+          sections: [
+            {
+              title: 'Two state variables',
+              body: (
+                <>
+                  The horizontal axis {formula('\\theta')} is angle; the vertical axis {formula('\\omega')} is angular velocity. One point means “current angle and current turning speed.”
+                </>
+              ),
+            },
+            {
+              title: 'The formula as motion',
+              body: (
+                <>
+                  {formula("\\theta'=\\omega")} says angular velocity changes angle. {formula("\\omega'=-g\\sin(\\theta)-c\\omega")} says gravity pulls the pendulum back toward center while damping {formula('c')} removes speed.
+                </>
+              ),
+            },
+            {
+              title: 'Energy picture',
+              body: 'With no damping, the trajectory stays on one energy curve. With damping, energy keeps decreasing, so the path spirals toward the stable point.',
+            },
+          ],
+        }
+  }
+
+  if (lessonId === 'population') {
+    return locale === 'zh'
+      ? {
+          eyebrow: '从零开始',
+          title: '猎物和捕食者为什么会绕圈',
+          summary: '这个模型只保留一个反馈：猎物多会支持更多捕食者，捕食者多又会压低猎物。',
+          sections: [
+            {
+              title: '坐标轴',
+              body: (
+                <>
+                  横轴 {formula('x')} 是猎物数量，纵轴 {formula('y')} 是捕食者数量。轨迹表示这两个数量随时间一起变化。
+                </>
+              ),
+            },
+            {
+              title: '参数怎么读',
+              items: [
+                'a：没有捕食者时，猎物自己增长的速度。',
+                'b：捕食强度，越大猎物被压低得越快。',
+                'd：捕食者死亡，越大捕食者越难维持。',
+                'c：转化率，越大同样猎物能支持更多捕食者。',
+              ],
+            },
+            {
+              title: '平衡点',
+              body: (
+                <>
+                  非零平衡点是 {formula('(d/c,\\ a/b)')}。改参数时，你其实在移动这个中心；初始位置决定你围绕它走哪一条轨迹。
+                </>
+              ),
+            },
+          ],
+        }
+      : {
+          eyebrow: 'Start from zero',
+          title: 'Why prey and predators cycle',
+          summary: 'This model keeps one feedback loop: more prey can support more predators, and more predators push prey down.',
+          sections: [
+            {
+              title: 'Axes',
+              body: (
+                <>
+                  The horizontal axis {formula('x')} is prey; the vertical axis {formula('y')} is predators. The trajectory shows how both counts change together over time.
+                </>
+              ),
+            },
+            {
+              title: 'Parameters',
+              items: [
+                'a: prey growth when predators are absent.',
+                'b: predation strength; larger b pushes prey down faster.',
+                'd: predator death; larger d makes predators harder to sustain.',
+                'c: conversion; larger c lets the same prey support more predators.',
+              ],
+            },
+            {
+              title: 'Equilibrium',
+              body: (
+                <>
+                  The nonzero equilibrium is {formula('(d/c,\\ a/b)')}. Changing parameters moves that center; the initial point decides which loop you start on.
+                </>
+              ),
+            },
+          ],
+        }
+  }
+
+  if (lessonId === 'heat-equation') {
+    return locale === 'zh'
+      ? {
+          eyebrow: '从零开始',
+          title: '热方程在让曲线变平',
+          summary: '这里不是在画箭头轨迹，而是在看一根杆上的温度分布如何随时间扩散。',
+          sections: [
+            {
+              title: '图上的对象',
+              body: (
+                <>
+                  横轴 {formula('x')} 是杆上的位置，曲线高度 {formula('u(x,t)')} 是温度。灰色是初始温度，黄色是当前温度，下方色带是同一根杆的热度分布。
+                </>
+              ),
+            },
+            {
+              title: 'u_xx 的直觉',
+              body: (
+                <>
+                  {formula('u_{xx}')} 可以理解成“这个点和附近平均温度的差”。比邻居高很多时通常会降温；比邻居低时通常会升温；平坦区域变化很慢。
+                </>
+              ),
+            },
+            {
+              title: '边界假设',
+              body: '这个模拟把杆两端固定为冷端，所以热量可以从两端流走。平均温下降不是数值错误，而是边界条件造成的。',
+            },
+          ],
+        }
+      : {
+          eyebrow: 'Start from zero',
+          title: 'The heat equation smooths a curve',
+          summary: 'This view is not an arrow trajectory. It shows how temperature along one rod diffuses over time.',
+          sections: [
+            {
+              title: 'What is on the graph',
+              body: (
+                <>
+                  The horizontal axis {formula('x')} is position on the rod, and curve height {formula('u(x,t)')} is temperature. Gray is the initial temperature, yellow is the current temperature, and the strip below is the same rod as a heat map.
+                </>
+              ),
+            },
+            {
+              title: 'Intuition for u_xx',
+              body: (
+                <>
+                  {formula('u_{xx}')} can be read as “how this point compares with nearby average temperature.” A point much hotter than neighbors usually cools; a point cooler than neighbors warms; flat regions change slowly.
+                </>
+              ),
+            },
+            {
+              title: 'Boundary assumption',
+              body: 'This simulation fixes both rod ends as cold. Heat can flow out through those ends, so falling average temperature is a boundary-condition effect, not a numerical bug.',
+            },
+          ],
+        }
+  }
+
   return locale === 'zh'
     ? {
         eyebrow: '从零开始',
@@ -1013,7 +1402,7 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
           sections: [
             { title: '颜色', items: ['紫色：Euler。', '绿色：中点法。', '黄色：RK4。'] },
             { title: '点和线', body: 'Euler 上的小点是它每一步落下的位置。步数越少，每一步越长，误差通常越明显。' },
-            { title: '你应该观察什么', body: '把步数降低时，三条曲线会分开；把步数提高时，它们会靠近。若 Euler 很快偏离，说明这个变化规则对步长更敏感。' },
+            { title: '你应该观察什么', body: '把步数降低时，三条曲线会分开；把步数提高时，它们会靠近。若 Euler 很快偏离，说明这个变化规则对步长更敏感。黄色 RK4 只是更可靠的数值参考，不是严格真答案。' },
           ],
         }
       : {
@@ -1023,7 +1412,7 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
           sections: [
             { title: 'Colors', items: ['Purple: Euler.', 'Green: midpoint.', 'Yellow: RK4.'] },
             { title: 'Dots and lines', body: 'Small dots mark the points Euler lands on. Fewer steps mean longer steps, and errors usually become more visible.' },
-            { title: 'What to watch', body: 'Lower the step count to make the paths separate, then raise it to see them converge. Early Euler drift means the rule is sensitive to step size.' },
+            { title: 'What to watch', body: 'Lower the step count to make the paths separate, then raise it to see them converge. Early Euler drift means the rule is sensitive to step size. Yellow RK4 is a better numerical reference here, not the exact truth.' },
           ],
         }
   }
@@ -1048,6 +1437,102 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
             { title: 'Gray segments', body: "Each segment shows y' at that point. Upward tilt means y is increasing; downward tilt means y is decreasing; steeper means faster change." },
             { title: 'Yellow curve', body: 'This is the solution from the current initial value. It follows the nearby segment directions.' },
             { title: 'Yellow point', body: 'This is the initial value. Moving t0 or y0 changes the starting point and selects a different solution.' },
+          ],
+        }
+  }
+
+  if (lessonId === 'phase-portraits') {
+    return locale === 'zh'
+      ? {
+          eyebrow: '怎么看图',
+          title: '相图图像读法',
+          summary: '横轴和纵轴都是状态变量，时间藏在轨迹的前进方向里。',
+          sections: [
+            { title: '点', body: '一个点代表系统当前状态 (x,y)。移动初始 x0、y0，就是把系统放到另一个初始状态。' },
+            { title: '箭头', body: '箭头主要表示方向。为了让图不乱，箭头长度做了归一化；箭头越深，速度大小通常越大。' },
+            { title: '轨迹', body: '黄色轨迹是从当前初始状态出发的未来。浅色轨迹是其他起点，用来帮助你看整体结构。' },
+          ],
+        }
+      : {
+          eyebrow: 'Read the graph',
+          title: 'How to read a phase portrait',
+          summary: 'Both axes are state variables. Time is carried by the direction of travel along trajectories.',
+          sections: [
+            { title: 'Point', body: 'A point is the current state (x,y). Moving x0 or y0 places the system in a different initial state.' },
+            { title: 'Arrows', body: 'Arrows mainly show direction. Length is normalized to keep the field readable; darker arrows usually indicate larger speed.' },
+            { title: 'Trajectory', body: 'The yellow trajectory is the future from the current initial state. Muted trajectories from other seeds reveal the global structure.' },
+          ],
+        }
+  }
+
+  if (lessonId === 'pendulum') {
+    return locale === 'zh'
+      ? {
+          eyebrow: '怎么看图',
+          title: '摆相图读法',
+          summary: '主图不是摆锤的真实空间路线，而是角度和角速度组成的状态图。',
+          sections: [
+            { title: '横轴和纵轴', body: '横轴 θ 表示摆偏离竖直方向的角度；纵轴 ω 表示角度变化有多快。ω 为正和为负代表转动方向相反。' },
+            { title: '右上角小图', body: '小图显示当前摆锤在真实空间里的位置。主图显示同一时刻的状态点在哪里。' },
+            { title: '轨迹形状', body: '闭合或近似闭合表示能量基本守恒；向中心缩进去表示阻尼正在移除能量。' },
+          ],
+        }
+      : {
+          eyebrow: 'Read the graph',
+          title: 'How to read the pendulum phase plot',
+          summary: 'The main plot is not the bob route in real space. It is a state plot of angle and angular velocity.',
+          sections: [
+            { title: 'Axes', body: 'Horizontal θ is angle away from vertical; vertical ω is how quickly the angle changes. Positive and negative ω mean opposite turning directions.' },
+            { title: 'Inset', body: 'The inset shows the current bob position in physical space. The main plot shows the state point at the same moment.' },
+            { title: 'Trajectory shape', body: 'Closed or nearly closed loops mean energy is mostly conserved. Inward spiraling means damping is removing energy.' },
+          ],
+        }
+  }
+
+  if (lessonId === 'population') {
+    return locale === 'zh'
+      ? {
+          eyebrow: '怎么看图',
+          title: '种群相图读法',
+          summary: '横轴是猎物，纵轴是捕食者；轨迹方向表示两个种群随时间怎样互相追赶。',
+          sections: [
+            { title: '黄色点和线', body: '黄色点是当前初始种群；黄色轨迹是从这个初始状态开始后，猎物和捕食者数量一起变化的路径。' },
+            { title: '蓝色点', body: '蓝色点是非零平衡点 (d/c, a/b)。在这个点附近，猎物和捕食者刚好互相抵消增长和减少。' },
+            { title: '参数变化', body: '调大或调小参数会移动平衡点，也会改变环绕它的轨迹形状；初始点决定你从哪条轨迹开始。' },
+          ],
+        }
+      : {
+          eyebrow: 'Read the graph',
+          title: 'How to read the population phase plot',
+          summary: 'The horizontal axis is prey; the vertical axis is predators. Trajectory direction shows how the two counts chase each other over time.',
+          sections: [
+            { title: 'Yellow point and path', body: 'The yellow point is the current initial population. The yellow path shows how prey and predators change together from that state.' },
+            { title: 'Blue point', body: 'The blue point is the nonzero equilibrium (d/c, a/b), where prey and predator growth effects balance.' },
+            { title: 'Parameter changes', body: 'Changing parameters moves the equilibrium and reshapes the paths around it; the initial point chooses which path you start on.' },
+          ],
+        }
+  }
+
+  if (lessonId === 'heat-equation') {
+    return locale === 'zh'
+      ? {
+          eyebrow: '怎么看图',
+          title: '热方程图像读法',
+          summary: '这里没有箭头或相轨迹；你看到的是同一根杆的温度曲线随时间变平。',
+          sections: [
+            { title: '曲线', body: '灰色曲线是初始温度。黄色曲线是当前温度。横轴是杆上的位置 x，曲线高度是温度 u。' },
+            { title: '色带', body: '下方色带是同一根杆的热度分布：颜色越暖，表示那个位置越热。' },
+            { title: '动画', body: '播放时，尖峰会被抹平，热量从高处向附近低处扩散。因为两端固定为冷端，平均温可能逐渐下降。' },
+          ],
+        }
+      : {
+          eyebrow: 'Read the graph',
+          title: 'How to read the heat equation graph',
+          summary: 'There are no arrows or phase trajectories here. You are watching one rod temperature curve smooth over time.',
+          sections: [
+            { title: 'Curves', body: 'Gray is the initial temperature. Yellow is the current temperature. The horizontal axis is position x, and curve height is temperature u.' },
+            { title: 'Strip', body: 'The strip below is the same rod as a heat map: warmer color means hotter position.' },
+            { title: 'Animation', body: 'When you play, peaks flatten as heat diffuses from high regions toward nearby low regions. Because both ends are fixed cold, average temperature can decrease.' },
           ],
         }
   }
@@ -1153,10 +1638,103 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
     'heat-uxx': {
       eyebrow: '变量',
       title: 'uₓₓ 是什么',
-      summary: 'uₓₓ 表示温度曲线对位置的二阶导数，可以理解为局部弯曲程度。',
+      summary: 'uₓₓ 表示温度曲线对位置的二阶导数，可以理解成“这个点和附近平均温度的差”。',
       sections: [
-        { title: '直觉', body: '尖峰附近弯曲大，所以变化快；平坦区域弯曲小，所以变化慢。' },
-        { title: '和热方程的关系', body: '公式 u_t = αuₓₓ 的意思是：曲线哪里弯得厉害，哪里就更快发生温度变化。' },
+        { title: '正负号', body: '如果一个点比邻居高很多，uₓₓ 通常为负，它会降温；如果一个点比邻居低，uₓₓ 通常为正，它会升温。' },
+        { title: '和热方程的关系', body: '公式 u_t = αuₓₓ 的意思是：温度变化率由附近温度差决定。平坦区域变化很慢。' },
+      ],
+    },
+    'heat-boundary': {
+      eyebrow: '假设',
+      title: '为什么两端是冷端',
+      summary: '这个模拟把杆两端固定为 0 温度，热量可以从两端流走。',
+      sections: [
+        { title: '图上会发生什么', body: '即使热量是在杆内部扩散，平均温度也可能下降，因为边界不断把热量带走。' },
+        { title: '这是什么假设', body: '它相当于杆的两端接在冷源上。换成绝热边界时，平均温度会有不同表现。' },
+      ],
+    },
+    'phase-state': {
+      eyebrow: '术语',
+      title: '状态点是什么',
+      summary: '状态点不是普通空间位置，而是一组变量当前的数值。',
+      sections: [
+        { title: '例子', body: '在摆模块里，一个点是 (角度, 角速度)。在种群模块里，一个点是 (猎物数量, 捕食者数量)。' },
+        { title: '为什么有用', body: '只看一个点，就能知道系统当前处境；沿着轨迹走，就能看到状态如何随时间改变。' },
+      ],
+    },
+    'phase-arrow': {
+      eyebrow: '术语',
+      title: '相图箭头怎么读',
+      summary: "箭头来自 x' 和 y'，表示当前状态下一瞬间往哪里走。",
+      sections: [
+        { title: '本图的约定', body: '箭头长度已归一化，所以不要用长度判断速度。箭头深浅会提示速度大小，方向仍然是最重要的信息。' },
+        { title: '和轨迹的关系', body: '轨迹应该一路顺着附近箭头方向前进。' },
+      ],
+    },
+    'phase-time': {
+      eyebrow: '术语',
+      title: '时间藏在哪里',
+      summary: '相图里没有单独的时间轴，时间体现在轨迹的前进方向上。',
+      sections: [{ title: '怎么看', body: '从初始点开始，沿着箭头方向走，就是时间增加时系统状态的变化。图上不能直接读出“几点到达这里”，但能读出长期趋势。' }],
+    },
+    'pendulum-theta': {
+      eyebrow: '变量',
+      title: 'θ 是什么',
+      summary: 'θ 是摆偏离竖直方向的角度。',
+      sections: [{ title: '调 θ₀ 会怎样', body: 'θ₀ 越大，表示一开始把摆拉得越偏；初始能量也通常越大。' }],
+    },
+    'pendulum-omega': {
+      eyebrow: '变量',
+      title: 'ω 是什么',
+      summary: 'ω 是角速度，表示角度正在变化得多快。',
+      sections: [{ title: '调 ω₀ 会怎样', body: 'ω₀ 的绝对值越大，摆一开始转得越快；正负号表示起始转动方向。' }],
+    },
+    'pendulum-damping': {
+      eyebrow: '参数',
+      title: '阻尼 c 是什么',
+      summary: 'c 表示摩擦或空气阻力这类能量损失。',
+      sections: [
+        { title: '调大 c', body: '能量流失更快，轨迹更快向稳定点收缩。' },
+        { title: '调小 c', body: '系统更接近无摩擦摆，轨迹更接近能量守恒的闭合环。' },
+      ],
+    },
+    'pendulum-gravity': {
+      eyebrow: '参数',
+      title: '重力 g 是什么',
+      summary: 'g 控制摆被拉回竖直方向的强度。',
+      sections: [{ title: '调大 g', body: '摆会更快被拉回中间，小幅摆动的节奏也会更快。' }],
+    },
+    'population-prey-growth': {
+      eyebrow: '参数',
+      title: 'a：猎物增长',
+      summary: 'a 是没有捕食者时猎物自己增长的速度。',
+      sections: [{ title: '调大 a', body: '猎物恢复更快，平衡捕食者数量 a/b 也会升高。' }],
+    },
+    'population-predation': {
+      eyebrow: '参数',
+      title: 'b：捕食强度',
+      summary: 'b 表示捕食者遇到并吃掉猎物的效率。',
+      sections: [{ title: '调大 b', body: '猎物被压低得更快，平衡捕食者数量 a/b 会降低。' }],
+    },
+    'population-predator-death': {
+      eyebrow: '参数',
+      title: 'd：捕食者死亡',
+      summary: 'd 是没有猎物时捕食者减少的速度。',
+      sections: [{ title: '调大 d', body: '捕食者更难维持数量，平衡猎物数量 d/c 会升高。' }],
+    },
+    'population-conversion': {
+      eyebrow: '参数',
+      title: 'c：转化率',
+      summary: 'c 表示吃到猎物后转化为捕食者增长的效率。',
+      sections: [{ title: '调大 c', body: '同样数量的猎物能支持更多捕食者，平衡猎物数量 d/c 会降低。' }],
+    },
+    'population-equilibrium': {
+      eyebrow: '术语',
+      title: '平衡点 (d/c, a/b)',
+      summary: '在这个点，猎物和捕食者的瞬时变化率都为 0。',
+      sections: [
+        { title: '横坐标 d/c', body: '捕食者刚好不增不减时，需要的猎物数量。' },
+        { title: '纵坐标 a/b', body: '猎物刚好不增不减时，对应的捕食者数量。' },
       ],
     },
   }
@@ -1240,10 +1818,103 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
     'heat-uxx': {
       eyebrow: 'Variable',
       title: 'What u_xx means',
-      summary: 'u_xx is the second derivative with respect to position, which measures local curvature.',
+      summary: 'u_xx is the second derivative with respect to position. You can read it as how this point compares with the local average nearby.',
       sections: [
-        { title: 'Intuition', body: 'Sharp peaks have high curvature and change quickly. Flat regions have low curvature and change slowly.' },
-        { title: 'In the heat equation', body: 'u_t = alpha u_xx says that curved parts of the temperature profile change faster.' },
+        { title: 'Sign', body: 'If a point is much hotter than its neighbors, u_xx is usually negative and it cools. If it is cooler than neighbors, u_xx is usually positive and it warms.' },
+        { title: 'In the heat equation', body: 'u_t = alpha u_xx says temperature change is driven by nearby temperature difference. Flat regions change slowly.' },
+      ],
+    },
+    'heat-boundary': {
+      eyebrow: 'Assumption',
+      title: 'Why the ends are cold',
+      summary: 'This simulation fixes both ends of the rod at temperature 0, so heat can flow out through the ends.',
+      sections: [
+        { title: 'What you see', body: 'Average temperature can decrease even though heat is diffusing inside the rod, because the boundary keeps removing heat.' },
+        { title: 'Model assumption', body: 'It is like attaching both rod ends to cold reservoirs. Insulated ends would behave differently.' },
+      ],
+    },
+    'phase-state': {
+      eyebrow: 'Term',
+      title: 'State point',
+      summary: 'A state point is not a physical location. It is the current values of a set of variables.',
+      sections: [
+        { title: 'Examples', body: 'In the pendulum lesson, a point is (angle, angular velocity). In the population lesson, a point is (prey count, predator count).' },
+        { title: 'Why it helps', body: 'One point tells the current situation. Following a trajectory shows how that situation changes over time.' },
+      ],
+    },
+    'phase-arrow': {
+      eyebrow: 'Term',
+      title: 'How to read phase arrows',
+      summary: "Arrows come from x' and y'. They show where the state moves next.",
+      sections: [
+        { title: 'This graph convention', body: 'Arrow length is normalized, so do not use length as speed. Opacity hints speed; direction is the main information.' },
+        { title: 'Connection to paths', body: 'A trajectory should keep following nearby arrow directions.' },
+      ],
+    },
+    'phase-time': {
+      eyebrow: 'Term',
+      title: 'Where time is',
+      summary: 'A phase portrait has no separate time axis. Time appears as direction along trajectories.',
+      sections: [{ title: 'How to read it', body: 'Start at the initial point and follow the arrows. That is how the state changes as time increases. You cannot read the exact arrival time directly, but you can read long-term behavior.' }],
+    },
+    'pendulum-theta': {
+      eyebrow: 'Variable',
+      title: 'What theta means',
+      summary: 'Theta is the angle away from vertical.',
+      sections: [{ title: 'Changing theta0', body: 'Larger theta0 means the pendulum starts farther from center, usually with more initial energy.' }],
+    },
+    'pendulum-omega': {
+      eyebrow: 'Variable',
+      title: 'What omega means',
+      summary: 'Omega is angular velocity: how quickly the angle is changing.',
+      sections: [{ title: 'Changing omega0', body: 'Larger absolute omega0 means the pendulum starts with more turning speed. The sign sets the starting direction.' }],
+    },
+    'pendulum-damping': {
+      eyebrow: 'Parameter',
+      title: 'What damping c means',
+      summary: 'c represents energy loss from friction or air resistance.',
+      sections: [
+        { title: 'Larger c', body: 'Energy drains faster, so the trajectory shrinks toward the stable point sooner.' },
+        { title: 'Smaller c', body: 'The system is closer to a frictionless pendulum, so paths look more like closed energy loops.' },
+      ],
+    },
+    'pendulum-gravity': {
+      eyebrow: 'Parameter',
+      title: 'What gravity g means',
+      summary: 'g controls how strongly the pendulum is pulled back toward vertical.',
+      sections: [{ title: 'Larger g', body: 'The pendulum is pulled back faster, and small swings have a faster rhythm.' }],
+    },
+    'population-prey-growth': {
+      eyebrow: 'Parameter',
+      title: 'a: prey growth',
+      summary: 'a is how quickly prey grow when predators are absent.',
+      sections: [{ title: 'Larger a', body: 'Prey recover faster, and equilibrium predators a/b increases.' }],
+    },
+    'population-predation': {
+      eyebrow: 'Parameter',
+      title: 'b: predation strength',
+      summary: 'b is how efficiently predators encounter and eat prey.',
+      sections: [{ title: 'Larger b', body: 'Prey are pushed down faster, and equilibrium predators a/b decreases.' }],
+    },
+    'population-predator-death': {
+      eyebrow: 'Parameter',
+      title: 'd: predator death',
+      summary: 'd is how quickly predators decline when prey are absent.',
+      sections: [{ title: 'Larger d', body: 'Predators are harder to sustain, and equilibrium prey d/c increases.' }],
+    },
+    'population-conversion': {
+      eyebrow: 'Parameter',
+      title: 'c: conversion',
+      summary: 'c is how efficiently eaten prey turns into predator growth.',
+      sections: [{ title: 'Larger c', body: 'The same prey can support more predators, and equilibrium prey d/c decreases.' }],
+    },
+    'population-equilibrium': {
+      eyebrow: 'Term',
+      title: 'Equilibrium (d/c, a/b)',
+      summary: 'At this point, both prey and predator instantaneous rates of change are 0.',
+      sections: [
+        { title: 'Horizontal coordinate d/c', body: 'The prey count needed for predators to be neither increasing nor decreasing.' },
+        { title: 'Vertical coordinate a/b', body: 'The predator count that makes prey neither increasing nor decreasing.' },
       ],
     },
   }
@@ -1370,9 +2041,21 @@ function drawSlopeSegments(ctx: CanvasRenderingContext2D, viewport: GraphViewpor
 
 function drawVectorField(ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme, system: System2D, columns = 17, rows = 13) {
   const samples = sampleVectorField(system, { xMin: viewport.xMin, xMax: viewport.xMax, yMin: viewport.yMin, yMax: viewport.yMax }, columns, rows)
+  const speedReference = vectorSpeedReference(samples)
   for (const sample of samples) {
-    drawVectorArrow(ctx, viewport, sample.x, sample.y, sample.dx, sample.dy, colorWithAlpha(theme.muted, 0.68))
+    const speed = Math.hypot(sample.dx, sample.dy)
+    const alpha = speedReference > 0 ? 0.3 + 0.48 * Math.min(1, Math.sqrt(speed / speedReference)) : 0.54
+    drawVectorArrow(ctx, viewport, sample.x, sample.y, sample.dx, sample.dy, colorWithAlpha(theme.muted, alpha))
   }
+}
+
+function vectorSpeedReference(samples: { dx: number; dy: number }[]): number {
+  const speeds = samples
+    .map((sample) => Math.hypot(sample.dx, sample.dy))
+    .filter((speed) => Number.isFinite(speed) && speed > 0)
+    .sort((a, b) => a - b)
+  if (!speeds.length) return 0
+  return speeds[Math.floor((speeds.length - 1) * 0.75)] || speeds.at(-1) || 1
 }
 
 function drawVectorArrow(ctx: CanvasRenderingContext2D, viewport: GraphViewport, x: number, y: number, dx: number, dy: number, color: string) {
@@ -1535,9 +2218,9 @@ function getCurrentValues(
     const path = integrateScalarOde(state.scalarFn, { t0: state.t0, y0: state.y0, step, steps: state.steps, method: state.method })
     const last = path.at(-1)
     return [
-      { label: 'slope', labelTex: "y'(t_0)", value: format(state.scalarFn(state.t0, state.y0), locale) },
-      { label: 'end t', labelTex: 't_{end}', value: format(last?.t, locale) },
-      { label: 'end y', labelTex: 'y_{end}', value: format(last?.y, locale) },
+      { label: locale === 'zh' ? '起点斜率' : 'starting slope', labelTex: "y'(t_0)", value: format(state.scalarFn(state.t0, state.y0), locale) },
+      { label: locale === 'zh' ? '结束时间' : 'end time', labelTex: 't_{end}', value: format(last?.t, locale) },
+      { label: locale === 'zh' ? '结束高度' : 'end height', labelTex: 'y_{end}', value: format(last?.y, locale) },
     ]
   }
   if (state.lessonId === 'numerical-methods') {
@@ -1545,27 +2228,48 @@ function getCurrentValues(
     const euler = integrateScalarOde(state.scalarFn, { t0: state.t0, y0: state.y0, step, steps: state.steps, method: 'euler' }).at(-1)
     const rk4 = integrateScalarOde(state.scalarFn, { t0: state.t0, y0: state.y0, step, steps: state.steps, method: 'rk4' }).at(-1)
     return [
-      { label: 'step h', labelTex: 'h', value: format(step, locale) },
-      { label: 'Euler end', value: format(euler?.y, locale) },
-      { label: 'RK4 end', value: format(rk4?.y, locale) },
-      { label: 'gap', labelTex: '|y_E-y_{RK4}|', value: format(euler && rk4 ? Math.abs(euler.y - rk4.y) : null, locale) },
+      {
+        label: locale === 'zh' ? '每步长度' : 'step length',
+        labelTex: 'h',
+        value: format(step, locale),
+        term: 'step-size',
+        note: locale === 'zh' ? '总时间 / 步数；h 越小通常越准。' : 'Total time / steps; smaller h is usually more accurate.',
+      },
+      { label: locale === 'zh' ? 'Euler 结束值' : 'Euler end value', labelTex: 'y_E', value: format(euler?.y, locale), term: 'euler' },
+      { label: locale === 'zh' ? 'RK4 结束值' : 'RK4 end value', labelTex: 'y_{RK4}', value: format(rk4?.y, locale), term: 'rk4' },
+      {
+        label: locale === 'zh' ? '两者差距' : 'difference',
+        labelTex: '|y_E-y_{RK4}|',
+        value: format(euler && rk4 ? Math.abs(euler.y - rk4.y) : null, locale),
+        note: locale === 'zh' ? '不是严格误差，只比较 Euler 和 RK4。' : 'Not exact error; just Euler vs RK4.',
+      },
     ]
   }
   if (state.lessonId === 'phase-portraits') {
     const vector = state.phasePreset.system(state.x0, state.phaseY0)
     return [
-      { label: "x'", labelTex: "x'", value: format(vector?.dx, locale) },
-      { label: "y'", labelTex: "y'", value: format(vector?.dy, locale) },
-      { label: locale === 'zh' ? '速度大小' : 'speed', value: format(vector ? Math.hypot(vector.dx, vector.dy) : null, locale) },
+      { label: locale === 'zh' ? '当前 x 变化率' : 'current x rate', labelTex: "x'", value: format(vector?.dx, locale), term: 'phase-arrow' },
+      { label: locale === 'zh' ? '当前 y 变化率' : 'current y rate', labelTex: "y'", value: format(vector?.dy, locale), term: 'phase-arrow' },
+      {
+        label: locale === 'zh' ? '速度大小' : 'speed magnitude',
+        value: format(vector ? Math.hypot(vector.dx, vector.dy) : null, locale),
+        term: 'phase-arrow',
+        note: locale === 'zh' ? '图上箭头长度已归一化；深浅更接近速度提示。' : 'Arrow length is normalized in the plot; opacity is the speed cue.',
+      },
     ]
   }
   if (state.lessonId === 'pendulum') {
     const points = simulatePendulum({ theta0: state.theta0, omega0: state.omega0, damping: state.damping, gravity: state.gravity, step: 0.035, steps: Math.round(state.duration / 0.035) })
     const last = points.at(-1)
     return [
-      { label: 'theta', labelTex: '\\theta', value: format(last?.theta, locale) },
-      { label: 'omega', labelTex: '\\omega', value: format(last?.omega, locale) },
-      { label: locale === 'zh' ? '能量' : 'energy', labelTex: 'E', value: format(last?.energy, locale) },
+      { label: locale === 'zh' ? '当前角度' : 'current angle', labelTex: '\\theta', value: format(last?.theta, locale), term: 'pendulum-theta' },
+      { label: locale === 'zh' ? '当前角速度' : 'current angular velocity', labelTex: '\\omega', value: format(last?.omega, locale), term: 'pendulum-omega' },
+      {
+        label: locale === 'zh' ? '能量' : 'energy',
+        labelTex: 'E',
+        value: format(last?.energy, locale),
+        note: locale === 'zh' ? '阻尼越大，能量通常流失越快。' : 'More damping usually removes energy faster.',
+      },
     ]
   }
   if (state.lessonId === 'population') {
@@ -1574,14 +2278,32 @@ function getCurrentValues(
     return [
       { label: locale === 'zh' ? '猎物' : 'prey', labelTex: 'x', value: format(last?.x, locale) },
       { label: locale === 'zh' ? '捕食者' : 'predator', labelTex: 'y', value: format(last?.y, locale) },
-      { label: locale === 'zh' ? '平衡猎物' : 'equilibrium prey', labelTex: 'd/c', value: format(state.predatorDeath / state.conversion, locale) },
+      {
+        label: locale === 'zh' ? '平衡猎物' : 'equilibrium prey',
+        labelTex: 'd/c',
+        value: format(state.predatorDeath / state.conversion, locale),
+        term: 'population-equilibrium',
+        note: locale === 'zh' ? '捕食者不增不减所需的猎物。' : 'Prey needed for predator balance.',
+      },
+      {
+        label: locale === 'zh' ? '平衡捕食者' : 'equilibrium predators',
+        labelTex: 'a/b',
+        value: format(state.preyGrowth / state.predation, locale),
+        term: 'population-equilibrium',
+        note: locale === 'zh' ? '猎物不增不减对应的捕食者。' : 'Predators needed for prey balance.',
+      },
     ]
   }
   const heat = simulateHeatEquation({ shape: state.heatShape, diffusivity: state.diffusivity, time: state.heatTime, points: 96 })
   return [
     { label: locale === 'zh' ? '最高温' : 'max heat', value: format(heat.max, locale) },
-    { label: locale === 'zh' ? '平均温' : 'average heat', value: format(heat.average, locale) },
-    { label: locale === 'zh' ? '扩散率' : 'diffusivity', labelTex: '\\alpha', value: format(state.diffusivity, locale) },
+    {
+      label: locale === 'zh' ? '平均温' : 'average heat',
+      value: format(heat.average, locale),
+      term: 'heat-boundary',
+      note: locale === 'zh' ? '冷端会让热量流走。' : 'Cold ends let heat leave.',
+    },
+    { label: locale === 'zh' ? '扩散率' : 'diffusivity', labelTex: '\\alpha', value: format(state.diffusivity, locale), term: 'heat-alpha' },
   ]
 }
 
@@ -1612,8 +2334,8 @@ function phaseSeeds(initial: PhasePoint): PhasePoint[] {
   ]
 }
 
-function currentFormulaTex(lessonId: string, scalarPreset: { formulaTex: string }, phasePreset: { formulaTex: string }, fallback: string): string {
-  if (lessonId === 'slope-fields' || lessonId === 'numerical-methods') return scalarPreset.formulaTex
+function currentFormulaTex(lessonId: string, expressionTex: string, phasePreset: { formulaTex: string }, fallback: string): string {
+  if (lessonId === 'slope-fields' || lessonId === 'numerical-methods') return `\\frac{dy}{dt}=${expressionTex}`
   if (lessonId === 'phase-portraits') return phasePreset.formulaTex
   return fallback
 }

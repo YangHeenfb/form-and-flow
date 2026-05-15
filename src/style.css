@@ -2153,6 +2153,43 @@ dt {
   font-variant-numeric: tabular-nums;
 }
 
+.diffeq-explanation dl div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.diffeq-explanation dt {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+
+.diffeq-explanation dt .concept-term {
+  font-size: inherit;
+}
+
+.diffeq-value-formula {
+  color: var(--text-main);
+}
+
+.diffeq-explanation dd {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  text-align: right;
+  max-width: 180px;
+}
+
+.diffeq-value-note {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.35;
+  font-variant-numeric: normal;
+}
+
 .formula-text {
   color: var(--text-main);
   font-family: Georgia, "Times New Roman", serif;
