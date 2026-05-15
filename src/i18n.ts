@@ -15,7 +15,6 @@ export type AppCopy = {
     title: string
     darkApp: string
     lightApp: string
-    shareUrl: string
     languageLabel: string
     switchToChinese: string
     switchToEnglish: string
@@ -36,7 +35,6 @@ export type AppCopy = {
     theme: string
     explanation: string
     controls: string
-    share: string
     exportPng: string
     autoHideHud: string
     closePanel: string
@@ -71,7 +69,6 @@ export type AppCopy = {
     title: string
     neutral: string
     highContrast: string
-    includeInShare: string
     lowContrastWarning: string
     colorLabels: Record<ThemeColorKey, string>
   }
@@ -166,7 +163,6 @@ export const appCopy: Record<Locale, AppCopy> = {
       title: 'Matrix Motion',
       darkApp: 'Dark App',
       lightApp: 'Light App',
-      shareUrl: 'Share URL',
       languageLabel: 'Language',
       switchToChinese: '中文',
       switchToEnglish: 'English',
@@ -203,7 +199,6 @@ export const appCopy: Record<Locale, AppCopy> = {
       theme: 'Theme',
       explanation: 'Explanation',
       controls: 'Controls',
-      share: 'Share',
       exportPng: 'Export PNG',
       autoHideHud: 'Auto-hide HUD',
       closePanel: 'Close panel',
@@ -238,7 +233,6 @@ export const appCopy: Record<Locale, AppCopy> = {
       title: 'Drawing Colors',
       neutral: 'Neutral',
       highContrast: 'High Contrast',
-      includeInShare: 'Include drawing colors in share link',
       lowContrastWarning: 'Low contrast warning: some axes, grids, vectors, or labels may be hard to read.',
       colorLabels: {
         grid: 'Grid',
@@ -327,7 +321,6 @@ export const appCopy: Record<Locale, AppCopy> = {
       title: '矩阵运动',
       darkApp: '深色界面',
       lightApp: '浅色界面',
-      shareUrl: '分享链接',
       languageLabel: '语言',
       switchToChinese: '中文',
       switchToEnglish: 'English',
@@ -364,7 +357,6 @@ export const appCopy: Record<Locale, AppCopy> = {
       theme: '主题',
       explanation: '解释',
       controls: '控制',
-      share: '分享',
       exportPng: '导出 PNG',
       autoHideHud: '自动隐藏控制栏',
       closePanel: '关闭面板',
@@ -399,7 +391,6 @@ export const appCopy: Record<Locale, AppCopy> = {
       title: '绘图颜色',
       neutral: '中性',
       highContrast: '高对比',
-      includeInShare: '分享链接中包含绘图颜色',
       lowContrastWarning: '低对比提醒：部分坐标轴、网格、向量或标签可能不易辨认。',
       colorLabels: {
         grid: '网格',

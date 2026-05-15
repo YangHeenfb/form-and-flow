@@ -8,7 +8,7 @@ import { exponentialDistribution, histogram, intervalProbability, normalDistribu
 import { convolveDiscrete, distributionById, sumDistributionStats } from '../modules/probability/math/convolution.ts'
 import { medicalTestMetrics } from '../modules/probability/math/medical.ts'
 import { normalizeDistribution, sumProbabilities } from '../modules/probability/math/probability.ts'
-import { decodeBayesUrlState, decodeBinomialUrlState, decodeCltUrlState, encodeProbabilityUrlState } from '../modules/probability/shared/useProbabilityUrlState.ts'
+import { decodeBayesUrlState, decodeBinomialUrlState, decodeCltUrlState } from '../modules/probability/shared/useProbabilityUrlState.ts'
 import { probabilityManifest } from '../modules/probability/manifest.ts'
 import { ProbabilityModule } from '../modules/probability/ProbabilityModule.tsx'
 import { moduleRegistry } from '../platform/moduleRegistry.ts'
@@ -94,8 +94,7 @@ describe('random variable sums', () => {
 })
 
 describe('probability URL state', () => {
-  it('encodes and decodes supported state only', () => {
-    expect(encodeProbabilityUrlState({ prior: 0.01, generated: undefined, seed: 123 })).toBe('prior=0.01&seed=123')
+  it('decodes supported state only', () => {
     expect(decodeBayesUrlState('?prior=0.01&likelihood=0.9&falseAlarm=0.09&population=10000').prior).toBe(0.01)
     expect(decodeBinomialUrlState('?n=10&p=0.5&k=5&mode=exact').mode).toBe('exact')
     expect(decodeCltUrlState('?source=die&sampleSize=30&samples=5000&seed=123').sampleSize).toBe(30)

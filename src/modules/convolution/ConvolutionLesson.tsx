@@ -39,12 +39,6 @@ import {
   decodePolynomialState,
   decodeProbabilityState,
   decodeSignalState,
-  encodeContinuousState,
-  encodeDiscreteState,
-  encodeImageKernelState,
-  encodePolynomialState,
-  encodeProbabilityState,
-  encodeSignalState,
   formatNumberList,
 } from './shared/convolutionUrlState.ts'
 
@@ -196,7 +190,6 @@ function DiscreteConvolutionLesson() {
       )}
       playback={<PlaybackControls ui={ui} playing={playing} speed={speed} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onReset={() => setK(0)} onSpeed={setSpeed} />}
       values={values}
-      onShare={() => shareWithParams(encodeDiscreteState({ a, b, mode, operation, k: currentK }))}
       onExport={() => exportConvolutionCanvas('discrete')}
     />
   )
@@ -263,7 +256,6 @@ function ProbabilitySumLesson() {
       )}
       playback={<PlaybackControls ui={ui} playing={playing} speed={speed} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onReset={() => setSum(minSum)} onSpeed={setSpeed} />}
       values={values}
-      onShare={() => shareWithParams(encodeProbabilityState({ preset: preset.id, sum: currentSum }))}
       onExport={() => exportConvolutionCanvas('probability')}
     />
   )
@@ -345,7 +337,6 @@ function SignalFilteringLesson() {
       )}
       playback={<PlaybackControls ui={ui} playing={playing} speed={speed} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onReset={() => setIndex(0)} onSpeed={setSpeed} />}
       values={values}
-      onShare={() => shareWithParams(encodeSignalState({ signal: signalPreset.id, kernel: kernelPreset.id, mode, boundary, length, sigma, noise, seed, index: currentIndex }))}
       onExport={() => exportConvolutionCanvas('signal')}
     />
   )
@@ -488,7 +479,6 @@ function ImageKernelLesson() {
         { label: ui.labels.operation, value: optionLabel(ui, operation) },
         { label: ui.labels.outputRgb, value: pixelResult.slice(0, 3).map((value) => formatNumber(value, ui)).join(', ') },
       ]}
-      onShare={() => shareWithParams(encodeImageKernelState({ image: imagePreset, kernel: kernelPresetId, boundary, operation, normalize, preserveAlpha, grayscale }))}
       onExport={() => exportCanvasElement(outputCanvasRef.current, 'convolution-image-kernel.png')}
     />
   )
@@ -571,7 +561,6 @@ function PolynomialMultiplicationLesson() {
         { label: ui.labels.currentCalculation, value: formatTermCalculation(terms, ui, 'c', currentK, currentValue) },
         { label: 'C(1)=A(1)B(1)', value: formatNumber(evaluatePolynomial(product, 1), ui) },
       ]}
-      onShare={() => shareWithParams(encodePolynomialState({ a, b, k: currentK }))}
       onExport={() => exportConvolutionCanvas('polynomial')}
     />
   )
@@ -629,7 +618,6 @@ function ContinuousConvolutionLesson() {
         { label: ui.labels.fPreset, value: optionLabel(ui, fPreset.label) },
         { label: ui.labels.gPreset, value: optionLabel(ui, gPreset.label) },
       ]}
-      onShare={() => shareWithParams(encodeContinuousState({ f: fId, g: gId, t: currentT, samples }))}
       onExport={() => exportConvolutionCanvas('continuous')}
     />
   )
@@ -643,7 +631,6 @@ function LessonFrame({
   canvas,
   playback,
   values,
-  onShare,
   onExport,
 }: {
   lessonId: ConvolutionLessonId
@@ -653,7 +640,6 @@ function LessonFrame({
   canvas: ReactNode
   playback: ReactNode
   values: ValueRow[]
-  onShare: () => void
   onExport: () => void
 }) {
   const { locale } = usePlatformLocale()
@@ -693,8 +679,6 @@ function LessonFrame({
             graphAriaLabel={helpLabels.graph}
             onGraphHelp={() => setHelpMode({ kind: 'graph' })}
             focusButton={focusButton}
-            shareLabel={ui.share}
-            onShare={onShare}
             exportLabel={ui.exportPng}
             onExport={onExport}
           />
@@ -2380,13 +2364,6 @@ function operationFormula(lessonId: 'discrete' | 'signal' | 'image-kernel', oper
 function readParams(): URLSearchParams {
   if (typeof window === 'undefined') return new URLSearchParams()
   return new URLSearchParams(window.location.search)
-}
-
-function shareWithParams(params: URLSearchParams) {
-  const path = window.location.pathname
-  const url = `${window.location.origin}${path}?${params.toString()}`
-  window.history.replaceState(null, '', `${path}?${params.toString()}`)
-  void navigator.clipboard?.writeText(url)
 }
 
 function exportConvolutionCanvas(lessonId: ConvolutionLessonId) {

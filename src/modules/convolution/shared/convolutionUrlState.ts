@@ -58,28 +58,11 @@ export function decodeDiscreteState(params: URLSearchParams): DiscreteUrlState {
   }
 }
 
-export function encodeDiscreteState(state: DiscreteUrlState): URLSearchParams {
-  const params = new URLSearchParams()
-  params.set('a', formatNumberList(state.a))
-  params.set('b', formatNumberList(state.b))
-  params.set('mode', state.mode)
-  params.set('operation', state.operation)
-  params.set('k', String(Math.round(state.k)))
-  return params
-}
-
 export function decodeProbabilityState(params: URLSearchParams): ProbabilityUrlState {
   return {
     preset: params.get('preset') ?? 'd6-d6',
     sum: readNumber(params, 'sum', 7),
   }
-}
-
-export function encodeProbabilityState(state: ProbabilityUrlState): URLSearchParams {
-  const params = new URLSearchParams()
-  params.set('preset', state.preset)
-  params.set('sum', String(Math.round(state.sum)))
-  return params
 }
 
 export function decodeSignalState(params: URLSearchParams): SignalUrlState {
@@ -96,20 +79,6 @@ export function decodeSignalState(params: URLSearchParams): SignalUrlState {
   }
 }
 
-export function encodeSignalState(state: SignalUrlState): URLSearchParams {
-  const params = new URLSearchParams()
-  params.set('signal', state.signal)
-  params.set('kernel', state.kernel)
-  params.set('mode', state.mode)
-  params.set('boundary', state.boundary)
-  params.set('length', String(Math.round(state.length)))
-  params.set('sigma', formatNumber(state.sigma))
-  params.set('noise', formatNumber(state.noise))
-  params.set('seed', String(Math.round(state.seed)))
-  params.set('index', String(Math.round(state.index)))
-  return params
-}
-
 export function decodeImageKernelState(params: URLSearchParams): ImageKernelUrlState {
   return {
     image: params.get('image') ?? 'edge-shapes',
@@ -122,32 +91,12 @@ export function decodeImageKernelState(params: URLSearchParams): ImageKernelUrlS
   }
 }
 
-export function encodeImageKernelState(state: ImageKernelUrlState): URLSearchParams {
-  const params = new URLSearchParams()
-  params.set('image', state.image)
-  params.set('kernel', state.kernel)
-  params.set('boundary', state.boundary)
-  params.set('operation', state.operation)
-  params.set('normalize', String(state.normalize))
-  params.set('preserveAlpha', String(state.preserveAlpha))
-  params.set('grayscale', String(state.grayscale))
-  return params
-}
-
 export function decodePolynomialState(params: URLSearchParams): PolynomialUrlState {
   return {
     a: readNumberList(params, 'a', [1, 1]),
     b: readNumberList(params, 'b', [1, 1]),
     k: readNumber(params, 'k', 0),
   }
-}
-
-export function encodePolynomialState(state: PolynomialUrlState): URLSearchParams {
-  const params = new URLSearchParams()
-  params.set('a', formatNumberList(state.a))
-  params.set('b', formatNumberList(state.b))
-  params.set('k', String(Math.round(state.k)))
-  return params
 }
 
 export function decodeContinuousState(params: URLSearchParams): ContinuousUrlState {
@@ -157,15 +106,6 @@ export function decodeContinuousState(params: URLSearchParams): ContinuousUrlSta
     t: clamp(readNumber(params, 't', 0), -5, 5),
     samples: Math.round(clamp(readNumber(params, 'samples', 96), 24, 320)),
   }
-}
-
-export function encodeContinuousState(state: ContinuousUrlState): URLSearchParams {
-  const params = new URLSearchParams()
-  params.set('f', state.f)
-  params.set('g', state.g)
-  params.set('t', formatNumber(state.t))
-  params.set('samples', String(Math.round(state.samples)))
-  return params
 }
 
 export function readNumberList(params: URLSearchParams, key: string, fallback: number[]): number[] {

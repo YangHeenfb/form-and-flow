@@ -1,20 +1,3 @@
-export type ProbabilityUrlValue = string | number | boolean | null | undefined
-
-export function encodeProbabilityUrlState(values: Record<string, ProbabilityUrlValue>): string {
-  const params = new URLSearchParams()
-  for (const key of Object.keys(values).sort()) {
-    const value = values[key]
-    if (value === null || value === undefined || value === '') continue
-    params.set(key, String(value))
-  }
-  return params.toString()
-}
-
-export function buildProbabilityUrl(pathname: string, values: Record<string, ProbabilityUrlValue>): string {
-  const query = encodeProbabilityUrlState(values)
-  return query ? `${pathname}?${query}` : pathname
-}
-
 export function readSearchParams(search = typeof window === 'undefined' ? '' : window.location.search): URLSearchParams {
   return new URLSearchParams(search)
 }
@@ -70,11 +53,4 @@ export function decodeCltUrlState(search: string) {
     samples: integerParam(params, 'samples', 5000, 1, 100000),
     seed: integerParam(params, 'seed', 123, 1, 2147483647),
   }
-}
-
-export function replaceUrl(values: Record<string, ProbabilityUrlValue>) {
-  if (typeof window === 'undefined') return
-  const next = buildProbabilityUrl(window.location.pathname, values)
-  window.history.replaceState(null, '', next)
-  void navigator.clipboard?.writeText(`${window.location.origin}${next}`)
 }
