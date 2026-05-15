@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { moduleRegistry } from '../platform/moduleRegistry.ts'
 import { resolveRoute } from '../platform/routes.ts'
+import { probabilityPresets } from '../modules/convolution/convolutionPresets.ts'
 import { continuousConvolutionAt, continuousConvolutionCurve, makeContinuousPresetFunction, productCurveAtShift, trapezoidIntegral } from '../modules/convolution/math/continuousConvolution.ts'
 import { crossCorrelate, discreteConvolutionTerms, discreteConvolve, isSymmetricKernel } from '../modules/convolution/math/discreteConvolution.ts'
 import {
@@ -67,6 +68,12 @@ describe('probability convolution math', () => {
   it('normalizes and validates safely', () => {
     expect(validateDistribution({ support: [0], probabilities: [-1] })).toBe(false)
     expect(normalizeDistribution({ support: [0, 1], probabilities: [0, 0] })).toEqual({ support: [0], probabilities: [1] })
+  })
+
+  it('uses true 0/1 supports for the coin-flip preset', () => {
+    const preset = probabilityPresets.find((candidate) => candidate.id === 'coins')
+    expect(preset?.x.support).toEqual([0, 1, 2, 3])
+    expect(preset?.y.support).toEqual([0, 1, 2])
   })
 })
 

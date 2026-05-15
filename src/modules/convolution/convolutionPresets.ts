@@ -9,7 +9,7 @@ import {
   makeSobelXKernel3,
   makeSobelYKernel3,
 } from './math/imageConvolution.ts'
-import { makeCoinDistribution, makeCustomDistribution, makeDieDistribution, makeSumOfNDiceDistribution, type DiscreteDistribution } from './math/probabilityConvolution.ts'
+import { convolveDistributions, makeCoinDistribution, makeCustomDistribution, makeDieDistribution, makeSumOfNDiceDistribution, type DiscreteDistribution } from './math/probabilityConvolution.ts'
 import { addNoise, makeDifferenceKernel, makeEdgeDetect1DKernel, makeGaussianKernel1D, makeImpulseSignal, makeMixedSignal, makeMovingAverageKernel, makeSharpen1DKernel, makeSineSignal, makeStepSignal } from './math/signalKernels.ts'
 
 export type SequencePreset = {
@@ -67,8 +67,16 @@ export const probabilityPresets: ProbabilityPreset[] = [
   { id: 'd4-d8', label: 'd4 + d8', x: makeDieDistribution(4), y: makeDieDistribution(8), note: 'Different supports produce a trapezoid-like sum distribution.' },
   { id: 'custom', label: 'custom small distribution', x: makeCustomDistribution([0, 1, 1, 2]), y: makeCustomDistribution([0, 2, 2, 3]), note: 'Repeated values act like larger probability mass.' },
   { id: 'three-dice', label: 'repeated dice sum', x: makeSumOfNDiceDistribution(2, 6), y: makeDieDistribution(6), note: 'Repeated convolution builds a bell-shaped dice total.' },
-  { id: 'coins', label: 'binomial-like coin flips', x: makeSumOfNDiceDistribution(3, 2), y: makeSumOfNDiceDistribution(2, 2), note: 'Many independent binary choices concentrate near the center.' },
+  { id: 'coins', label: 'binomial coin flips', x: makeSumOfNCoinsDistribution(3), y: makeSumOfNCoinsDistribution(2), note: 'Many independent 0/1 coin flips concentrate near the center.' },
 ]
+
+function makeSumOfNCoinsDistribution(count: number, p = 0.5): DiscreteDistribution {
+  let distribution = makeCoinDistribution(p)
+  for (let index = 1; index < Math.max(1, Math.floor(count)); index += 1) {
+    distribution = convolveDistributions(distribution, makeCoinDistribution(p))
+  }
+  return distribution
+}
 
 export const signalPresets: SignalPreset[] = [
   { id: 'impulse', label: 'impulse', make: (length) => makeImpulseSignal(length, Math.floor(length / 2)) },
