@@ -128,7 +128,7 @@ function DiscreteConvolutionLesson() {
   const terms = discreteConvolutionTerms(a, orientedKernel, fullIndex)
   const displayTerms = termsForDisplayedKernel(terms, b.length, operation)
   const currentValue = output[currentK] ?? 0
-  const formula = operationFormula('discrete', operation, locale, ui)
+  const formula = operationFormula('discrete', operation, ui)
 
   useAnimationStep(playing, speed, () => setK((value) => (value >= maxK ? 0 : value + 1)))
 
@@ -294,7 +294,7 @@ function SignalFilteringLesson() {
   const fullIndex = fullIndexFromVisibleIndex(currentIndex, mode, signal.length, kernel.length)
   const signalTerms = discreteConvolutionTerms(signal, operation === 'convolution' ? kernel : flipSequence(kernel), fullIndex)
   const displayTerms = termsForDisplayedKernel(signalTerms, kernel.length, operation)
-  const formula = operationFormula('signal', operation, locale, ui)
+  const formula = operationFormula('signal', operation, ui)
 
   useAnimationStep(playing, speed, () => setIndex((value) => (value >= maxIndex ? 0 : value + 1)))
 
@@ -380,7 +380,7 @@ function ImageKernelLesson() {
   const pixelResult = applyKernelAtPixel(inputImage, selectedPixel.x, selectedPixel.y, kernel, { mode: operation, boundaryMode: boundary, normalize, preserveAlpha, grayscaleBeforeApply: grayscale })
   const kernelSum = kernel.flat().reduce((sum, value) => sum + value, 0)
   const appliedKernel = useMemo(() => previewAppliedKernel(kernel, operation, normalize), [kernel, normalize, operation])
-  const formula = operationFormula('image-kernel', operation, locale, ui)
+  const formula = operationFormula('image-kernel', operation, ui)
 
   useEffect(() => {
     if (imagePreset === 'upload') return
@@ -2341,19 +2341,19 @@ function coerceContinuousPreset(value: string): ContinuousPresetId {
   return continuousPresetOptions.some((preset) => preset.id === value) ? (value as ContinuousPresetId) : 'rectangle'
 }
 
-function operationFormula(lessonId: 'discrete' | 'signal' | 'image-kernel', operation: OperationMode, locale: Locale, ui: ConvolutionUiCopy): FormulaDisplay {
+function operationFormula(lessonId: 'discrete' | 'signal' | 'image-kernel', operation: OperationMode, ui: ConvolutionUiCopy): FormulaDisplay {
   const note = ui.formulaOperationNote
   if (lessonId === 'image-kernel') {
     if (operation === 'correlation') {
       return {
-        formula: 'correlation: out[x,y] = sum_u sum_v I[x+u,y+v] K[u,v]',
-        formulaTex: '\\text{corr: }\\operatorname{out}[x,y]=\\sum_{u,v} I[x+u,y+v]K[u,v]',
+        formula: 'out[x,y] = sum_u sum_v I[x+u,y+v] K[u,v]',
+        formulaTex: '\\operatorname{out}[x,y]=\\sum_{u,v} I[x+u,y+v]K[u,v]',
         note,
       }
     }
     return {
-      formula: 'convolution: out[x,y] = sum_u sum_v I[x-u,y-v] K[u,v]',
-      formulaTex: '\\text{conv: }\\operatorname{out}[x,y]=\\sum_{u,v} I[x-u,y-v]K[u,v]',
+      formula: 'out[x,y] = sum_u sum_v I[x-u,y-v] K[u,v]',
+      formulaTex: '\\operatorname{out}[x,y]=\\sum_{u,v} I[x-u,y-v]K[u,v]',
       note,
     }
   }
@@ -2362,17 +2362,15 @@ function operationFormula(lessonId: 'discrete' | 'signal' | 'image-kernel', oper
   const inputName = lessonId === 'signal' ? 'x' : 'a'
   const kernelName = lessonId === 'signal' ? 'h' : 'b'
   if (operation === 'correlation') {
-    const formula = locale === 'zh' ? '相关：不翻转卷积核' : 'correlation: no kernel flip'
     return {
-      formula: `${formula}; ${outputName}[k] = sum_i ${inputName}[i] ${kernelName}[i - k]`,
-      formulaTex: `\\text{correlation: }${outputName}[k]=\\sum_i ${inputName}[i]${kernelName}[i-k]`,
+      formula: `${outputName}[k] = sum_i ${inputName}[i] ${kernelName}[i - k]`,
+      formulaTex: `${outputName}[k]=\\sum_i ${inputName}[i]${kernelName}[i-k]`,
       note,
     }
   }
-  const formula = locale === 'zh' ? '卷积：先翻转卷积核' : 'convolution: flip the kernel'
   return {
-    formula: `${formula}; ${outputName}[k] = sum_i ${inputName}[i] ${kernelName}[k - i]`,
-    formulaTex: `\\text{convolution: }${outputName}[k]=\\sum_i ${inputName}[i]${kernelName}[k-i]`,
+    formula: `${outputName}[k] = sum_i ${inputName}[i] ${kernelName}[k - i]`,
+    formulaTex: `${outputName}[k]=\\sum_i ${inputName}[i]${kernelName}[k-i]`,
     note,
   }
 }
