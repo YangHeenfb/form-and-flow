@@ -2537,26 +2537,36 @@ dt {
 .probability-range > span {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   width: 100%;
+  min-width: 0;
 }
 
 .probability-range-label {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  white-space: nowrap;
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .probability-range > span > strong {
   margin-left: auto;
+  flex: 0 0 auto;
 }
 
 .probability-range strong,
 .probability-explanation dd {
   color: var(--text-main);
   font-variant-numeric: tabular-nums;
+}
+
+.probability-range-hint {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.45;
 }
 
 .seed-control {
@@ -2637,7 +2647,7 @@ dt {
 .probability-explanation .formula-card {
   max-width: 100%;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .probability-related-link {

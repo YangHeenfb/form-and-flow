@@ -96,8 +96,9 @@ function zhTopics(lessonId: ProbabilityLessonId): Record<ProbabilityHelpTopicId,
         {
           title: '为什么总是在看比例',
           items: [
-            '概率 0 表示不发生，概率 1 表示一定发生。',
-            '如果把总体画成一块区域，概率就是某个部分占这块区域的比例。',
+            '在有限人群或离散图像里，概率 0 可以理解成不会出现，概率 1 可以理解成一定出现。',
+            '在连续变量里，某个精确点的概率可以是 0，所以通常要看一段区间的面积。',
+            '如果把总体画成一块区域，概率就是某个部分占这块区域的比例；图中极小区域有时会略放大，精确值看右侧读数。',
             '如果把总体画成人数，概率就是目标人数除以总人数。',
           ],
         },
@@ -134,10 +135,19 @@ function zhTopics(lessonId: ProbabilityLessonId): Record<ProbabilityHelpTopicId,
         {
           title: '先验、似然、后验',
           items: [
+            'H 是你正在判断的假设，E 是你刚看到的证据。',
             '先验 P(H)：看到证据之前，假设本来有多常见。',
             '似然 P(E | H)：如果假设是真的，证据出现的概率。',
             '后验 P(H | E)：看到证据之后，假设为真的概率。',
           ],
+        },
+        {
+          title: '分母 P(E) 从哪里来',
+          items: ['所有证据 E = 来自 H 的证据 + 来自非 H 的证据。', 'P(E)=P(E|H)P(H)+P(E|非 H)P(非 H)。'],
+        },
+        {
+          title: '赔率和似然比',
+          items: ['赔率 odds 不是概率。概率问“占全部多少”，赔率问“目标情况 : 非目标情况”。', '似然比表示证据更偏向 H 还是非 H。大于 1 时更支持 H，小于 1 时更支持非 H。', '如果非 H 情况下证据从不出现，而 H 情况下会出现，似然比会显示为 ∞。'],
         },
         {
           title: '为什么基础率重要',
@@ -161,7 +171,7 @@ function zhTopics(lessonId: ProbabilityLessonId): Record<ProbabilityHelpTopicId,
         },
         {
           title: '不要把两个问题混在一起',
-          body: '敏感度和特异度描述测试本身；阳性预测值和阴性预测值描述拿到结果后，一个人属于哪一类的概率。',
+          body: '测试“准不准”和结果“意味着什么”不是同一个问题。敏感度和特异度描述测试本身；阳性预测值和阴性预测值描述拿到结果后，一个人属于哪一类的概率。',
         },
       ],
     },
@@ -210,6 +220,7 @@ function zhTopics(lessonId: ProbabilityLessonId): Record<ProbabilityHelpTopicId,
             '先从原始分布抽一组样本。',
             '把这一组样本求平均，得到一个样本均值。',
             '重复很多组后，样本均值本身也会形成一个分布。',
+            '标准误 σ / √n 可以理解成样本平均数通常会离真实平均数多远。',
           ],
         },
       ],
@@ -282,6 +293,7 @@ function zhGraphTopic(lessonId: ProbabilityLessonId): HelpTopic {
             'H 且 E 是分子。',
             '所有 E 是分母，包含 H 且 E 以及非 H 且 E。',
             '假阳性或误报越多，分母中非 H 的部分越大。',
+            '很小的非零区域会稍微放大，方便看见；精确比例看右侧读数。',
           ],
         },
       ],
@@ -294,11 +306,14 @@ function zhGraphTopic(lessonId: ProbabilityLessonId): HelpTopic {
       summary: '图中把人群分成真阳性、假阳性、假阴性、真阴性。当前选中的测试结果会高亮对应的两类人。',
       sections: [
         {
-          title: '读阳性结果',
+          title: '读测试结果',
           items: [
             '阳性结果 = 真阳性 + 假阳性。',
             '阳性预测值看真阳性在所有阳性里占多少。',
+            '阴性结果 = 真阴性 + 假阴性。',
+            '阴性预测值看真阴性在所有阴性里占多少。',
             '基础率很低时，假阳性的数量可能很可观。',
+            '很小的非零区域会稍微放大，方便看见；精确比例看右侧读数。',
           ],
         },
       ],
@@ -325,13 +340,13 @@ function zhGraphTopic(lessonId: ProbabilityLessonId): HelpTopic {
     return {
       eyebrow: '图像阅读',
       title: '密度图像怎么看？',
-      summary: '曲线高度是密度，真正的概率是高亮区间下方的面积。区间越宽，面积通常越大。',
+      summary: '曲线高度是密度，真正的概率是高亮区间下方的面积。区间变宽通常会增加面积，但移动区间时还要看曲线高度。',
       sections: [
         {
           title: '不要只看高度',
           items: [
             '密度高说明附近值更集中，但单点本身没有概率质量。',
-            'a 和 b 决定正在计算的区间。',
+            'a 和 b 决定正在计算的区间。如果只是把区间变宽而不移走原来的部分，面积会变大；移动区间时，面积还取决于曲线高度。',
             '直方图来自随机样本，用来和理论密度对照。',
           ],
         },
@@ -350,6 +365,7 @@ function zhGraphTopic(lessonId: ProbabilityLessonId): HelpTopic {
             'n 越大，每组平均数通常越稳定。',
             '样本均值的分布会变窄。',
             '正态叠加线是理论近似，用来对照模拟结果。',
+            '前提是样本之间独立，并且原始分布有有限方差；n 越大，这个近似通常越好。',
           ],
         },
       ],
@@ -364,6 +380,7 @@ function zhGraphTopic(lessonId: ProbabilityLessonId): HelpTopic {
         {
           title: '看同一个和',
           items: [
+            '这一节默认 X 和 Y 独立，所以格子的概率可以相乘。',
             '一个格子是一种 x 和 y 的组合。',
             '格子颜色或高亮表示这个组合是否得到当前选中的和。',
             '同一个和可能由很多组合产生，所以输出概率要相加。',
@@ -384,6 +401,7 @@ function zhGraphTopic(lessonId: ProbabilityLessonId): HelpTopic {
           '高亮区域是当前条件，也就是分母。',
           '高亮区域里同时满足目标事件的部分是分子。',
           '切换 P(A | B) 和 P(B | A) 时，分母会换掉。',
+          '很小的非零区域会稍微放大，方便看见；精确比例看右侧读数。',
         ],
       },
     ],
@@ -507,7 +525,12 @@ function enTopics(lessonId: ProbabilityLessonId): Record<ProbabilityHelpTopicId,
       sections: [
         {
           title: 'Why this is about proportions',
-          items: ['Probability 0 means impossible; probability 1 means certain.', 'In an area picture, probability is the share of the area.', 'In a count picture, probability is target count divided by total count.'],
+          items: [
+            'In finite count pictures, probability 0 behaves like “does not occur” and probability 1 behaves like “always occurs.”',
+            'For continuous variables, an exact point can have probability 0, so we usually measure intervals by area.',
+            'In an area picture, probability is the share of the area. Tiny drawn regions may be enlarged slightly; use the readout for exact values.',
+            'In a count picture, probability is target count divided by total count.',
+          ],
         },
       ],
     },
@@ -537,7 +560,15 @@ function enTopics(lessonId: ProbabilityLessonId): Record<ProbabilityHelpTopicId,
       sections: [
         {
           title: 'Prior, likelihood, posterior',
-          items: ['Prior P(H): how common the hypothesis was before evidence.', 'Likelihood P(E | H): how often the evidence appears if the hypothesis is true.', 'Posterior P(H | E): how likely the hypothesis is after evidence appears.'],
+          items: ['H is the hypothesis you are judging, and E is the evidence you just saw.', 'Prior P(H): how common the hypothesis was before evidence.', 'Likelihood P(E | H): how often the evidence appears if the hypothesis is true.', 'Posterior P(H | E): how likely the hypothesis is after evidence appears.'],
+        },
+        {
+          title: 'Where P(E) comes from',
+          items: ['All evidence E = evidence from H + evidence from not H.', 'P(E)=P(E|H)P(H)+P(E|not H)P(not H).'],
+        },
+        {
+          title: 'Odds and likelihood ratio',
+          items: ['Odds are not probability. Probability asks “share of the whole”; odds ask “target cases : other cases.”', 'The likelihood ratio says whether evidence leans toward H or not H. Above 1 supports H; below 1 supports not H.', 'If evidence never appears under not H but can appear under H, the likelihood ratio is shown as ∞.'],
         },
         {
           title: 'Why the base rate matters',
@@ -556,7 +587,7 @@ function enTopics(lessonId: ProbabilityLessonId): Record<ProbabilityHelpTopicId,
         },
         {
           title: 'Do not mix the questions',
-          body: 'Sensitivity and specificity describe the test. Predictive values describe what a result means for a person.',
+          body: 'Test accuracy and result meaning are not the same question. Sensitivity and specificity describe the test. Predictive values describe what a result means for a person.',
         },
       ],
     },
@@ -593,7 +624,7 @@ function enTopics(lessonId: ProbabilityLessonId): Record<ProbabilityHelpTopicId,
       sections: [
         {
           title: 'Keep the two layers separate',
-          items: ['First sample several values from the source distribution.', 'Average that sample to get one sample mean.', 'Repeat many samples, and the sample means form their own distribution.'],
+          items: ['First sample several values from the source distribution.', 'Average that sample to get one sample mean.', 'Repeat many samples, and the sample means form their own distribution.', 'The standard error σ / √n is the typical distance between a sample mean and the true mean.'],
         },
       ],
     },
@@ -647,7 +678,7 @@ function enGraphTopic(lessonId: ProbabilityLessonId): HelpTopic {
       sections: [
         {
           title: 'What to watch',
-          items: ['H and E is the numerator.', 'All E cases form the denominator.', 'More false alarms make the not-H part of the denominator larger.'],
+          items: ['H and E is the numerator.', 'All E cases form the denominator.', 'More false alarms make the not-H part of the denominator larger.', 'Tiny nonzero regions are enlarged slightly so they remain visible; use the readout for exact values.'],
         },
       ],
     }
@@ -659,8 +690,8 @@ function enGraphTopic(lessonId: ProbabilityLessonId): HelpTopic {
       summary: 'The population is split into true positives, false positives, false negatives, and true negatives. The selected result highlights the relevant pair.',
       sections: [
         {
-          title: 'Reading a positive result',
-          items: ['Positive results = true positives + false positives.', 'Positive predictive value is true positives divided by all positives.', 'When base rate is low, false positives can be numerous.'],
+          title: 'Reading a test result',
+          items: ['Positive results = true positives + false positives.', 'Positive predictive value is true positives divided by all positives.', 'Negative results = true negatives + false negatives.', 'Negative predictive value is true negatives divided by all negatives.', 'When base rate is low, false positives can be numerous.', 'Tiny nonzero regions are enlarged slightly so they remain visible; use the readout for exact values.'],
         },
       ],
     }
@@ -682,11 +713,11 @@ function enGraphTopic(lessonId: ProbabilityLessonId): HelpTopic {
     return {
       eyebrow: 'Graph reading',
       title: 'How do I read the density graph?',
-      summary: 'Curve height is density. Probability is the highlighted area under the curve across an interval.',
+      summary: 'Curve height is density. Probability is the highlighted area under the curve across an interval. Widening an interval usually adds area; moving it also depends on curve height.',
       sections: [
         {
           title: 'Do not read only height',
-          items: ['High density means nearby values are more concentrated, not that one exact point has probability mass.', 'a and b define the interval.', 'The histogram comes from random samples and can be compared with the theoretical curve.'],
+          items: ['High density means nearby values are more concentrated, not that one exact point has probability mass.', 'a and b define the interval. If you only widen the interval without removing area, probability grows; moving it depends on the curve height.', 'The histogram comes from random samples and can be compared with the theoretical curve.'],
         },
       ],
     }
@@ -699,7 +730,7 @@ function enGraphTopic(lessonId: ProbabilityLessonId): HelpTopic {
       sections: [
         {
           title: 'Watch sample size n',
-          items: ['Larger n usually makes each average more stable.', 'The sample-mean distribution gets narrower.', 'The normal overlay is the theoretical approximation.'],
+          items: ['Larger n usually makes each average more stable.', 'The sample-mean distribution gets narrower.', 'The normal overlay is the theoretical approximation.', 'The usual CLT setup assumes independent samples and finite source variance; larger n usually improves the approximation.'],
         },
       ],
     }
@@ -712,7 +743,7 @@ function enGraphTopic(lessonId: ProbabilityLessonId): HelpTopic {
       sections: [
         {
           title: 'Watch one sum',
-          items: ['Each cell is one x and y combination.', 'Highlighted cells create the selected sum.', 'Many different pairs can feed the same output bar.'],
+          items: ['This lesson assumes X and Y are independent, so cell probabilities can be multiplied.', 'Each cell is one x and y combination.', 'Highlighted cells create the selected sum.', 'Many different pairs can feed the same output bar.'],
         },
       ],
     }
@@ -724,7 +755,7 @@ function enGraphTopic(lessonId: ProbabilityLessonId): HelpTopic {
     sections: [
       {
         title: 'What to watch',
-        items: ['The universe is all possible cases.', 'The highlighted condition is the denominator.', 'The target part inside the condition is the numerator.', 'Switching P(A | B) and P(B | A) changes the denominator.'],
+        items: ['The universe is all possible cases.', 'The highlighted condition is the denominator.', 'The target part inside the condition is the numerator.', 'Switching P(A | B) and P(B | A) changes the denominator.', 'Tiny nonzero regions are enlarged slightly so they remain visible; use the readout for exact values.'],
       },
     ],
   }

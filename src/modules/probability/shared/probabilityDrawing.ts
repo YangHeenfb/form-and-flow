@@ -41,6 +41,7 @@ export type ProbabilityDrawingCopy = {
   probability: string
   density: string
   pairsWithSum: (sum: number) => string
+  tinyRegionNote: string
 }
 
 const defaultDrawingCopy: ProbabilityDrawingCopy = {
@@ -55,6 +56,7 @@ const defaultDrawingCopy: ProbabilityDrawingCopy = {
   probability: 'probability',
   density: 'density',
   pairsWithSum: (sum) => `pairs with x + y = ${sum}`,
+  tinyRegionNote: 'Tiny regions enlarged; use readout.',
 }
 
 export function drawConditionalScene(ctx: CanvasRenderingContext2D, size: ProbabilityCanvasSize, theme: ProbabilityTheme, args: {
@@ -331,8 +333,9 @@ function drawVennDiagram(ctx: CanvasRenderingContext2D, rect: Rect, theme: Proba
 
   const keyY = rect.y + rect.height - keyHeight + 8
   drawVennKey(ctx, args.regions, rect.x + 16, keyY, rect.width - 32, theme)
-  if (args.note && rect.width > 360) {
-    label(ctx, args.note, rect.x + 18, rect.y + rect.height - 10, theme.muted, 11)
+  const note = args.note ? `${args.note} ${args.labels.tinyRegionNote}` : args.labels.tinyRegionNote
+  if (rect.width > 360) {
+    label(ctx, note, rect.x + 18, rect.y + rect.height - 10, theme.muted, 10)
   }
 }
 
