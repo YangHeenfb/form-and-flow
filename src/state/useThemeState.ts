@@ -6,7 +6,6 @@ const storageKey = 'matrix-motion-lab-theme'
 export const neutralDarkTheme: ThemeSettings = {
   surfaceMode: 'dark',
   colorPreset: 'neutral',
-  includeThemeInShareLink: false,
   colors: {
     grid: '#3f4a55',
     transformedGrid: '#55b9aa',
@@ -54,8 +53,8 @@ export function applyColorPreset(settings: ThemeSettings, preset: ColorPreset): 
     }
   }
   return settings.surfaceMode === 'dark'
-    ? { ...neutralDarkTheme, includeThemeInShareLink: settings.includeThemeInShareLink }
-    : { ...neutralLightTheme, includeThemeInShareLink: settings.includeThemeInShareLink }
+    ? neutralDarkTheme
+    : neutralLightTheme
 }
 
 export function saveThemeSettings(settings: ThemeSettings, storage: Storage = localStorage): void {
@@ -71,9 +70,7 @@ export function loadThemeSettings(storage: Storage = localStorage): ThemeSetting
     const parsed = JSON.parse(raw) as ThemeSettings
     if ((parsed.surfaceMode === 'dark' || parsed.surfaceMode === 'light') && parsed.colors) {
       if (isLegacyNeutralTheme(parsed)) {
-        return parsed.surfaceMode === 'dark'
-          ? { ...neutralDarkTheme, includeThemeInShareLink: parsed.includeThemeInShareLink }
-          : { ...neutralLightTheme, includeThemeInShareLink: parsed.includeThemeInShareLink }
+        return parsed.surfaceMode === 'dark' ? neutralDarkTheme : neutralLightTheme
       }
       return parsed
     }
@@ -104,7 +101,6 @@ export function useThemeState(initialTheme?: ThemeSettings) {
       const withMode = {
         ...base,
         colorPreset: current.colorPreset,
-        includeThemeInShareLink: current.includeThemeInShareLink,
       }
       return current.colorPreset === 'high-contrast' ? applyColorPreset(withMode, 'high-contrast') : withMode
     })
@@ -123,10 +119,6 @@ export function useThemeState(initialTheme?: ThemeSettings) {
         [key]: value,
       },
     }))
-  }, [])
-
-  const setIncludeThemeInShareLink = useCallback((includeThemeInShareLink: boolean) => {
-    setTheme((current) => ({ ...current, includeThemeInShareLink }))
   }, [])
 
   const cssVariables = useMemo(() => {
@@ -159,7 +151,6 @@ export function useThemeState(initialTheme?: ThemeSettings) {
     setSurfaceMode,
     setColorPreset,
     setColor,
-    setIncludeThemeInShareLink,
     setTheme,
   }
 }

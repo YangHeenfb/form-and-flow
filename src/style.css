@@ -273,10 +273,6 @@ dt {
   margin-bottom: 3px;
 }
 
-.share-button {
-  min-width: 132px;
-}
-
 .workspace,
 .visualization-standard-layout {
   min-height: 0;
