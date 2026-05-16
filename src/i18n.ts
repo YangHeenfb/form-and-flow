@@ -78,6 +78,7 @@ export type AppCopy = {
     reset: string
     resetView: string
     exportPng: string
+    progress: string
     speed: string
     zoom: string
     playbackMode: string
@@ -251,6 +252,7 @@ export const appCopy: Record<Locale, AppCopy> = {
       reset: 'Reset animation',
       resetView: 'Reset view',
       exportPng: 'Export PNG',
+      progress: 'Playback progress',
       speed: 'Speed',
       zoom: 'Zoom',
       playbackMode: 'Playback mode',
@@ -409,6 +411,7 @@ export const appCopy: Record<Locale, AppCopy> = {
       reset: '重置动画',
       resetView: '重置视图',
       exportPng: '导出 PNG',
+      progress: '播放进度',
       speed: '速度',
       zoom: '缩放',
       playbackMode: '播放模式',

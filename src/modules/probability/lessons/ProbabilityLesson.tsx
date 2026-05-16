@@ -211,6 +211,7 @@ type ProbabilityUiCopy = {
     play: string
     pause: string
     reset: string
+    playbackProgress: string
     speed: string
     mode: string
     target: string
@@ -354,6 +355,7 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
       play: 'Play',
       pause: 'Pause',
       reset: 'Reset parameters',
+      playbackProgress: 'Playback progress',
       speed: 'speed',
       mode: 'Input method',
       target: 'Question to answer',
@@ -519,6 +521,7 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
       play: '播放',
       pause: '暂停',
       reset: '重置参数',
+      playbackProgress: '播放进度',
       speed: '速度',
       mode: '输入方式',
       target: '要回答的问题',
@@ -820,6 +823,21 @@ export function ProbabilityLesson({ lessonId }: Props) {
     () => currentLessonCopy(copy, locale, lessonId, target, selectedTestResult, rangeMode),
     [copy, lessonId, locale, rangeMode, selectedTestResult, target],
   )
+  const sumPlaybackProgress = useMemo(() => {
+    if (sumDistribution.values.length <= 1) return 0
+    const index = Math.max(0, sumDistribution.values.indexOf(animatedSelectedSum))
+    return index / (sumDistribution.values.length - 1)
+  }, [animatedSelectedSum, sumDistribution.values])
+  const seekSumPlaybackProgress = useCallback(
+    (progress: number) => {
+      if (sumDistribution.values.length === 0) return
+      const index = Math.round(clampProgress(progress) * Math.max(0, sumDistribution.values.length - 1))
+      const nextSum = sumDistribution.values[index] ?? sumDistribution.values[0]
+      setAnimationPhase(index)
+      setSelectedSum(nextSum)
+    },
+    [sumDistribution.values],
+  )
 
   const selectedRange = useCallback(
     (value: number) => {
@@ -1001,6 +1019,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
               {ui.controls.reset}
             </button>
           </div>
+          {lessonId === 'random-variable-sum' && <PlaybackProgress label={ui.controls.playbackProgress} value={sumPlaybackProgress} onChange={seekSumPlaybackProgress} />}
           <Range label={ui.controls.speed} value={speed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setSpeed} />
         </div>
       </main>
@@ -1417,6 +1436,21 @@ function Range({
       {hint && <small className="probability-range-hint">{hint}</small>}
     </label>
   )
+}
+
+function PlaybackProgress({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
+  const progress = clampProgress(value)
+  return (
+    <label className="playback-progress-control">
+      <span>{label}</span>
+      <input type="range" min={0} max={1} step={0.001} value={progress} aria-label={label} onChange={(event) => onChange(Number(event.target.value))} />
+      <strong>{Math.round(progress * 100)}%</strong>
+    </label>
+  )
+}
+
+function clampProgress(value: number): number {
+  return Math.max(0, Math.min(1, value))
 }
 
 function SelectField<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: Array<readonly [T, string]>; onChange: (value: T) => void }) {
