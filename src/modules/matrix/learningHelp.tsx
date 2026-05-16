@@ -106,14 +106,14 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
       title: '矩阵是什么？',
       summary: (
         <>
-          在这个模块里，矩阵 <Formula tex="A" /> 是一个数字表，用来定义规则 <Formula tex="v\\mapsto Av" />。它不是只存数字，而是在告诉空间怎么移动。
+          在这个模块里，矩阵 <Formula tex="A" /> 是一个数字表，用来定义规则 <Formula tex="v" /> ↦ <Formula tex="Av" />。它不是只存数字，而是在告诉空间怎么移动。
         </>
       ),
       sections: [
         {
           title: '行和列怎么读',
           items: [
-            `如果矩阵形状是 ${outputDim}x${inputDim}，它就把 ${inputSpace} 的向量变成 ${outputSpace} 的向量。`,
+            `如果矩阵形状是 ${outputDim}×${inputDim}（行 × 列），它就把 ${inputSpace} 的向量映射到 ${outputSpace} 的向量。`,
             '列数对应输入有几个坐标；行数对应输出有几个坐标。',
             '第 1 列是 i 被送到哪里，第 2 列是 j 被送到哪里，第 3 列是 k 被送到哪里。',
           ],
@@ -151,7 +151,7 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           title: '为什么顺序看起来反过来',
           body: (
             <>
-              向量从右边开始被作用：<Formula tex="v\\mapsto Av\\mapsto B(Av)\\mapsto C(BAv)" />。所以最后写出来是 <Formula tex="CBA" />，但实验面板仍按你选择的先后顺序播放。
+              向量从右边开始被作用：<Formula tex="v" /> ↦ <Formula tex="Av" /> ↦ <Formula tex="B(Av)" /> ↦ <Formula tex="C(BAv)" />。所以最后写出来是 <Formula tex="CBA" />，但实验面板仍按你选择的先后顺序播放。
             </>
           ),
         },
