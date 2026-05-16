@@ -92,6 +92,7 @@ const differentialCopy: Record<DifferentialLocale, {
     resetView: string
     lesson: string
     exportPng: string
+    playbackProgress: string
     seeing: string
     why: string
     formula: string
@@ -125,6 +126,7 @@ const differentialCopy: Record<DifferentialLocale, {
       resetView: 'Reset view',
       lesson: 'Lesson',
       exportPng: 'Export PNG',
+      playbackProgress: 'Playback progress',
       seeing: 'What you are seeing',
       why: 'Why it matters',
       formula: 'Current model',
@@ -226,6 +228,7 @@ const differentialCopy: Record<DifferentialLocale, {
       resetView: '重置视图',
       lesson: '章节',
       exportPng: '导出 PNG',
+      playbackProgress: '播放进度',
       seeing: '你正在看到什么',
       why: '为什么重要',
       formula: '当前模型',
@@ -483,6 +486,17 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
     diffusivity,
     heatTime,
   }, locale)
+  const playbackProgress = getDifferentialPlaybackProgress(lessonId, duration, heatTime)
+  const seekPlaybackProgress = useCallback((progress: number) => {
+    const next = clampProgress(progress)
+    if (lessonId === 'heat-equation') {
+      setHeatTime(next * 1.2)
+    } else {
+      const start = differentialPlaybackStartTime
+      const end = maxPlaybackTimeForLesson(lessonId)
+      setDuration(start + (end - start) * next)
+    }
+  }, [lessonId])
 
   const exportPng = () => {
     const canvas = document.querySelector<HTMLCanvasElement>('.diffeq-canvas')
@@ -666,6 +680,7 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
               {ui.resetView}
             </button>
           </div>
+          <PlaybackProgress label={ui.playbackProgress} value={playbackProgress} onChange={seekPlaybackProgress} />
           <Range label={ui.ranges.speed} labelTex={locale === 'zh' ? '\\text{速度}' : '\\text{speed}'} value={speed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setSpeed} />
         </div>
       </main>
@@ -701,6 +716,7 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
   )
 
   function resetLesson() {
+    setPlaying(false)
     const preset = scalarOdePresets.find((candidate) => candidate.id === defaultScalarPresetId(lessonId)) ?? scalarOdePresets[0]
     setScalarPresetId(preset.id)
     setExpression(preset.expression)
@@ -748,6 +764,41 @@ function Range({ label, labelTex, value, min, max, step, valueSuffix, onChange }
       <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
     </label>
   )
+}
+
+const differentialPlaybackStartTime = 0.5
+
+function PlaybackProgress({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
+  const progress = clampProgress(value)
+  return (
+    <label className="playback-progress-control">
+      <span>{label}</span>
+      <input type="range" min={0} max={1} step={0.001} value={progress} aria-label={label} onChange={(event) => onChange(Number(event.target.value))} />
+      <strong>{Math.round(progress * 100)}%</strong>
+    </label>
+  )
+}
+
+function getDifferentialPlaybackProgress(lessonId: string, duration: number, heatTime: number): number {
+  if (lessonId === 'heat-equation') return progressFromValue(heatTime, 0, 1.2)
+  return progressFromValue(duration, differentialPlaybackStartTime, maxPlaybackTimeForLesson(lessonId))
+}
+
+function maxPlaybackTimeForLesson(lessonId: string): number {
+  if (lessonId === 'population') return 30
+  if (lessonId === 'pendulum') return 24
+  if (lessonId === 'phase-portraits') return 16
+  return 12
+}
+
+function progressFromValue(value: number, start: number, end: number): number {
+  const span = end - start
+  if (Math.abs(span) < 1e-9) return 0
+  return clampProgress((value - start) / span)
+}
+
+function clampProgress(value: number): number {
+  return Math.max(0, Math.min(1, value))
 }
 
 function Legend({ lessonId, locale }: { lessonId: string; locale: DifferentialLocale }) {

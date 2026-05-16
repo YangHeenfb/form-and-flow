@@ -1165,7 +1165,22 @@ dt {
   padding: 0;
 }
 
-.transport > .playback-progress-control {
+:where(
+  .transport,
+  .calculus-playback,
+  .convolution-playback,
+  .fourier-playback,
+  .probability-playback,
+  .playback-control-cluster,
+  .complex-playback,
+  .optimization-playback,
+  .vector-field-playback,
+  .fourier-series-playback,
+  .group-playback,
+  .topology-playback,
+  .number-theory-playback,
+  .neural-playback
+) > .playback-progress-control {
   width: 340px;
   max-width: 100%;
   flex: 1 1 320px;
@@ -1275,7 +1290,33 @@ dt {
   }
 
   .transport > .playback-progress-control,
-  .transport > .speed-control {
+  .calculus-playback > .playback-progress-control,
+    .convolution-playback > .playback-progress-control,
+    .fourier-playback > .playback-progress-control,
+    .probability-playback > .playback-progress-control,
+    .playback-control-cluster > .playback-progress-control,
+    .complex-playback > .playback-progress-control,
+    .optimization-playback > .playback-progress-control,
+    .vector-field-playback > .playback-progress-control,
+    .fourier-series-playback > .playback-progress-control,
+    .group-playback > .playback-progress-control,
+    .topology-playback > .playback-progress-control,
+    .number-theory-playback > .playback-progress-control,
+    .neural-playback > .playback-progress-control,
+    .transport > .speed-control,
+    .calculus-playback > .speed-control,
+    .convolution-playback > .speed-control,
+    .fourier-playback > .speed-control,
+    .probability-playback > .speed-control,
+    .playback-control-cluster > .speed-control,
+    .complex-playback > .speed-control,
+    .optimization-playback > .speed-control,
+    .vector-field-playback > .speed-control,
+    .fourier-series-playback > .speed-control,
+    .group-playback > .speed-control,
+    .topology-playback > .speed-control,
+    .number-theory-playback > .speed-control,
+    .neural-playback > .speed-control {
     width: 100%;
     max-width: calc(100vw - 96px);
     flex-basis: 100%;
@@ -2805,6 +2846,17 @@ dt {
   .convolution-playback {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .convolution-playback {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .convolution-playback > :where(.transport-buttons, .playback-progress-control, .speed-control) {
+    width: 100%;
+    max-width: 100%;
+    justify-self: stretch;
   }
 }
 
