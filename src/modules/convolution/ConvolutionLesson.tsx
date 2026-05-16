@@ -158,7 +158,22 @@ function DiscreteConvolutionLesson() {
           <p className="input-help">{ui.operationNote}</p>
         </>
       }
-      playback={<PlaybackControls ui={ui} playing={playing} speed={speed} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onReset={() => setK(0)} onSpeed={setSpeed} />}
+      playback={
+        <PlaybackControls
+          ui={ui}
+          playing={playing}
+          speed={speed}
+          progress={progressFromValue(currentK, 0, maxK)}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onReset={() => {
+            setPlaying(false)
+            setK(0)
+          }}
+          onProgress={(progress) => setK(Math.round(valueFromProgress(progress, 0, maxK)))}
+          onSpeed={setSpeed}
+        />
+      }
       values={values}
       onExport={() => exportConvolutionCanvas('discrete')}
     />
@@ -222,7 +237,22 @@ function ProbabilitySumLesson() {
           <DistributionTable xDistribution={xDistribution} yDistribution={yDistribution} selectedSum={currentSum} ariaLabel={ui.canvas.pairsForSum} />
         </>
       }
-      playback={<PlaybackControls ui={ui} playing={playing} speed={speed} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onReset={() => setSum(minSum)} onSpeed={setSpeed} />}
+      playback={
+        <PlaybackControls
+          ui={ui}
+          playing={playing}
+          speed={speed}
+          progress={progressFromValue(currentSum, minSum, maxSum)}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onReset={() => {
+            setPlaying(false)
+            setSum(minSum)
+          }}
+          onProgress={(progress) => setSum(Math.round(valueFromProgress(progress, minSum, maxSum)))}
+          onSpeed={setSpeed}
+        />
+      }
       values={values}
       onExport={() => exportConvolutionCanvas('probability')}
     />
@@ -292,7 +322,22 @@ function SignalFilteringLesson() {
           <p className="input-help">{ui.operationNote}</p>
         </>
       }
-      playback={<PlaybackControls ui={ui} playing={playing} speed={speed} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onReset={() => setIndex(0)} onSpeed={setSpeed} />}
+      playback={
+        <PlaybackControls
+          ui={ui}
+          playing={playing}
+          speed={speed}
+          progress={progressFromValue(currentIndex, 0, maxIndex)}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onReset={() => {
+            setPlaying(false)
+            setIndex(0)
+          }}
+          onProgress={(progress) => setIndex(Math.round(valueFromProgress(progress, 0, maxIndex)))}
+          onSpeed={setSpeed}
+        />
+      }
       values={values}
       onExport={() => exportConvolutionCanvas('signal')}
     />
@@ -494,7 +539,22 @@ function PolynomialMultiplicationLesson() {
           <Range label={ui.labels.coefficientK} value={currentK} min={0} max={maxK} step={1} onChange={setK} />
         </>
       }
-      playback={<PlaybackControls ui={ui} playing={playing} speed={speed} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onReset={() => setK(0)} onSpeed={setSpeed} />}
+      playback={
+        <PlaybackControls
+          ui={ui}
+          playing={playing}
+          speed={speed}
+          progress={progressFromValue(currentK, 0, maxK)}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onReset={() => {
+            setPlaying(false)
+            setK(0)
+          }}
+          onProgress={(progress) => setK(Math.round(valueFromProgress(progress, 0, maxK)))}
+          onSpeed={setSpeed}
+        />
+      }
       values={[
         { label: 'A(x)', value: polynomialToString(a) },
         { label: 'B(x)', value: polynomialToString(b) },
@@ -553,7 +613,22 @@ function ContinuousConvolutionLesson() {
           <Range label={ui.labels.integrationSamples} value={samples} min={24} max={240} step={4} onChange={setSamples} />
         </>
       }
-      playback={<PlaybackControls ui={ui} playing={playing} speed={speed} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onReset={() => setT(-4)} onSpeed={setSpeed} />}
+      playback={
+        <PlaybackControls
+          ui={ui}
+          playing={playing}
+          speed={speed}
+          progress={progressFromValue(currentT, -4, 4)}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onReset={() => {
+            setPlaying(false)
+            setT(-4)
+          }}
+          onProgress={(progress) => setT(valueFromProgress(progress, -4, 4))}
+          onSpeed={setSpeed}
+        />
+      }
       values={[
         { label: ui.labels.currentT, value: formatNumber(currentT, ui) },
         { label: ui.labels.convolutionValue, value: formatNumber(integral, ui) },
@@ -1144,17 +1219,21 @@ function PlaybackControls({
   ui,
   playing,
   speed,
+  progress,
   onPlay,
   onPause,
   onReset,
+  onProgress,
   onSpeed,
 }: {
   ui: ConvolutionUiCopy
   playing: boolean
   speed: number
+  progress: number
   onPlay: () => void
   onPause: () => void
   onReset: () => void
+  onProgress: (progress: number) => void
   onSpeed: (speed: number) => void
 }) {
   return (
@@ -1169,8 +1248,20 @@ function PlaybackControls({
           {ui.reset}
         </button>
       </div>
+      <PlaybackProgress label={ui.playbackProgress} value={progress} onChange={onProgress} />
       <Range label={ui.speed} value={speed} min={0.25} max={4} step={0.05} valueSuffix="x" onChange={onSpeed} />
     </>
+  )
+}
+
+function PlaybackProgress({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
+  const progress = clampProgress(value)
+  return (
+    <label className="playback-progress-control">
+      <span>{label}</span>
+      <input type="range" min={0} max={1} step={0.001} value={progress} aria-label={label} onChange={(event) => onChange(Number(event.target.value))} />
+      <strong>{Math.round(progress * 100)}%</strong>
+    </label>
   )
 }
 
@@ -1853,6 +1944,20 @@ function makeSampleImageData(preset: string, width: number, height: number): Ima
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value))
+}
+
+function progressFromValue(value: number, start: number, end: number): number {
+  const span = end - start
+  if (Math.abs(span) < 1e-9) return 0
+  return clampProgress((value - start) / span)
+}
+
+function valueFromProgress(progress: number, start: number, end: number): number {
+  return start + (end - start) * clampProgress(progress)
+}
+
+function clampProgress(value: number): number {
+  return Math.max(0, Math.min(1, value))
 }
 
 function formatNumber(value: number, ui?: ConvolutionUiCopy): string {

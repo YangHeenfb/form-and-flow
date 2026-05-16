@@ -28,6 +28,7 @@ export type ConvolutionUiCopy = {
   play: string
   pause: string
   reset: string
+  playbackProgress: string
   exportPng: string
   speed: string
   add: string
@@ -166,6 +167,7 @@ export const convolutionUiCopy: Record<Locale, ConvolutionUiCopy> = {
     play: 'Play',
     pause: 'Pause',
     reset: 'Reset animation',
+    playbackProgress: 'Playback progress',
     exportPng: 'Export PNG',
     speed: 'speed',
     add: 'add',
@@ -332,6 +334,7 @@ export const convolutionUiCopy: Record<Locale, ConvolutionUiCopy> = {
     play: '播放',
     pause: '暂停',
     reset: '重置动画',
+    playbackProgress: '播放进度',
     exportPng: '导出 PNG',
     speed: '速度',
     add: '添加',
