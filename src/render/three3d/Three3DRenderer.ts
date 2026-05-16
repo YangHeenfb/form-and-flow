@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { applyMatrixToVector } from '../../math/matrix.ts'
-import type { Matrix, ThreeCameraView } from '../../math/types.ts'
+import type { Matrix, ThemeSurfaceMode, ThreeCameraView } from '../../math/types.ts'
 import type { ThreeRenderPayload } from '../RendererAdapter.ts'
 
 type Point3 = [number, number, number]
@@ -33,7 +33,7 @@ export class Three3DRenderer {
     this.resize()
     this.applyCameraView(cameraView)
     this.applyViewZoom(payload.viewZoom)
-    this.scene.clear()
+    this.clearScene()
     this.scene.background = new THREE.Color(payload.theme.surfaceMode === 'dark' ? '#0d141c' : '#f8fafc')
 
     const light = new THREE.DirectionalLight(0xffffff, payload.theme.surfaceMode === 'dark' ? 1.2 : 1.5)
@@ -140,6 +140,23 @@ export class Three3DRenderer {
     this.camera.updateProjectionMatrix()
   }
 
+  private clearScene(): void {
+    this.scene.traverse((object) => {
+      const mesh = object as THREE.Object3D & {
+        geometry?: THREE.BufferGeometry
+        material?: THREE.Material | THREE.Material[]
+      }
+      mesh.geometry?.dispose()
+      const materials = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : []
+      materials.forEach((material) => {
+        const mappedMaterial = material as THREE.Material & { map?: THREE.Texture }
+        mappedMaterial.map?.dispose()
+        material.dispose()
+      })
+    })
+    this.scene.clear()
+  }
+
   private addReferenceGrid(payload: ThreeRenderPayload): void {
     const grid = new THREE.GridHelper(10, 10, payload.theme.colors.grid, payload.theme.colors.grid)
     grid.material.transparent = true
@@ -201,7 +218,7 @@ export class Three3DRenderer {
     for (let index = 0; index < payload.inputDim; index += 1) {
       const values = Array.from({ length: payload.inputDim }, (_, col) => (col === index ? 1 : 0))
       const end = transformPoint(payload.visualMatrix, values, payload.inputDim)
-      this.scene.add(arrow(end, colors[index], `basis-${index}`))
+      this.scene.add(arrow(end, colors[index], `basis-${index}`, `T(${basisLabel(index)})`, payload.theme.surfaceMode))
     }
   }
 
@@ -210,7 +227,7 @@ export class Three3DRenderer {
       .filter((vector) => vector.dim === payload.inputDim)
       .forEach((vector) => {
         const output = applyMatrixToVector(payload.visualMatrix, vector.values) as Point3
-        this.scene.add(arrow(output, vector.color ?? payload.theme.colors.inputVector, vector.name))
+        this.scene.add(arrow(output, vector.color ?? payload.theme.colors.inputVector, vector.name, `T(${vector.name})`, payload.theme.surfaceMode))
       })
   }
 }
@@ -220,20 +237,102 @@ function transformPoint(matrix: Matrix, values: number[], inputDim: number): Poi
   return [output[0] ?? 0, output[1] ?? 0, output[2] ?? 0]
 }
 
-function arrow(end: Point3, color: string, name: string): THREE.Object3D {
+function arrow(end: Point3, color: string, name: string, label?: string, surfaceMode: ThemeSurfaceMode = 'dark'): THREE.Object3D {
   const vector = new THREE.Vector3(...end)
   const length = vector.length()
+  const group = new THREE.Group()
+  group.name = name
   if (length < 1e-6) {
     const dot = new THREE.Mesh(
       new THREE.SphereGeometry(0.06, 16, 16),
       new THREE.MeshBasicMaterial({ color }),
     )
     dot.name = name
-    return dot
+    group.add(dot)
+  } else {
+    const helper = new THREE.ArrowHelper(vector.clone().normalize(), new THREE.Vector3(0, 0, 0), length, color, 0.18, 0.1)
+    helper.name = name
+    group.add(helper)
   }
-  const helper = new THREE.ArrowHelper(vector.clone().normalize(), new THREE.Vector3(0, 0, 0), length, color, 0.18, 0.1)
-  helper.name = name
-  return helper
+  if (label) {
+    const sprite = vectorLabel(label, color, surfaceMode)
+    sprite.position.copy(labelPosition(vector))
+    group.add(sprite)
+  }
+  return group
+}
+
+function vectorLabel(text: string, color: string, surfaceMode: ThemeSurfaceMode): THREE.Sprite {
+  const paddingX = 18
+  const font = '600 28px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+  const canvas = document.createElement('canvas')
+  const context = canvas.getContext('2d')
+  if (!context) {
+    return new THREE.Sprite()
+  }
+  context.font = font
+  const metrics = context.measureText(text)
+  const width = Math.ceil(metrics.width + paddingX * 2)
+  const height = 48
+  canvas.width = width
+  canvas.height = height
+  context.font = font
+  context.textBaseline = 'middle'
+  context.fillStyle = surfaceMode === 'dark' ? 'rgba(13, 20, 28, 0.82)' : 'rgba(248, 250, 252, 0.86)'
+  drawRoundedRect(context, 0, 0, width, height, 12)
+  context.fill()
+  context.strokeStyle = color
+  context.globalAlpha = 0.72
+  context.lineWidth = 3
+  drawRoundedRect(context, 1.5, 1.5, width - 3, height - 3, 10)
+  context.stroke()
+  context.globalAlpha = 1
+  context.fillStyle = color
+  context.fillText(text, paddingX, height / 2)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  const material = new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+  })
+  const sprite = new THREE.Sprite(material)
+  const labelHeight = 0.28
+  sprite.scale.set((labelHeight * width) / height, labelHeight, 1)
+  sprite.renderOrder = 20
+  return sprite
+}
+
+function labelPosition(vector: THREE.Vector3): THREE.Vector3 {
+  if (vector.length() < 1e-6) {
+    return new THREE.Vector3(0.22, 0.24, 0.18)
+  }
+  const direction = vector.clone().normalize()
+  return vector.clone().add(direction.multiplyScalar(0.2)).add(new THREE.Vector3(0.08, 0.1, 0.08))
+}
+
+function drawRoundedRect(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+): void {
+  const boundedRadius = Math.min(radius, width / 2, height / 2)
+  context.beginPath()
+  context.moveTo(x + boundedRadius, y)
+  context.lineTo(x + width - boundedRadius, y)
+  context.quadraticCurveTo(x + width, y, x + width, y + boundedRadius)
+  context.lineTo(x + width, y + height - boundedRadius)
+  context.quadraticCurveTo(x + width, y + height, x + width - boundedRadius, y + height)
+  context.lineTo(x + boundedRadius, y + height)
+  context.quadraticCurveTo(x, y + height, x, y + height - boundedRadius)
+  context.lineTo(x, y + boundedRadius)
+  context.quadraticCurveTo(x, y, x + boundedRadius, y)
+  context.closePath()
 }
 
 function lineSegments(points: Point3[], color: string, opacity: number, lineWidth = 1): THREE.LineSegments {
@@ -288,4 +387,8 @@ function squareEdges(): Array<[number, number]> {
     [2, 3],
     [3, 0],
   ]
+}
+
+function basisLabel(index: number): string {
+  return ['i', 'j', 'k'][index] ?? `e${index + 1}`
 }

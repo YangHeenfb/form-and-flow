@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { canonicalBridgeMatrix, validateMapSequence } from '../math/matrix.ts'
 import { presets2d } from '../math/presets2d.ts'
 import { presets3d, presetsR2ToR3, presetsR3ToR2 } from '../math/presets3d.ts'
@@ -56,6 +56,37 @@ function defaultVectors(dim: SpaceDim): VectorState[] {
   ]
 }
 
+function isDefaultVectorSet(vectors: VectorState[], dim: SpaceDim): boolean {
+  const defaults = defaultVectors(dim)
+  return (
+    vectors.length === defaults.length &&
+    vectors.every((vector, index) => {
+      const preset = defaults[index]
+      return (
+        vector.name === preset.name &&
+        vector.dim === preset.dim &&
+        vector.color === preset.color &&
+        vector.values.length === preset.values.length &&
+        vector.values.every((value, valueIndex) => Math.abs(value - preset.values[valueIndex]) < 1e-9)
+      )
+    })
+  )
+}
+
+function adaptVectorsToDim(vectors: VectorState[], dim: SpaceDim): VectorState[] {
+  if (vectors.length === 0 || isDefaultVectorSet(vectors, 2) || isDefaultVectorSet(vectors, 3)) {
+    return defaultVectors(dim)
+  }
+  if (vectors.every((vector) => vector.dim === dim)) {
+    return vectors
+  }
+  return vectors.map((vector) => ({
+    ...vector,
+    dim,
+    values: resizeVector(vector.values, dim),
+  }))
+}
+
 const defaultViewOptions: ViewOptions = {
   showGrid: true,
   showBasis: true,
@@ -73,6 +104,10 @@ export function useAppState() {
   const inputDim = maps[0]?.inputDim ?? 2
   const outputDim = maps.at(-1)?.outputDim ?? inputDim
   const mapKind = mapKindFromDims(inputDim, outputDim)
+
+  useEffect(() => {
+    setVectors((current) => adaptVectorsToDim(current, inputDim))
+  }, [inputDim])
 
   const setMapKind = useCallback((kind: MapKind) => {
     const dims = dimsFromMapKind(kind)
@@ -120,7 +155,7 @@ export function useAppState() {
 
   const applyPreset = useCallback((preset: LinearMap) => {
     setMaps((current) => [clonePreset(preset, 'A1'), ...current.slice(1)])
-    setVectors((current) => current.map((vector) => ({ ...vector, dim: preset.inputDim, values: resizeVector(vector.values, preset.inputDim) })))
+    setVectors((current) => adaptVectorsToDim(current, preset.inputDim))
   }, [])
 
   const addVector = useCallback(() => {
