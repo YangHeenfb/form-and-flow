@@ -245,6 +245,7 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
       if (nextProgress < 1) {
         animationProgressRef.current = nextProgress
         emitAnimationFrame(nextProgress)
+        setAnimation((latest) => (latest.playing ? { ...latest, progress: nextProgress } : latest))
         frame = requestAnimationFrame(tick)
         return
       }
@@ -283,15 +284,24 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
 
   const playAnimation = useCallback(() => {
     setPlaybackSignature(matrixDraftSignature)
-    animationProgressRef.current = 0
     if (prefersReducedMotion) {
       animationProgressRef.current = 1
       emitAnimationFrame(1)
       setAnimation((current) => ({ ...current, playing: false, progress: 1 }))
       return
     }
-    setAnimation((current) => ({ ...current, playing: true, progress: 0, stepIndex: 0 }))
-  }, [emitAnimationFrame, matrixDraftSignature, prefersReducedMotion])
+    setAnimation((current) => {
+      const shouldRestart = hasUnplayedMatrixEdit || animationProgressRef.current >= 1
+      const progress = shouldRestart ? 0 : animationProgressRef.current
+      animationProgressRef.current = progress
+      return {
+        ...current,
+        playing: true,
+        progress,
+        stepIndex: shouldRestart ? 0 : current.stepIndex,
+      }
+    })
+  }, [emitAnimationFrame, hasUnplayedMatrixEdit, matrixDraftSignature, prefersReducedMotion])
 
   const pauseAnimation = useCallback(() => {
     const progress = hasUnplayedMatrixEdit ? 0 : animationProgressRef.current
@@ -304,6 +314,30 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
     animationProgressRef.current = 0
     setAnimation((current) => ({ ...current, playing: false, progress: 0, stepIndex: 0 }))
   }, [matrixDraftSignature])
+
+  const seekAnimation = useCallback(
+    (timelineProgress: number) => {
+      setPlaybackSignature(matrixDraftSignature)
+      const progress = clampTimelineProgress(timelineProgress)
+      setAnimation((current) => {
+        if (current.mode !== 'step') {
+          animationProgressRef.current = progress
+          return { ...current, progress }
+        }
+        const stepCount = Math.max(1, stepMaps.length)
+        const scaledProgress = progress * stepCount
+        const stepIndex = Math.min(stepCount - 1, Math.floor(scaledProgress))
+        const stepProgress = stepIndex === stepCount - 1 && progress === 1 ? 1 : scaledProgress - stepIndex
+        animationProgressRef.current = stepProgress
+        return {
+          ...current,
+          progress: stepProgress,
+          stepIndex,
+        }
+      })
+    },
+    [matrixDraftSignature, stepMaps.length],
+  )
 
   const resetView = useCallback(() => {
     setViewZoom(1)
@@ -482,9 +516,11 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
       onPause={pauseAnimation}
       onReset={resetAnimation}
       onResetView={resetView}
+      onSeek={seekAnimation}
       onSpeedChange={(speed) => setAnimation((current) => ({ ...current, speed }))}
       onModeChange={setPlaybackMode}
       onViewOptionChange={setViewOption}
+      stepCount={stepMaps.length}
     />
   )
 
@@ -562,6 +598,10 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
 
 function clampViewZoom(zoom: number): number {
   return Math.max(minViewZoom, Math.min(maxViewZoom, zoom))
+}
+
+function clampTimelineProgress(progress: number): number {
+  return Math.max(0, Math.min(1, progress))
 }
 
 function loadLocale(): Locale {
