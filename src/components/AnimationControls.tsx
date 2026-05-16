@@ -10,9 +10,11 @@ type Props = {
   onPause: () => void
   onReset: () => void
   onResetView: () => void
+  onSeek: (progress: number) => void
   onSpeedChange: (speed: number) => void
   onModeChange: (mode: PlaybackMode) => void
   onViewOptionChange: (key: keyof ViewOptions, value: boolean) => void
+  stepCount?: number
 }
 
 const viewOptionKeys: Array<keyof ViewOptions> = ['showGrid', 'showBasis', 'showUnitShape', 'showVectors', 'showTrails']
@@ -25,10 +27,14 @@ export function AnimationControls({
   onPause,
   onReset,
   onResetView,
+  onSeek,
   onSpeedChange,
   onModeChange,
   onViewOptionChange,
+  stepCount = 1,
 }: Props) {
+  const timelineProgress = getTimelineProgress(animation, stepCount)
+
   return (
     <footer className="transport">
       <div className="transport-buttons">
@@ -45,6 +51,19 @@ export function AnimationControls({
           {copy.resetView}
         </button>
       </div>
+      <label className="playback-progress-control">
+        <span>{copy.progress}</span>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.001"
+          value={timelineProgress}
+          aria-label={copy.progress}
+          onChange={(event) => onSeek(Number(event.target.value))}
+        />
+        <strong>{Math.round(timelineProgress * 100)}%</strong>
+      </label>
       <label className="speed-control">
         <span>{copy.speed}</span>
         <input
@@ -79,4 +98,16 @@ export function AnimationControls({
       </div>
     </footer>
   )
+}
+
+function getTimelineProgress(animation: AnimationState, stepCount: number): number {
+  if (animation.mode !== 'step') {
+    return clamp(animation.progress)
+  }
+  const safeStepCount = Math.max(1, stepCount)
+  return clamp((Math.min(animation.stepIndex, safeStepCount - 1) + animation.progress) / safeStepCount)
+}
+
+function clamp(value: number): number {
+  return Math.max(0, Math.min(1, value))
 }

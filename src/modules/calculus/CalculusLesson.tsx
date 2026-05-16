@@ -67,6 +67,7 @@ const calculusCopy: Record<CalculusLocale, {
     resetView: string
     lesson: string
     exportPng: string
+    playbackProgress: string
     seeing: string
     why: string
     formula: string
@@ -94,6 +95,7 @@ const calculusCopy: Record<CalculusLocale, {
       resetView: 'Reset view',
       lesson: 'Lesson',
       exportPng: 'Export PNG',
+      playbackProgress: 'Playback progress',
       seeing: 'What you are seeing',
       why: 'Why it matters',
       formula: 'Current formula',
@@ -166,6 +168,7 @@ const calculusCopy: Record<CalculusLocale, {
       resetView: '重置视图',
       lesson: '章节',
       exportPng: '导出 PNG',
+      playbackProgress: '播放进度',
       seeing: '你正在看到什么',
       why: '为什么重要',
       formula: '当前公式',
@@ -292,6 +295,22 @@ export function CalculusLesson({ lessonId }: Props) {
   }, [a, b, lessonId, playing, speed])
 
   const values = getCurrentValues({ lessonId, fn, selectedPreset, x0, h, a, b, n, method, degree }, locale)
+  const playbackProgress = getCalculusPlaybackProgress({ lessonId, x0, h, a, b, n, degree })
+  const seekPlaybackProgress = useCallback(
+    (progress: number) => {
+      const next = clampProgress(progress)
+      if (lessonId === 'derivative') {
+        setH(valueFromProgress(next, 2, 0.02))
+      } else if (lessonId === 'integral') {
+        setN(valueFromProgress(next, 1, 80))
+      } else if (lessonId === 'fundamental-theorem') {
+        setX0(a + (b - a) * next)
+      } else if (lessonId === 'taylor') {
+        setDegree(valueFromProgress(next, 0, 10))
+      }
+    },
+    [a, b, lessonId],
+  )
 
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme) => {
@@ -441,7 +460,10 @@ export function CalculusLesson({ lessonId }: Props) {
               {playing ? <Pause size={16} /> : <Play size={16} />}
               {playing ? ui.pause : ui.play}
             </button>
-            <button type="button" onClick={() => resetLessonControls(lessonId, selectedPreset, setX0, setH, setA, setB, setN, setDegree)}>
+            <button type="button" onClick={() => {
+              setPlaying(false)
+              resetLessonControls(lessonId, selectedPreset, setX0, setH, setA, setB, setN, setDegree)
+            }}>
               <RotateCcw size={16} />
               {ui.reset}
             </button>
@@ -450,6 +472,7 @@ export function CalculusLesson({ lessonId }: Props) {
               {ui.resetView}
             </button>
           </div>
+          <PlaybackProgress label={ui.playbackProgress} value={playbackProgress} onChange={seekPlaybackProgress} />
           <Range label={ui.ranges.speed} labelTex={locale === 'zh' ? '\\text{速度}' : '\\text{speed}'} value={speed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setSpeed} />
         </div>
       </main>
@@ -534,6 +557,55 @@ function Range({ label, labelTex, value, min, max, step, valueSuffix, onChange }
       <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
     </label>
   )
+}
+
+function PlaybackProgress({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
+  const progress = clampProgress(value)
+  return (
+    <label className="playback-progress-control">
+      <span>{label}</span>
+      <input type="range" min={0} max={1} step={0.001} value={progress} aria-label={label} onChange={(event) => onChange(Number(event.target.value))} />
+      <strong>{Math.round(progress * 100)}%</strong>
+    </label>
+  )
+}
+
+function getCalculusPlaybackProgress({
+  lessonId,
+  x0,
+  h,
+  a,
+  b,
+  n,
+  degree,
+}: {
+  lessonId: string
+  x0: number
+  h: number
+  a: number
+  b: number
+  n: number
+  degree: number
+}): number {
+  if (lessonId === 'derivative') return progressFromValue(h, 2, 0.02)
+  if (lessonId === 'integral') return progressFromValue(n, 1, 80)
+  if (lessonId === 'fundamental-theorem') return progressFromValue(x0, a, b)
+  if (lessonId === 'taylor') return progressFromValue(degree, 0, 10)
+  return 0
+}
+
+function progressFromValue(value: number, start: number, end: number): number {
+  const span = end - start
+  if (Math.abs(span) < 1e-9) return 0
+  return clampProgress((value - start) / span)
+}
+
+function valueFromProgress(progress: number, start: number, end: number): number {
+  return start + (end - start) * clampProgress(progress)
+}
+
+function clampProgress(value: number): number {
+  return Math.max(0, Math.min(1, value))
 }
 
 function drawCalculusScene(
