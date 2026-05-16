@@ -284,6 +284,7 @@ dt {
 
 .workspace > *,
 .visualization-standard-layout > * {
+  min-width: 0;
   min-height: 0;
 }
 
@@ -799,6 +800,7 @@ dt {
 .matrix-grid label,
 .vector-row label,
 .color-grid label,
+.playback-progress-control,
 .speed-control {
   display: grid;
   gap: 4px;
@@ -1140,6 +1142,7 @@ dt {
   padding: 0 14px;
 }
 
+.playback-progress-control,
 .speed-control,
 .zoom-control {
   grid-template-columns: max-content minmax(120px, 1fr) 52px;
@@ -1147,6 +1150,7 @@ dt {
   color: var(--text-main);
 }
 
+.playback-progress-control strong,
 .speed-control strong,
 .zoom-control strong {
   text-align: right;
@@ -1154,10 +1158,33 @@ dt {
   font-variant-numeric: tabular-nums;
 }
 
+.playback-progress-control input,
 .speed-control input,
 .zoom-control input {
   width: 100%;
   padding: 0;
+}
+
+:where(
+  .transport,
+  .calculus-playback,
+  .convolution-playback,
+  .fourier-playback,
+  .probability-playback,
+  .playback-control-cluster,
+  .complex-playback,
+  .optimization-playback,
+  .vector-field-playback,
+  .fourier-series-playback,
+  .group-playback,
+  .topology-playback,
+  .number-theory-playback,
+  .neural-playback
+) > .playback-progress-control {
+  width: 340px;
+  max-width: 100%;
+  flex: 1 1 320px;
+  min-width: 0;
 }
 
 .transport > .speed-control {
@@ -1260,6 +1287,23 @@ dt {
 
   .transport {
     align-items: stretch;
+  }
+
+  .transport > .playback-progress-control,
+  .calculus-playback > .playback-progress-control,
+  .convolution-playback > .playback-progress-control,
+  .fourier-playback > .playback-progress-control,
+  .probability-playback > .playback-progress-control,
+  .playback-control-cluster > .playback-progress-control,
+  .transport > .speed-control,
+  .calculus-playback > .speed-control,
+  .convolution-playback > .speed-control,
+  .fourier-playback > .speed-control,
+  .probability-playback > .speed-control,
+  .playback-control-cluster > .speed-control {
+    width: 100%;
+    max-width: calc(100vw - 96px);
+    flex-basis: 100%;
   }
 
   .visualization-stage-toolbar {
@@ -2831,6 +2875,17 @@ dt {
   .convolution-playback {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .convolution-playback {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .convolution-playback > :where(.transport-buttons, .playback-progress-control, .speed-control) {
+    width: 100%;
+    max-width: 100%;
+    justify-self: stretch;
   }
 }
 

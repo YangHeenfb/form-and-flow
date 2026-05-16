@@ -88,6 +88,7 @@ const fourierCopy: Record<FourierLocale, {
     play: string
     pause: string
     reset: string
+    playbackProgress: string
     seeing: string
     why: string
     formula: string
@@ -121,6 +122,7 @@ const fourierCopy: Record<FourierLocale, {
       play: 'Play',
       pause: 'Pause',
       reset: 'Reset animation',
+      playbackProgress: 'Playback progress',
       seeing: 'What you are seeing',
       why: 'Why it matters',
       formula: 'Current formula',
@@ -208,6 +210,7 @@ const fourierCopy: Record<FourierLocale, {
       play: '播放',
       pause: '暂停',
       reset: '重置动画',
+      playbackProgress: '播放进度',
       seeing: '你正在看到什么',
       why: '为什么重要',
       formula: '当前公式',
@@ -425,6 +428,28 @@ export function FourierLesson({ lessonId }: Props) {
     threshold,
   })
   const spectrumClamped = Math.abs(safeFrequencyStep - Math.max(0.05, Math.abs(frequencyStep))) > 1e-9
+  const playbackProgress = getFourierPlaybackProgress({
+    lessonKey,
+    selectedFrequency,
+    frequencyMin,
+    frequencyMax,
+    coefficientCount,
+    maxHarmonic,
+    cutoff,
+  })
+  const seekPlaybackProgress = useCallback(
+    (progress: number) => {
+      const next = clampProgress(progress)
+      if (lessonKey === 'spectrum') {
+        setSelectedFrequency(valueFromProgress(next, frequencyMin, frequencyMax))
+      } else if (lessonKey === 'reconstruction') {
+        setCoefficientCount(valueFromProgress(next, 1, maxHarmonic * 2 + 1))
+      } else if (lessonKey === 'filtering') {
+        setCutoff(valueFromProgress(next, 0, maxHarmonic))
+      }
+    },
+    [frequencyMax, frequencyMin, lessonKey, maxHarmonic],
+  )
 
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme) => {
@@ -679,11 +704,15 @@ export function FourierLesson({ lessonId }: Props) {
               {playing ? <Pause size={16} /> : <Play size={16} />}
               {playback.label}
             </button>
-            <button type="button" onClick={() => resetLesson(lessonKey, selectedPreset.defaultFrequency, setSelectedFrequency, setCoefficientCount, setCutoff, setPlayhead)}>
+            <button type="button" onClick={() => {
+              setPlaying(false)
+              resetLesson(lessonKey, selectedPreset.defaultFrequency, setSelectedFrequency, setCoefficientCount, setCutoff, setPlayhead)
+            }}>
               <RotateCcw size={16} />
               {ui.reset}
             </button>
           </div>
+          <PlaybackProgress label={ui.playbackProgress} value={playbackProgress} onChange={seekPlaybackProgress} />
           <Range label={ui.controls.speed} value={playbackSpeed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setPlaybackSpeed} />
         </div>
       </main>
@@ -775,6 +804,54 @@ function Range({
       <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
     </label>
   )
+}
+
+function PlaybackProgress({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
+  const progress = clampProgress(value)
+  return (
+    <label className="playback-progress-control">
+      <span>{label}</span>
+      <input type="range" min={0} max={1} step={0.001} value={progress} aria-label={label} onChange={(event) => onChange(Number(event.target.value))} />
+      <strong>{Math.round(progress * 100)}%</strong>
+    </label>
+  )
+}
+
+function getFourierPlaybackProgress({
+  lessonKey,
+  selectedFrequency,
+  frequencyMin,
+  frequencyMax,
+  coefficientCount,
+  maxHarmonic,
+  cutoff,
+}: {
+  lessonKey: 'spectrum' | 'reconstruction' | 'filtering'
+  selectedFrequency: number
+  frequencyMin: number
+  frequencyMax: number
+  coefficientCount: number
+  maxHarmonic: number
+  cutoff: number
+}): number {
+  if (lessonKey === 'spectrum') return progressFromValue(selectedFrequency, frequencyMin, frequencyMax)
+  if (lessonKey === 'reconstruction') return progressFromValue(coefficientCount, 1, maxHarmonic * 2 + 1)
+  if (lessonKey === 'filtering') return progressFromValue(cutoff, 0, maxHarmonic)
+  return 0
+}
+
+function progressFromValue(value: number, start: number, end: number): number {
+  const span = end - start
+  if (Math.abs(span) < 1e-9) return 0
+  return clampProgress((value - start) / span)
+}
+
+function valueFromProgress(progress: number, start: number, end: number): number {
+  return start + (end - start) * clampProgress(progress)
+}
+
+function clampProgress(value: number): number {
+  return Math.max(0, Math.min(1, value))
 }
 
 function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
