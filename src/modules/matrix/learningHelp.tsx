@@ -134,8 +134,8 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
         {
           title: '形状怎么读',
           items: [
-            `${outputDim}x${inputDim} 表示 output × input。`,
-            `它会把 ${inputSpace} 的向量变成 ${outputSpace} 的向量。`,
+            `${outputDim}×${inputDim} 表示行数 × 列数，也就是输出维度 × 输入维度。`,
+            `它会把 ${inputSpace} 的向量映射到 ${outputSpace} 的向量。`,
             '列数对应输入有几个坐标；行数对应输出有几个坐标。',
           ],
         },
