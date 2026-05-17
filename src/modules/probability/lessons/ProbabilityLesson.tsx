@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Pause, Play, RotateCcw, Shuffle } from 'lucide-react'
 import { Formula, renderMathText } from '../../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton } from '../../../core/ui/LearningHelp.tsx'
@@ -773,13 +773,21 @@ export function ProbabilityLesson({ lessonId }: Props) {
   const [playing, setPlaying] = useState(false)
   const [speed, setSpeed] = useState(1)
   const [animationPhase, setAnimationPhase] = useState(0)
+  const hasAnimatedPlayback = lessonId === 'random-variable-sum'
 
   useAnimationLoop(
-    playing,
+    playing && hasAnimatedPlayback,
     useCallback((deltaMs) => {
       setAnimationPhase((value) => value + deltaMs * 0.004 * speed)
     }, [speed]),
   )
+
+  useEffect(() => {
+    if (!hasAnimatedPlayback) {
+      setPlaying(false)
+      setAnimationPhase(0)
+    }
+  }, [hasAnimatedPlayback])
 
   const conditional = useMemo(
     () => (conditionMode === 'conditional' ? contingencyFromConditionals(pA, bGivenA, bGivenNotA) : contingencyFromIntersection(pA, pB, pAB)),
@@ -1019,19 +1027,21 @@ export function ProbabilityLesson({ lessonId }: Props) {
             onExport={exportPng}
           />
         </div>
-        <div className="probability-playback platform-card">
+        <div className={`probability-playback${hasAnimatedPlayback ? '' : ' probability-playback-static'} platform-card`}>
           <div className="transport-buttons">
-            <button type="button" className="primary-button" aria-label={playing ? ui.controls.pause : ui.controls.play} onClick={() => setPlaying((current) => !current)}>
-              {playing ? <Pause size={16} /> : <Play size={16} />}
-              {playing ? ui.controls.pause : ui.controls.play}
-            </button>
+            {hasAnimatedPlayback && (
+              <button type="button" className="primary-button" aria-label={playing ? ui.controls.pause : ui.controls.play} onClick={() => setPlaying((current) => !current)}>
+                {playing ? <Pause size={16} /> : <Play size={16} />}
+                {playing ? ui.controls.pause : ui.controls.play}
+              </button>
+            )}
             <button type="button" onClick={resetLesson}>
               <RotateCcw size={16} />
               {ui.controls.reset}
             </button>
           </div>
-          {lessonId === 'random-variable-sum' && <PlaybackProgress label={ui.controls.playbackProgress} value={sumPlaybackProgress} onChange={seekSumPlaybackProgress} />}
-          <Range label={ui.controls.speed} value={speed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setSpeed} />
+          {hasAnimatedPlayback && <PlaybackProgress label={ui.controls.playbackProgress} value={sumPlaybackProgress} onChange={seekSumPlaybackProgress} />}
+          {hasAnimatedPlayback && <Range label={ui.controls.speed} value={speed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setSpeed} />}
         </div>
         </>
       }

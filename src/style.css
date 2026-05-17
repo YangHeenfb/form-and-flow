@@ -2873,6 +2873,10 @@ dt {
   flex-wrap: wrap;
 }
 
+.probability-playback-static {
+  min-height: 56px;
+}
+
 .probability-playback label {
   color: var(--text-muted);
 }
