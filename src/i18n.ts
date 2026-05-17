@@ -211,7 +211,7 @@ export const appCopy: Record<Locale, AppCopy> = {
       explanation: 'Explanation',
       controls: 'Controls',
       exportPng: 'Export PNG',
-      autoHideHud: 'Auto-hide HUD',
+      autoHideHud: 'Auto-hide UI',
       closePanel: 'Close panel',
     },
     matrixSequence: {
@@ -382,7 +382,7 @@ export const appCopy: Record<Locale, AppCopy> = {
       explanation: '解释',
       controls: '控制',
       exportPng: '导出 PNG',
-      autoHideHud: '自动隐藏控制栏',
+      autoHideHud: '自动隐藏界面控件',
       closePanel: '关闭面板',
     },
     matrixSequence: {

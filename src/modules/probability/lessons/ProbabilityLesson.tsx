@@ -979,12 +979,15 @@ export function ProbabilityLesson({ lessonId }: Props) {
   return (
     <>
     <ModuleFocusFrame>
-      {({ focusButton }) => (
+      {({ focusButton, isFocusMode, autoHideToggle, onFocusPanelActiveChange }) => (
     <LessonScaffold
       className="probability-lesson"
       controlsClassName="probability-controls"
       mainClassName="probability-main"
       explanationClassName="probability-explanation"
+      isFocusMode={isFocusMode}
+      autoHideToggle={autoHideToggle}
+      onFocusPanelActiveChange={onFocusPanelActiveChange}
       controls={
         <>
         <div className="lesson-learning-entry learning-help-entry">

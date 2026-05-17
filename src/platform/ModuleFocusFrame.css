@@ -54,10 +54,12 @@
   height: 100%;
   min-height: 0;
   max-height: none;
+  grid-template-areas: "stage";
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   gap: 0;
   overflow: hidden;
+  position: relative;
 }
 
 .module-focus-frame.is-focus :is(
@@ -115,6 +117,7 @@
   .calculus-title-row,
   .convolution-title-row,
   .fourier-title-row,
+  .probability-title-row,
   .complex-title-row,
   .optimization-title-row,
   .vector-field-title-row,
@@ -127,6 +130,10 @@
   min-height: 68px;
   border-bottom: 1px solid var(--panel-border);
   padding: 12px 16px;
+  padding-right: 440px;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
 }
 
 .module-focus-frame.is-focus :is(
@@ -146,7 +153,176 @@
   min-height: 0;
 }
 
+.module-focus-frame.is-focus .lesson-focus-panel-buttons {
+  position: absolute;
+  z-index: 22;
+  top: 12px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  max-width: min(420px, calc(100% - 32px));
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.module-focus-frame.is-focus .lesson-focus-panel-buttons button,
+.module-focus-frame.is-focus .lesson-focus-panel-buttons .visualization-autohide-toggle {
+  min-height: 36px;
+  padding: 0 10px;
+  border-color: color-mix(in srgb, var(--focus) 28%, var(--panel-border));
+  background: color-mix(in srgb, var(--panel-bg) 88%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.module-focus-frame.is-focus .lesson-focus-panel-buttons .visualization-autohide-toggle {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.module-focus-frame.is-focus .lesson-focus-panel-buttons button.active {
+  color: var(--focus-contrast, #0b1412);
+  border-color: var(--focus);
+  background: var(--focus);
+}
+
+.module-focus-frame.is-focus .lesson-focus-transport {
+  display: contents;
+}
+
+.module-focus-frame.is-focus :is(
+  .lesson-focus-transport > *,
+  .calculus-playback,
+  .convolution-playback,
+  .fourier-playback,
+  .probability-playback,
+  .diffeq-playback
+) {
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.module-focus-frame.is-focus .lesson-stage-actions {
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.module-focus-frame.visualization-hud-hidden.is-focus :is(
+  .calculus-title-row,
+  .convolution-title-row,
+  .fourier-title-row,
+  .probability-title-row,
+  .complex-title-row,
+  .optimization-title-row,
+  .vector-field-title-row,
+  .topology-title-row,
+  .fourier-series-title-row,
+  .group-title-row,
+  .number-theory-title-row,
+  .neural-title-row,
+  .lesson-stage-actions,
+  .lesson-focus-panel-buttons
+) {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+}
+
+.module-focus-frame.visualization-hud-hidden.is-focus :is(
+  .lesson-focus-transport > *,
+  .calculus-playback,
+  .convolution-playback,
+  .fourier-playback,
+  .probability-playback,
+  .diffeq-playback
+) {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+}
+
+.module-focus-frame.is-focus .lesson-focus-drawer-content {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.module-focus-frame.is-focus .lesson-focus-drawer-content :where(
+  label,
+  .calculus-field,
+  .control-field,
+  .range-control,
+  .fourier-range-control,
+  .probability-range,
+  .seed-control,
+  .speed-control,
+  .sequence-editor
+) {
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.module-focus-frame.is-focus .lesson-focus-drawer-content :where(h2, h3) {
+  margin-top: 4px;
+}
+
+.module-focus-frame.is-focus .lesson-focus-drawer-content :where(p, dt) {
+  color: var(--text-muted);
+}
+
+.module-focus-frame.is-focus .lesson-focus-drawer-content dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.module-focus-frame.is-focus .lesson-focus-drawer-content dl > div {
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.module-focus-frame.is-focus .lesson-focus-drawer-content dd {
+  min-width: 0;
+  margin: 0;
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
 @media (max-width: 720px) {
+  .module-focus-frame.is-focus :is(
+    .calculus-title-row,
+    .convolution-title-row,
+    .fourier-title-row,
+    .probability-title-row
+  ) {
+    min-height: 150px;
+    align-items: flex-start;
+    padding-right: 16px;
+  }
+
+  .module-focus-frame.is-focus .lesson-focus-panel-buttons {
+    top: 82px;
+    left: 16px;
+    right: 16px;
+    justify-content: flex-start;
+  }
+
+  .module-focus-frame.is-focus .lesson-focus-panel-buttons button,
+  .module-focus-frame.is-focus .lesson-focus-panel-buttons .visualization-autohide-toggle {
+    flex: 1 1 132px;
+    min-width: 0;
+  }
+
   .module-focus-frame.is-focus .neural-stage {
     grid-template-columns: minmax(0, 1fr);
   }

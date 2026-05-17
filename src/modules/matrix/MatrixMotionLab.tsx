@@ -529,7 +529,6 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
     { id: 'vectors', title: copy.visualization.vectors, content: vectorPanel, side: 'left' },
     { id: 'theme', title: copy.visualization.theme, content: themePanel, side: 'left' },
     { id: 'explanation', title: copy.visualization.explanation, content: explanationPanel, side: 'right' },
-    { id: 'controls', title: copy.visualization.controls, content: transport, side: 'bottom' },
   ]
 
   const shortcutActions = useMemo(

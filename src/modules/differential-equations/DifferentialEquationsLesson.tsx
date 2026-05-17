@@ -526,12 +526,15 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
   return (
     <>
     <ModuleFocusFrame>
-      {({ focusButton }) => (
+      {({ focusButton, isFocusMode, autoHideToggle, onFocusPanelActiveChange }) => (
     <LessonScaffold
       className="calculus-lesson diffeq-lesson"
       controlsClassName="calculus-controls diffeq-controls"
       mainClassName="calculus-main diffeq-main"
       explanationClassName="calculus-explanation diffeq-explanation"
+      isFocusMode={isFocusMode}
+      autoHideToggle={autoHideToggle}
+      onFocusPanelActiveChange={onFocusPanelActiveChange}
       controls={
         <>
         <div className="lesson-learning-entry learning-help-entry">

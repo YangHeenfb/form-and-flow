@@ -12,6 +12,7 @@ import {
 import { OverlayDrawer } from './OverlayDrawer.tsx'
 import { OverlayTransport } from './OverlayTransport.tsx'
 import { VisualizationToolbar, type VisualizationLabels } from './VisualizationToolbar.tsx'
+import { hudIdleDelayMs, loadAutoHideHud, saveAutoHideHud } from './autoHideHud.ts'
 import {
   createOverlayPanelState,
   type OverlayPanelDefinition,
@@ -19,9 +20,6 @@ import {
   type VisualizationLayoutState,
   type VisualizationWorkbenchStatus,
 } from './visualizationLayoutTypes.ts'
-
-const autoHideStorageKey = 'visual-math-lab-auto-hide-hud'
-const hudIdleDelayMs = 2600
 
 export type VisualizationWorkbenchHandle = {
   enterFocus: () => void
@@ -90,7 +88,7 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
     const isHudHidden = isExpanded && autoHideHud && !hudVisible && !activePanel
 
     useEffect(() => {
-      localStorage.setItem(autoHideStorageKey, JSON.stringify(autoHideHud))
+      saveAutoHideHud(autoHideHud)
     }, [autoHideHud])
 
     useEffect(() => {
@@ -270,18 +268,6 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
     )
   },
 )
-
-function loadAutoHideHud(): boolean {
-  if (typeof localStorage === 'undefined') {
-    return false
-  }
-
-  try {
-    return localStorage.getItem(autoHideStorageKey) === 'true'
-  } catch {
-    return false
-  }
-}
 
 function assignRef<T>(ref: Ref<T> | undefined, value: T | null): void {
   if (!ref) {

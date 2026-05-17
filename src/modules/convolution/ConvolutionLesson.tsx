@@ -729,12 +729,15 @@ function LessonFrame({
   return (
     <>
     <ModuleFocusFrame>
-      {({ focusButton }) => (
+      {({ focusButton, isFocusMode, autoHideToggle, onFocusPanelActiveChange }) => (
     <LessonScaffold
       className="convolution-lesson"
       controlsClassName="convolution-controls"
       mainClassName="convolution-main"
       explanationClassName="convolution-explanation"
+      isFocusMode={isFocusMode}
+      autoHideToggle={autoHideToggle}
+      onFocusPanelActiveChange={onFocusPanelActiveChange}
       controls={
         <>
         <div className="lesson-learning-entry learning-help-entry">

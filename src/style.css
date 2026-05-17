@@ -410,7 +410,9 @@ dt {
 }
 
 .visualization-workbench.is-expanded .visualization-standard-layout {
+  grid-template-areas: "stage";
   grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: 0;
 }
 
@@ -425,6 +427,7 @@ dt {
 }
 
 .visualization-workbench.is-expanded .visualization-center-column {
+  grid-area: stage;
   grid-template-rows: minmax(0, 1fr);
   gap: 0;
 }

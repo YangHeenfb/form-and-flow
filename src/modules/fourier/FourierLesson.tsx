@@ -522,12 +522,15 @@ export function FourierLesson({ lessonId }: Props) {
   return (
     <>
     <ModuleFocusFrame>
-      {({ focusButton }) => (
+      {({ focusButton, isFocusMode, autoHideToggle, onFocusPanelActiveChange }) => (
     <LessonScaffold
       className="fourier-lesson"
       controlsClassName="fourier-controls"
       mainClassName="fourier-main"
       explanationClassName="fourier-explanation"
+      isFocusMode={isFocusMode}
+      autoHideToggle={autoHideToggle}
+      onFocusPanelActiveChange={onFocusPanelActiveChange}
       controls={
         <>
         <div className="lesson-learning-entry learning-help-entry">
