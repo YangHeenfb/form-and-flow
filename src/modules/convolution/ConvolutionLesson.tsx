@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode, type RefObject } from 'react'
-import { Download, Pause, Play, RotateCcw } from 'lucide-react'
+import { CircleHelp, Download, Pause, Play, RotateCcw } from 'lucide-react'
 import { drawGrid, GraphCanvas, worldToScreen, type GraphTheme, type GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton, type HelpTopic } from '../../core/ui/LearningHelp.tsx'
@@ -23,7 +23,9 @@ import { crossCorrelate, discreteConvolutionTerms, discreteConvolve, flipSequenc
 import {
   applyKernelAtPixel,
   applyKernelToImageData,
+  flipKernel2D,
   makeIdentityKernel3,
+  normalizeKernel2D,
   type ImageConvolutionOptions,
   type Kernel2D,
 } from './math/imageConvolution.ts'
@@ -45,6 +47,16 @@ type ValueRow = {
   value: string
 }
 
+type FormulaDisplay = {
+  formula: string
+  formulaTex: string
+  note?: string
+}
+
+type ControlHelpers = {
+  openTerm: (term: ConvolutionTermId) => void
+}
+
 type ConvolutionTermId =
   | 'sequence-a'
   | 'sequence-b'
@@ -58,6 +70,18 @@ type ConvolutionTermId =
   | 'boundary'
   | 'image-kernel'
   | 'continuous-integral'
+  | 'mode'
+  | 'sigma'
+  | 'noise'
+  | 'seed'
+  | 'normalize-kernel'
+  | 'preserve-alpha'
+  | 'grayscale'
+  | 'integration-samples'
+  | 'expectation'
+  | 'variance'
+  | 'probability-weight'
+  | 'coefficient-sum'
 
 type ConvolutionHelpMode = { kind: 'beginner' } | { kind: 'graph' } | { kind: 'term'; term: ConvolutionTermId }
 
@@ -68,6 +92,8 @@ const continuousPresetOptions: { id: ContinuousPresetId; label: string; tex: str
   { id: 'exponential', label: 'exponential decay', tex: 'e^{-t}\\mathbf{1}_{t\\ge 0}' },
   { id: 'bumps', label: 'two bumps', tex: 'e^{-(t+0.75)^2/(2\\sigma^2)}+0.65e^{-(t-0.85)^2/(2(0.65\\sigma)^2)}' },
 ]
+
+const discretePlaybackSpeedScale = 0.8
 
 export function ConvolutionLesson({ lessonId }: { lessonId: ConvolutionLessonId }) {
   if (lessonId === 'discrete') return <DiscreteConvolutionLesson />
@@ -96,9 +122,11 @@ function DiscreteConvolutionLesson() {
   const fullIndex = fullIndexFromVisibleIndex(currentK, mode, a.length, b.length)
   const orientedKernel = operation === 'convolution' ? b : flipSequence(b)
   const terms = discreteConvolutionTerms(a, orientedKernel, fullIndex)
+  const displayTerms = termsForDisplayedKernel(terms, b.length, operation)
   const currentValue = output[currentK] ?? 0
+  const formula = operationFormula('discrete', operation, ui)
 
-  useAnimationStep(playing, speed, () => setK((value) => (value >= maxK ? 0 : value + 1)))
+  useAnimationStep(playing, speed * discretePlaybackSpeedScale, () => setK((value) => (value >= maxK ? 0 : value + 1)))
 
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme) => {
@@ -113,12 +141,14 @@ function DiscreteConvolutionLesson() {
     { label: ui.labels.overlapCount, value: String(terms.length) },
     { label: ui.labels.operation, value: optionLabel(ui, operation) },
     { label: ui.labels.kernelSymmetric, value: isSymmetricKernel(b) ? ui.yes : ui.no },
-    { label: ui.labels.terms, value: formatTerms(terms, ui) },
+    { label: ui.labels.currentCalculation, value: formatTermCalculation(displayTerms, ui, 'y', currentK, currentValue) },
   ]
 
   return (
     <LessonFrame
       lessonId="discrete"
+      operation={operation}
+      formula={formula}
       canvas={
         <GraphCanvas
           className="graph-canvas convolution-canvas"
@@ -130,7 +160,7 @@ function DiscreteConvolutionLesson() {
           draw={draw}
         />
       }
-      controls={
+      controls={({ openTerm }) => (
         <>
           <SelectControl
             label={ui.preset}
@@ -147,17 +177,17 @@ function DiscreteConvolutionLesson() {
           <SequenceEditor label={ui.labels.sequenceA} values={a} onChange={(values) => {
             setPresetId('custom-small')
             setA(values)
-          }} addLabel={ui.add} />
+          }} addLabel={ui.add} helpTerm="sequence-a" onHelp={openTerm} />
           <SequenceEditor label={ui.labels.kernelB} values={b} onChange={(values) => {
             setPresetId('custom-small')
             setB(values)
-          }} addLabel={ui.add} />
-          <SelectControl label={ui.labels.mode} value={mode} options={modeOptions(ui)} onChange={(next) => setMode(next as ConvolutionMode)} />
-          <SelectControl label={ui.labels.operation} value={operation} options={operationOptions(ui)} onChange={(next) => setOperation(next as OperationMode)} />
-          <Range label={ui.labels.shiftOutputIndex} value={currentK} min={0} max={maxK} step={1} onChange={setK} />
+          }} addLabel={ui.add} helpTerm="sequence-b" onHelp={openTerm} />
+          <SelectControl label={ui.labels.mode} value={mode} options={modeOptions(ui)} onChange={(next) => setMode(next as ConvolutionMode)} helpTerm="mode" onHelp={openTerm} />
+          <SelectControl label={ui.labels.operation} value={operation} options={operationOptions(ui)} onChange={(next) => setOperation(next as OperationMode)} helpTerm="correlation" onHelp={openTerm} />
+          <Range label={ui.labels.shiftOutputIndex} value={currentK} min={0} max={maxK} step={1} onChange={setK} helpTerm="output-index" onHelp={openTerm} />
           <p className="input-help">{ui.operationNote}</p>
         </>
-      }
+      )}
       playback={
         <PlaybackControls
           ui={ui}
@@ -196,6 +226,7 @@ function ProbabilitySumLesson() {
   const maxSum = output.support[output.support.length - 1] ?? 0
   const currentSum = clamp(Math.round(sum), minSum, maxSum)
   const probability = output.probabilities[output.support.indexOf(currentSum)] ?? 0
+  const pairTerms = probabilityPairTerms(xDistribution, yDistribution, currentSum)
 
   useAnimationStep(playing, speed, () => setSum((value) => (value >= maxSum ? minSum : value + 1)))
 
@@ -213,13 +244,14 @@ function ProbabilitySumLesson() {
     { label: ui.labels.ey, value: formatNumber(distributionMean(yDistribution), ui) },
     { label: ui.labels.exPlusY, value: formatNumber(distributionMean(output), ui) },
     { label: ui.labels.varXPlusY, value: formatNumber(distributionVariance(output), ui) },
+    { label: ui.labels.currentCalculation, value: formatProbabilityCalculation(pairTerms, currentSum, probability, ui) },
   ]
 
   return (
     <LessonFrame
       lessonId="probability"
       canvas={<GraphCanvas className="graph-canvas convolution-canvas" ariaLabel={ui.canvas.probabilityAria} xMin={0} xMax={1} yMin={0} yMax={1} draw={draw} />}
-      controls={
+      controls={({ openTerm }) => (
         <>
           <SelectControl
             label={ui.preset}
@@ -232,11 +264,11 @@ function ProbabilitySumLesson() {
               setSum(nextOutput.support[Math.floor(nextOutput.support.length / 2)] ?? 0)
             }}
           />
-          <Range label={ui.labels.sumS} value={currentSum} min={minSum} max={maxSum} step={1} onChange={setSum} />
+          <Range label={ui.labels.sumS} value={currentSum} min={minSum} max={maxSum} step={1} onChange={setSum} helpTerm="probability-weight" onHelp={openTerm} />
           <p className="input-help">{optionLabel(ui, preset.note)}</p>
-          <DistributionTable xDistribution={xDistribution} yDistribution={yDistribution} selectedSum={currentSum} ariaLabel={ui.canvas.pairsForSum} />
+          <DistributionTable xDistribution={xDistribution} yDistribution={yDistribution} selectedSum={currentSum} ariaLabel={ui.canvas.pairsForSum} ui={ui} />
         </>
-      }
+      )}
       playback={
         <PlaybackControls
           ui={ui}
@@ -283,15 +315,18 @@ function SignalFilteringLesson() {
   const maxIndex = Math.max(0, output.length - 1)
   const currentIndex = clamp(Math.round(index), 0, maxIndex)
   const currentValue = output[currentIndex] ?? 0
-  const signalTerms = discreteConvolutionTerms(signal, operation === 'convolution' ? kernel : flipSequence(kernel), fullIndexFromVisibleIndex(currentIndex, mode, signal.length, kernel.length))
+  const fullIndex = fullIndexFromVisibleIndex(currentIndex, mode, signal.length, kernel.length)
+  const signalTerms = discreteConvolutionTerms(signal, operation === 'convolution' ? kernel : flipSequence(kernel), fullIndex)
+  const displayTerms = termsForDisplayedKernel(signalTerms, kernel.length, operation)
+  const formula = operationFormula('signal', operation, ui)
 
   useAnimationStep(playing, speed, () => setIndex((value) => (value >= maxIndex ? 0 : value + 1)))
 
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme) => {
-      drawSignalScene(ctx, viewport, theme, { signal, kernel, output, currentIndex, operation, labels: ui.canvas })
+      drawSignalScene(ctx, viewport, theme, { signal, kernel, output, currentIndex, fullIndex, operation, labels: ui.canvas })
     },
-    [currentIndex, kernel, operation, output, signal, ui.canvas],
+    [currentIndex, fullIndex, kernel, operation, output, signal, ui.canvas],
   )
 
   const values: ValueRow[] = [
@@ -300,28 +335,36 @@ function SignalFilteringLesson() {
     { label: ui.labels.outputValue, value: formatNumber(currentValue, ui) },
     { label: ui.labels.mode, value: optionLabel(ui, mode) },
     { label: ui.labels.boundaryMode, value: optionLabel(ui, boundary) },
-    { label: ui.labels.terms, value: formatTerms(signalTerms.slice(0, 5), ui) },
+    { label: ui.labels.currentCalculation, value: formatTermCalculation(displayTerms, ui, 'y', currentIndex, currentValue) },
   ]
 
   return (
     <LessonFrame
       lessonId="signal"
+      operation={operation}
+      formula={formula}
       canvas={<GraphCanvas className="graph-canvas convolution-canvas" ariaLabel={ui.canvas.signalAria} xMin={0} xMax={1} yMin={0} yMax={1} draw={draw} />}
-      controls={
+      controls={({ openTerm }) => (
         <>
-          <SelectControl label={ui.labels.signal} value={signalPreset.id} options={signalPresets.map((preset) => ({ value: preset.id, label: optionLabel(ui, preset.label) }))} onChange={setSignalId} />
-          <SelectControl label={ui.labels.kernel} value={kernelPreset.id} options={signalKernelPresets.map((preset) => ({ value: preset.id, label: optionLabel(ui, preset.label) }))} onChange={setKernelId} />
-          <SelectControl label={ui.labels.mode} value={mode} options={modeOptions(ui)} onChange={(next) => setMode(next as ConvolutionMode)} />
-          <SelectControl label={ui.labels.boundaryMode} value={boundary} options={boundaryOptions(ui)} onChange={(next) => setBoundary(next as BoundaryMode)} />
-          <SelectControl label={ui.labels.operation} value={operation} options={operationOptions(ui)} onChange={(next) => setOperation(next as OperationMode)} />
-          <Range label={ui.labels.length} value={length} min={16} max={160} step={1} onChange={setLength} />
-          <Range label={ui.labels.gaussianSigma} value={sigma} min={0.2} max={3} step={0.1} onChange={setSigma} />
-          <Range label={ui.labels.noiseAmplitude} value={noise} min={0} max={1.5} step={0.05} onChange={setNoise} />
-          <Range label={ui.labels.seed} value={seed} min={1} max={200} step={1} onChange={setSeed} />
-          <Range label={ui.labels.kernelPosition} value={currentIndex} min={0} max={maxIndex} step={1} onChange={setIndex} />
+          <div className="control-group">
+            <h3>{ui.labels.basicControls}</h3>
+            <SelectControl label={ui.labels.signal} value={signalPreset.id} options={signalPresets.map((preset) => ({ value: preset.id, label: optionLabel(ui, preset.label) }))} onChange={setSignalId} helpTerm="sequence-a" onHelp={openTerm} />
+            <SelectControl label={ui.labels.kernel} value={kernelPreset.id} options={signalKernelPresets.map((preset) => ({ value: preset.id, label: optionLabel(ui, preset.label) }))} onChange={setKernelId} helpTerm="kernel" onHelp={openTerm} />
+            <Range label={ui.labels.kernelPosition} value={currentIndex} min={0} max={maxIndex} step={1} onChange={setIndex} helpTerm="output-index" onHelp={openTerm} />
+          </div>
+          <div className="control-group">
+            <h3>{ui.labels.advancedControls}</h3>
+            <SelectControl label={ui.labels.mode} value={mode} options={modeOptions(ui)} onChange={(next) => setMode(next as ConvolutionMode)} helpTerm="mode" onHelp={openTerm} />
+            <SelectControl label={ui.labels.boundaryMode} value={boundary} options={boundaryOptions(ui)} onChange={(next) => setBoundary(next as BoundaryMode)} helpTerm="boundary" onHelp={openTerm} />
+            <SelectControl label={ui.labels.operation} value={operation} options={operationOptions(ui)} onChange={(next) => setOperation(next as OperationMode)} helpTerm="correlation" onHelp={openTerm} />
+            <Range label={ui.labels.length} value={length} min={16} max={160} step={1} onChange={setLength} />
+            <Range label={ui.labels.gaussianSigma} value={sigma} min={0.2} max={3} step={0.1} onChange={setSigma} helpTerm="sigma" onHelp={openTerm} />
+            <Range label={ui.labels.noiseAmplitude} value={noise} min={0} max={1.5} step={0.05} onChange={setNoise} helpTerm="noise" onHelp={openTerm} />
+            <Range label={ui.labels.seed} value={seed} min={1} max={200} step={1} onChange={setSeed} helpTerm="seed" onHelp={openTerm} />
+          </div>
           <p className="input-help">{ui.operationNote}</p>
         </>
-      }
+      )}
       playback={
         <PlaybackControls
           ui={ui}
@@ -374,6 +417,8 @@ function ImageKernelLesson() {
   }, [boundary, grayscale, inputImage, kernel, normalize, operation, preserveAlpha, ui.couldNotReadImage])
   const pixelResult = applyKernelAtPixel(inputImage, selectedPixel.x, selectedPixel.y, kernel, { mode: operation, boundaryMode: boundary, normalize, preserveAlpha, grayscaleBeforeApply: grayscale })
   const kernelSum = kernel.flat().reduce((sum, value) => sum + value, 0)
+  const appliedKernel = useMemo(() => previewAppliedKernel(kernel, operation, normalize), [kernel, normalize, operation])
+  const formula = operationFormula('image-kernel', operation, ui)
 
   useEffect(() => {
     if (imagePreset === 'upload') return
@@ -390,6 +435,8 @@ function ImageKernelLesson() {
   return (
     <LessonFrame
       lessonId="image-kernel"
+      operation={operation}
+      formula={formula}
       canvas={
         <div className="image-kernel-stage">
           <ImageCanvas
@@ -402,7 +449,7 @@ function ImageKernelLesson() {
           <ImageCanvas title={ui.labels.outputImage} canvasRef={outputCanvasRef} imageData={outputImage} selectedPixel={selectedPixel} onSelect={(point) => setSelectedPixel(point)} />
         </div>
       }
-      controls={
+      controls={({ openTerm }) => (
         <>
           <SelectControl
             label={ui.labels.sampleImage}
@@ -430,6 +477,8 @@ function ImageKernelLesson() {
               setKernelPresetId(preset.id)
               setKernel(resizeKernel(preset.kernel, kernelSize))
             }}
+            helpTerm="image-kernel"
+            onHelp={openTerm}
           />
           <SelectControl
             label={ui.labels.gridSize}
@@ -443,23 +492,30 @@ function ImageKernelLesson() {
               setKernelSize(size)
               setKernel((current) => resizeKernel(current, size))
             }}
+            helpTerm="kernel"
+            onHelp={openTerm}
           />
           <KernelGridEditor kernel={kernel} onChange={(next) => {
             setKernel(next)
             setKernelPresetId('custom')
           }} />
-          <SelectControl label={ui.labels.operation} value={operation} options={operationOptions(ui)} onChange={(next) => setOperation(next as OperationMode)} />
-          <SelectControl label={ui.labels.boundaryMode} value={boundary} options={boundaryOptions(ui)} onChange={(next) => setBoundary(next as BoundaryMode)} />
-          <Toggle label={ui.labels.normalizeKernel} checked={normalize} onChange={setNormalize} />
-          <Toggle label={ui.labels.preserveAlpha} checked={preserveAlpha} onChange={setPreserveAlpha} />
-          <Toggle label={ui.labels.grayscaleBeforeApply} checked={grayscale} onChange={setGrayscale} />
+          <KernelPreview
+            title={operation === 'convolution' ? ui.labels.appliedKernelFlipped : ui.labels.appliedKernelDirect}
+            kernel={appliedKernel}
+            ui={ui}
+          />
+          <SelectControl label={ui.labels.operation} value={operation} options={operationOptions(ui)} onChange={(next) => setOperation(next as OperationMode)} helpTerm="correlation" onHelp={openTerm} />
+          <SelectControl label={ui.labels.boundaryMode} value={boundary} options={boundaryOptions(ui)} onChange={(next) => setBoundary(next as BoundaryMode)} helpTerm="boundary" onHelp={openTerm} />
+          <Toggle label={ui.labels.normalizeKernel} checked={normalize} onChange={setNormalize} helpTerm="normalize-kernel" onHelp={openTerm} />
+          <Toggle label={ui.labels.preserveAlpha} checked={preserveAlpha} onChange={setPreserveAlpha} helpTerm="preserve-alpha" onHelp={openTerm} />
+          <Toggle label={ui.labels.grayscaleBeforeApply} checked={grayscale} onChange={setGrayscale} helpTerm="grayscale" onHelp={openTerm} />
           <button type="button" onClick={() => exportCanvasElement(outputCanvasRef.current, 'convolution-image-output.png')}>
             <Download size={16} />
             {ui.exportOutputImage}
           </button>
           {error && <p className="warning-text">{error}</p>}
         </>
-      }
+      )}
       playback={<p className="input-help">{ui.imageProcessingHelp}</p>}
       values={[
         { label: ui.labels.selectedPixel, value: `${selectedPixel.x}, ${selectedPixel.y}` },
@@ -489,6 +545,7 @@ function PolynomialMultiplicationLesson() {
   const maxK = Math.max(0, product.length - 1)
   const currentK = clamp(Math.round(k), 0, maxK)
   const terms = convolutionTermsForCoefficient(a, b, currentK)
+  const currentValue = product[currentK] ?? 0
 
   useAnimationStep(playing, speed, () => setK((value) => (value >= maxK ? 0 : value + 1)))
 
@@ -503,7 +560,7 @@ function PolynomialMultiplicationLesson() {
     <LessonFrame
       lessonId="polynomial"
       canvas={<GraphCanvas className="graph-canvas convolution-canvas" ariaLabel={ui.canvas.polynomialAria} xMin={0} xMax={1} yMin={0} yMax={1} draw={draw} />}
-      controls={
+      controls={({ openTerm }) => (
         <>
           <SelectControl
             label={ui.preset}
@@ -536,9 +593,9 @@ function PolynomialMultiplicationLesson() {
             }} />
           </label>
           <p className="input-help">{ui.labels.ascendingPowersHelp}</p>
-          <Range label={ui.labels.coefficientK} value={currentK} min={0} max={maxK} step={1} onChange={setK} />
+          <Range label={ui.labels.coefficientK} value={currentK} min={0} max={maxK} step={1} onChange={setK} helpTerm="output-index" onHelp={openTerm} />
         </>
-      }
+      )}
       playback={
         <PlaybackControls
           ui={ui}
@@ -559,10 +616,10 @@ function PolynomialMultiplicationLesson() {
         { label: 'A(x)', value: polynomialToString(a) },
         { label: 'B(x)', value: polynomialToString(b) },
         { label: 'C(x)', value: polynomialToString(product) },
-        { label: 'c[k]', value: formatNumber(product[currentK] ?? 0, ui) },
+        { label: 'c[k]', value: formatNumber(currentValue, ui) },
         { label: ui.labels.degreeOfResult, value: String(Math.max(0, product.length - 1)) },
-        { label: ui.labels.terms, value: formatTerms(terms, ui) },
-        { label: 'C(1)', value: formatNumber(evaluatePolynomial(product, 1), ui) },
+        { label: ui.labels.currentCalculation, value: formatTermCalculation(terms, ui, 'c', currentK, currentValue) },
+        { label: 'C(1)=A(1)B(1)', value: formatNumber(evaluatePolynomial(product, 1), ui) },
       ]}
       onExport={() => exportConvolutionCanvas('polynomial')}
     />
@@ -592,16 +649,16 @@ function ContinuousConvolutionLesson() {
 
   const draw = useCallback(
     (ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme) => {
-      drawContinuousScene(ctx, viewport, theme, { f, g, t: currentT, product, outputCurve })
+      drawContinuousScene(ctx, viewport, theme, { f, g, t: currentT, product, outputCurve, labels: ui.canvas })
     },
-    [currentT, f, g, outputCurve, product],
+    [currentT, f, g, outputCurve, product, ui.canvas],
   )
 
   return (
     <LessonFrame
       lessonId="continuous"
       canvas={<GraphCanvas className="graph-canvas convolution-canvas" ariaLabel={ui.canvas.continuousAria} xMin={-5} xMax={5} yMin={-1.5} yMax={2.2} draw={draw} />}
-      controls={
+      controls={({ openTerm }) => (
         <>
           <SelectControl label={ui.labels.functionF} value={fId} options={continuousPresetOptions.map((preset) => ({ value: preset.id, textValue: optionLabel(ui, preset.label), label: <Formula tex={preset.tex} label={optionLabel(ui, preset.label)} /> }))} onChange={(next) => setFId(next as ContinuousPresetId)} />
           <SelectControl label={ui.labels.functionG} value={gId} options={continuousPresetOptions.map((preset) => ({ value: preset.id, textValue: optionLabel(ui, preset.label), label: <Formula tex={preset.tex} label={optionLabel(ui, preset.label)} /> }))} onChange={(next) => setGId(next as ContinuousPresetId)} />
@@ -609,10 +666,10 @@ function ContinuousConvolutionLesson() {
             <span>{ui.selectedFunctions}</span>
             <Formula tex={`f(t)=${fPreset.tex},\\quad g(t)=${gPreset.tex}`} label={`${ui.selectedFunctions}: f=${optionLabel(ui, fPreset.label)}, g=${optionLabel(ui, gPreset.label)}`} />
           </div>
-          <Range label={ui.labels.shiftT} value={currentT} min={-4} max={4} step={0.05} onChange={setT} />
-          <Range label={ui.labels.integrationSamples} value={samples} min={24} max={240} step={4} onChange={setSamples} />
+          <Range label={ui.labels.shiftT} value={currentT} min={-4} max={4} step={0.05} onChange={setT} helpTerm="output-index" onHelp={openTerm} />
+          <Range label={ui.labels.integrationSamples} value={samples} min={24} max={240} step={4} onChange={setSamples} helpTerm="integration-samples" onHelp={openTerm} />
         </>
-      }
+      )}
       playback={
         <PlaybackControls
           ui={ui}
@@ -643,6 +700,8 @@ function ContinuousConvolutionLesson() {
 
 function LessonFrame({
   lessonId,
+  operation,
+  formula,
   controls,
   canvas,
   playback,
@@ -650,7 +709,9 @@ function LessonFrame({
   onExport,
 }: {
   lessonId: ConvolutionLessonId
-  controls: ReactNode
+  operation?: OperationMode
+  formula?: FormulaDisplay
+  controls: ReactNode | ((helpers: ControlHelpers) => ReactNode)
   canvas: ReactNode
   playback: ReactNode
   values: ValueRow[]
@@ -662,6 +723,8 @@ function LessonFrame({
   const [helpMode, setHelpMode] = useState<ConvolutionHelpMode | null>(null)
   const helpLabels = getConvolutionHelpLabels(locale)
   const activeHelpTopic = helpMode ? getConvolutionHelpTopic(helpMode, lessonId, locale) : null
+  const openTerm = (term: ConvolutionTermId) => setHelpMode({ kind: 'term', term })
+  const currentFormula: FormulaDisplay = formula ?? { formula: copy.formula, formulaTex: copy.formulaTex }
   return (
     <>
     <ModuleFocusFrame>
@@ -674,7 +737,7 @@ function LessonFrame({
           </HelpTrigger>
         </div>
         <h2>{ui.controls}</h2>
-        {controls}
+        {typeof controls === 'function' ? controls({ openTerm }) : controls}
       </aside>
 
       <main className="convolution-main">
@@ -700,13 +763,14 @@ function LessonFrame({
 
       <aside className="convolution-explanation platform-card">
         <h2>{ui.seeing}</h2>
-        <p>{renderConvolutionWhat(lessonId, locale, copy.what, (term) => setHelpMode({ kind: 'term', term }))}</p>
+        <p>{renderConvolutionWhat(lessonId, locale, copy.what, openTerm, operation)}</p>
         <h2>{ui.why}</h2>
         <p>{copy.why}</p>
         <h2>{ui.formula}</h2>
         <p className="formula-text formula-card">
-          <Formula tex={copy.formulaTex} block label={copy.formula} />
+          <Formula tex={currentFormula.formulaTex} block label={currentFormula.formula} />
         </p>
+        {currentFormula.note && <p className="formula-note">{currentFormula.note}</p>}
         <h2>{ui.values}</h2>
         <dl>
           {values.map((row) => (
@@ -727,7 +791,7 @@ function LessonFrame({
   )
 }
 
-function renderConvolutionWhat(lessonId: ConvolutionLessonId, locale: Locale, fallback: string, onTerm: (term: ConvolutionTermId) => void): ReactNode {
+function renderConvolutionWhat(lessonId: ConvolutionLessonId, locale: Locale, fallback: string, onTerm: (term: ConvolutionTermId) => void, operation?: OperationMode): ReactNode {
   const term = (id: ConvolutionTermId, labelText: string) => (
     <TermButton key={id} onClick={() => onTerm(id)}>
       {labelText}
@@ -735,6 +799,17 @@ function renderConvolutionWhat(lessonId: ConvolutionLessonId, locale: Locale, fa
   )
 
   if (lessonId === 'discrete') {
+    if (operation === 'correlation') {
+      return locale === 'zh' ? (
+        <>
+          {term('sequence-a', 'a')} 是固定参考序列，{term('sequence-b', 'b')} 会直接滑过 a；相关模式不会先 {term('flip', '翻转')} b，而是按输出 {term('output-index', '索引 k')} 对齐后，把重叠项 {term('multiply-sum', '相乘再求和')}。
+        </>
+      ) : (
+        <>
+          {term('sequence-a', 'a')} is the reference sequence and {term('sequence-b', 'b')} slides directly across it. Correlation does not {term('flip', 'flip')} b first; it aligns b by output {term('output-index', 'index k')}, then {term('multiply-sum', 'multiplies and sums')} the overlapping values.
+        </>
+      )
+    }
     return locale === 'zh' ? (
       <>
         {term('sequence-a', 'a')} 是固定参考序列，{term('sequence-b', 'b')} 是要滑过去的序列；卷积会先把 b {term('flip', '翻转')}，再按输出 {term('output-index', '索引 k')} 对齐，取重叠项 {term('multiply-sum', '相乘再求和')}。
@@ -747,9 +822,20 @@ function renderConvolutionWhat(lessonId: ConvolutionLessonId, locale: Locale, fa
   }
 
   if (lessonId === 'signal') {
+    if (operation === 'correlation') {
+      return locale === 'zh' ? (
+        <>
+          输入信号像一排数据点，{term('kernel', '卷积核')} 像一个小窗口；相关模式让窗口直接滑动，不先翻转。窗口到某个 {term('index', '索引')} 时，会读取附近数据并做加权和。
+        </>
+      ) : (
+        <>
+          The signal is a row of samples, and the {term('kernel', 'kernel')} is a small window. In correlation mode, that window slides directly without flipping. At each {term('index', 'index')}, it reads nearby values and makes a weighted sum.
+        </>
+      )
+    }
     return locale === 'zh' ? (
       <>
-        输入信号像一排数据点，{term('kernel', 'kernel')} 像一个小窗口；窗口滑到某个 {term('index', '索引')} 时，会读取附近数据并做加权和，所以不同 kernel 会产生平滑、锐化或边缘检测。
+        输入信号像一排数据点，{term('kernel', '卷积核')} 像一个小窗口；窗口滑到某个 {term('index', '索引')} 时，会读取附近数据并做加权和，所以不同卷积核会产生平滑、锐化或边缘检测。
       </>
     ) : (
       <>
@@ -759,13 +845,24 @@ function renderConvolutionWhat(lessonId: ConvolutionLessonId, locale: Locale, fa
   }
 
   if (lessonId === 'image-kernel') {
+    if (operation === 'correlation') {
+      return locale === 'zh' ? (
+        <>
+          图像 {term('image-kernel', '卷积核')} 是一个小数字网格。当前是相关模式：卷积核中心对准像素后直接滑过去，把邻近像素按权重相加，得到输出图像里的新颜色。
+        </>
+      ) : (
+        <>
+          An image {term('image-kernel', 'kernel')} is a small grid of weights. This is correlation mode: the kernel center sits over each pixel and slides directly, combining nearby pixels into the new output color.
+        </>
+      )
+    }
     return locale === 'zh' ? (
       <>
-        图像 {term('image-kernel', 'kernel')} 是一个小数字网格。它放在某个像素周围，把邻近像素按权重相加，得到输出图像里对应位置的新颜色。
+        图像 {term('image-kernel', '卷积核')} 是一个小数字网格。卷积模式会先把卷积核上下左右翻转，再放到某个像素周围，把邻近像素按权重相加，得到输出图像里的新颜色。
       </>
     ) : (
       <>
-        An image {term('image-kernel', 'kernel')} is a small grid of weights. It sits over a pixel neighborhood, combines nearby pixels by those weights, and produces the new output color.
+        An image {term('image-kernel', 'kernel')} is a small grid of weights. In convolution mode it is flipped both vertically and horizontally before it sits over a pixel neighborhood and combines nearby pixels into the new output color.
       </>
     )
   }
@@ -773,11 +870,11 @@ function renderConvolutionWhat(lessonId: ConvolutionLessonId, locale: Locale, fa
   if (lessonId === 'probability') {
     return locale === 'zh' ? (
       <>
-        每个输出柱会收集所有满足同一个和的组合；中间热力图显示哪些结果对正在 {term('overlap', '重叠')} 到当前和。
+        每个输出柱会收集所有满足同一个和的组合；每个组合贡献 {term('probability-weight', '两个概率的乘积')}。中间热力图显示哪些结果对正在贡献到当前和。
       </>
     ) : (
       <>
-        Each output bar collects all pairs with the same sum. The middle heatmap shows which outcome pairs {term('overlap', 'contribute')} to the selected sum.
+        Each output bar collects all pairs with the same sum. Each pair contributes a {term('probability-weight', 'product of two probabilities')}. The middle heatmap shows which outcome pairs contribute to the selected sum.
       </>
     )
   }
@@ -833,7 +930,7 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
               title: 'a 和 b 分别是什么',
               body: (
                 <>
-                  {formula('a[i]')} 和 {formula('b[j]')} 都是一排数字。a 通常当作输入或参考序列，b 常常当作 kernel，也就是拿来测量、平滑、加权或匹配 a 的小模板。
+                  {formula('a[i]')} 和 {formula('b[j]')} 都是一排数字。a 通常当作输入或参考序列，b 常常当作卷积核，也就是拿来测量、平滑、加权或匹配 a 的小模板。
                 </>
               ),
             },
@@ -855,7 +952,7 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
             },
             {
               title: '怎么探索',
-              items: ['先选 asymmetric kernel，看卷积和相关的结果不同。', '再选 symmetric kernel，看翻转前后没有区别。', '移动 k，观察中间“重叠乘积”如何变成下方的一个输出柱。'],
+              items: ['先选“非对称卷积核”，看卷积和相关的结果不同。', '再选“对称卷积核”，看翻转前后没有区别。', '移动 k，观察中间“重叠乘积”如何变成下方的一个输出柱。'],
             },
           ],
         }
@@ -900,12 +997,13 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
     return locale === 'zh'
       ? {
           eyebrow: '从零开始',
-          title: '图像 kernel 是什么',
-          summary: '图像 kernel 是一个小矩阵，用来告诉每个像素应该怎样参考周围像素。',
+          title: '图像卷积核是什么',
+          summary: '图像卷积核是一个小矩阵，用来告诉每个像素应该怎样参考周围像素。',
           sections: [
-            { title: '一个像素怎么变成新像素', body: '把 kernel 放在一个像素周围，每个格子的数字乘以对应邻居像素的颜色，最后相加，就得到输出图像里的新像素。' },
-            { title: '常见效果', items: ['平均型 kernel 会模糊，因为它把周围颜色混在一起。', '锐化 kernel 会强调中心像素和邻居的差别。', '边缘检测 kernel 会让变化剧烈的位置变亮。'] },
+            { title: '一个像素怎么变成新像素', body: '把卷积核放在一个像素周围，每个格子的数字乘以对应邻居像素的颜色，最后相加，就得到输出图像里的新像素。' },
+            { title: '常见效果', items: ['平均型卷积核会模糊，因为它把周围颜色混在一起。', '锐化卷积核会强调中心像素和邻居的差别。', '边缘检测卷积核会让变化剧烈的位置变亮。'] },
             { title: '边界模式', body: '图像边缘没有完整邻居，所以需要决定缺失部分怎么处理：补零、钳制到边缘，或从另一边环绕。' },
+            { title: '怎么探索', items: ['选择 emboss 或 Sobel X 这类非对称卷积核。', '在卷积和相关之间切换。', '看“实际使用的卷积核”是否翻转，以及输出图像如何变化。'] },
           ],
         }
       : {
@@ -916,6 +1014,7 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
             { title: 'How one pixel becomes a new pixel', body: 'Place the kernel over a pixel neighborhood, multiply each kernel weight by the matching neighbor color, then sum the results.' },
             { title: 'Common effects', items: ['Averaging kernels blur by mixing nearby colors.', 'Sharpening kernels emphasize the center pixel against its neighbors.', 'Edge kernels brighten places where the image changes abruptly.'] },
             { title: 'Boundary modes', body: 'At image edges, some neighbors are missing, so the app must decide whether to use zeros, clamp to the edge, or wrap around.' },
+            { title: 'How to explore', items: ['Choose an asymmetric kernel such as emboss or Sobel X.', 'Switch between convolution and correlation.', 'Watch the applied kernel flip and compare the output image.'] },
           ],
         }
   }
@@ -925,10 +1024,11 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
       ? {
           eyebrow: '从零开始',
           title: '卷积为什么能做信号滤波',
-          summary: 'kernel 是一个小的加权窗口。窗口怎么加权，就决定保留或削弱信号里的什么特征。',
+          summary: '卷积核是一个小的加权窗口。窗口怎么加权，就决定保留或削弱信号里的什么特征。',
           sections: [
-            { title: '平滑', body: '移动平均或高斯 kernel 会把附近点混合起来，所以随机噪声会被压低，但尖锐变化也可能变钝。' },
-            { title: '检测变化', body: '差分或边缘 kernel 会比较相邻点，所以信号突然跳变的位置会变得明显。' },
+            { title: '平滑', body: '移动平均或高斯卷积核会把附近点混合起来，所以随机噪声会被压低，但尖锐变化也可能变钝。' },
+            { title: '检测变化', body: '差分或边缘卷积核会比较相邻点，所以信号突然跳变的位置会变得明显。' },
+            { title: '怎么探索', items: ['选择 noisy sine，再选择 moving average 或 gaussian。', '拖动卷积核位置，看紫色权重怎样贴到输入信号上。', '切到 difference，看跳变处如何被放大。'] },
           ],
         }
       : {
@@ -938,6 +1038,151 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
           sections: [
             { title: 'Smoothing', body: 'Moving-average or Gaussian kernels mix nearby samples, reducing random noise but also softening sharp changes.' },
             { title: 'Detecting change', body: 'Difference or edge kernels compare neighboring samples, making sudden changes stand out.' },
+            { title: 'How to explore', items: ['Choose noisy sine, then use moving average or Gaussian.', 'Drag kernel position and watch the purple weights sit on the input signal.', 'Switch to difference and notice how jumps become larger.'] },
+          ],
+        }
+  }
+
+  if (lessonId === 'probability') {
+    return locale === 'zh'
+      ? {
+          eyebrow: '从零开始',
+          title: '为什么概率相加会用卷积',
+          summary: '两个独立随机变量相加时，每个可能的和都会收集所有能产生它的组合，并把这些组合的概率加起来。',
+          sections: [
+            { title: '为什么 7 比 2 更常见', body: '两个公平骰子掷出 7 的组合有 1+6、2+5、3+4、4+3、5+2、6+1；掷出 2 只有 1+1。组合越多，总概率通常越大。' },
+            { title: '偏置时怎么算', body: <>{formula('x+y=s')} 的每个组合不是同样重要。组合 {formula('(x,y)')} 的贡献是 {formula('P_X(x)P_Y(y)')}。把所有贡献加起来，就是 {formula('P(S=s)')}。</> },
+            { title: '怎么探索', items: ['先看公平 d6 + 公平 d6，观察 7 的组合最多。', '再看偏置硬币，注意每个组合下面的概率贡献不同。', '拖动和 s，看当前计算如何把多个概率乘积加起来。'] },
+          ],
+        }
+      : {
+          eyebrow: 'Start from zero',
+          title: 'Why probability sums use convolution',
+          summary: 'When two independent random variables are added, each possible sum collects every pair that can make it, then adds the pair probabilities.',
+          sections: [
+            { title: 'Why 7 beats 2 for dice', body: 'Two fair dice can make 7 as 1+6, 2+5, 3+4, 4+3, 5+2, and 6+1. They can make 2 only as 1+1. More contributing pairs usually means more probability.' },
+            { title: 'How biased pairs count', body: <>Pairs are not always equally important. A pair {formula('(x,y)')} with {formula('x+y=s')} contributes {formula('P_X(x)P_Y(y)')}. Adding all such contributions gives {formula('P(S=s)')}.</> },
+            { title: 'How to explore', items: ['Start with fair d6 + fair d6 and watch the center sums collect more pairs.', 'Switch to biased coins and notice that pair contributions have different sizes.', 'Drag sum s and read the current probability product calculation.'] },
+          ],
+        }
+  }
+
+  if (lessonId === 'polynomial') {
+    return locale === 'zh'
+      ? {
+          eyebrow: '从零开始',
+          title: '多项式乘法为什么像卷积',
+          summary: '每个系数可以看成序列里的一个数。相乘时，次数相加后相同的项会被收集到同一个输出系数。',
+          sections: [
+            { title: '系数怎么读', body: '升幂排列 [1, 2, 3] 表示 1 + 2x + 3x^2。第 0 个数是常数项，第 1 个数是 x 的系数。' },
+            { title: '同一个 k 收集什么', body: <>{formula('c[k]')} 收集所有满足 {formula('i+j=k')} 的乘积 {formula('a_i b_j')}。这和离散卷积的“同一个输出位置收集多项乘积”是同一种结构。</> },
+            { title: '怎么探索', items: ['选择 (1+x)(1+x)，看 x 的系数为什么是 2。', '拖动 k，看网格中哪条对角线被选中。', '选择 asymmetric polynomials，观察负系数和不同长度如何进入同一个 c[k]。'] },
+          ],
+        }
+      : {
+          eyebrow: 'Start from zero',
+          title: 'Why polynomial multiplication looks like convolution',
+          summary: 'Coefficients can be read as a sequence. During multiplication, products with the same final power are collected into the same output coefficient.',
+          sections: [
+            { title: 'How coefficients are read', body: 'Ascending powers [1, 2, 3] means 1 + 2x + 3x^2. The 0th number is the constant term; the 1st number is the coefficient of x.' },
+            { title: 'What one k collects', body: <>{formula('c[k]')} collects every product {formula('a_i b_j')} where {formula('i+j=k')}. This is the same structure as discrete convolution collecting products into one output position.</> },
+            { title: 'How to explore', items: ['Choose (1+x)(1+x) and see why the coefficient of x is 2.', 'Drag k and watch which diagonal of the grid is selected.', 'Try asymmetric polynomials and see how negative coefficients and unequal lengths enter one c[k].'] },
+          ],
+        }
+  }
+
+  if (lessonId === 'continuous') {
+    return locale === 'zh'
+      ? {
+          eyebrow: '从零开始',
+          title: '连续卷积在做什么',
+          summary: '离散卷积是一格一格相乘再相加。连续卷积做同一类事，只是格子变成曲线：每一点相乘，再把乘积下面的面积加起来。',
+          sections: [
+            { title: 'τ 和 t 的角色', body: <>{formula('\\tau')} 是沿着横轴扫过的变量。{formula('t')} 是当前平移量；你拖动 t，就是移动紫色函数，重新测量重叠面积。</> },
+            { title: '为什么是积分', body: '离散版把有限个乘积加起来；连续版有无穷多个点，所以用积分来表示“把整段面积加起来”。' },
+            { title: '怎么探索', items: ['选择 rectangle 和 gaussian。', '拖动 t，观察重叠面积最大时，上方输出曲线也接近最大。', '增加积分采样数，看曲线近似是否更平滑。'] },
+          ],
+        }
+      : {
+          eyebrow: 'Start from zero',
+          title: 'What continuous convolution is doing',
+          summary: 'Discrete convolution multiplies entries and adds them. Continuous convolution does the same kind of thing with curves: multiply values point by point, then add the product area.',
+          sections: [
+            { title: 'What tau and t do', body: <>{formula('\\tau')} is the variable sweeping along the horizontal axis. {formula('t')} is the current shift; dragging t moves the purple function and recomputes the overlap area.</> },
+            { title: 'Why it uses an integral', body: 'The discrete version adds finitely many products. The continuous version has infinitely many points, so an integral represents adding the whole area.' },
+            { title: 'How to explore', items: ['Choose rectangle and Gaussian.', 'Drag t and watch the output curve peak near the strongest overlap.', 'Increase integration samples and see the numerical approximation become smoother.'] },
+          ],
+        }
+  }
+
+  if (lessonId === 'probability') {
+    return locale === 'zh'
+      ? {
+          eyebrow: '怎么看图',
+          title: '概率和图像读法',
+          summary: '从上到下读：上方是 X 和 Y 的原始分布，中间是当前和的组合，下方是 X+Y 的分布。',
+          sections: [
+            { title: '上方分布', body: '青色柱是 X 的概率，紫色柱是 Y 的概率。柱越高，那个结果越可能出现。' },
+            { title: '中间热力图', body: '亮起来的格子满足 x+y=s。亮度会受到 P_X(x)P_Y(y) 的影响，所以偏置分布里不同组合贡献不同。' },
+            { title: '下方输出', body: '黄色分布是和 S=X+Y。高亮柱就是当前选中的 P(S=s)。' },
+          ],
+        }
+      : {
+          eyebrow: 'Read the graph',
+          title: 'How to read probability sums',
+          summary: 'Read top to bottom: original distributions for X and Y, pairs for the current sum, then the distribution of X+Y.',
+          sections: [
+            { title: 'Source distributions', body: 'Teal bars show probabilities for X; purple bars show probabilities for Y. Taller bars are more likely outcomes.' },
+            { title: 'Pair heatmap', body: 'Highlighted cells satisfy x+y=s. Brightness reflects P_X(x)P_Y(y), so biased distributions give different pair weights.' },
+            { title: 'Output distribution', body: 'The yellow distribution is S=X+Y. The highlighted bar is the currently selected P(S=s).' },
+          ],
+        }
+  }
+
+  if (lessonId === 'polynomial') {
+    return locale === 'zh'
+      ? {
+          eyebrow: '怎么看图',
+          title: '多项式乘法图像读法',
+          summary: '上方网格显示每一项乘每一项；下方柱状图显示乘积多项式的系数。',
+          sections: [
+            { title: '乘法网格', body: '第 i 行来自 A 的 x^i 项，第 j 列来自 B 的 x^j 项。格子里的数字是这两个系数的乘积。' },
+            { title: '高亮对角线', body: '被高亮的格子满足 i+j=k，所以它们都会被加进 c[k]。' },
+            { title: '输出系数', body: '下方黄色柱是 C(x) 的系数。高亮柱就是当前 c[k]。' },
+          ],
+        }
+      : {
+          eyebrow: 'Read the graph',
+          title: 'How to read polynomial multiplication',
+          summary: 'The grid shows every term times every term; the lower bars show the coefficients of the product polynomial.',
+          sections: [
+            { title: 'Multiplication grid', body: 'Row i comes from the x^i term of A; column j comes from the x^j term of B. The cell value is the product of those two coefficients.' },
+            { title: 'Highlighted diagonal', body: 'Highlighted cells satisfy i+j=k, so they all add into c[k].' },
+            { title: 'Output coefficients', body: 'The yellow bars are coefficients of C(x). The highlighted bar is the current c[k].' },
+          ],
+        }
+  }
+
+  if (lessonId === 'continuous') {
+    return locale === 'zh'
+      ? {
+          eyebrow: '怎么看图',
+          title: '连续卷积图像读法',
+          summary: '青色曲线是 f(τ)，紫色曲线是翻转并平移后的 g(t−τ)，浅色阴影是两者相乘后的面积，上方曲线是输出。',
+          sections: [
+            { title: '输入曲线', body: '青色 f(τ) 固定不动。紫色 g(t−τ) 会随 t 移动；它已经包含卷积里的翻转和平移。' },
+            { title: '乘积面积', body: '黄色曲线和浅色阴影表示 f(τ)g(t−τ)。当前输出值就是这块带符号面积的积分。' },
+            { title: '上方输出', body: '上方蓝色曲线是每个 t 对应的卷积输出。它向上挪了一点，只是为了和下方曲线分开看清楚。虚线表示当前 t。' },
+          ],
+        }
+      : {
+          eyebrow: 'Read the graph',
+          title: 'How to read continuous convolution',
+          summary: 'Teal is f(tau), purple is flipped-and-shifted g(t-tau), the pale fill is product area, and the upper curve is the output.',
+          sections: [
+            { title: 'Input curves', body: 'Teal f(tau) stays fixed. Purple g(t-tau) moves with t and already includes the convolution flip and shift.' },
+            { title: 'Product area', body: 'The yellow curve and pale fill show f(tau)g(t-tau). The current output value is the integral of this signed area.' },
+            { title: 'Upper output', body: 'The upper blue curve is the convolution output for every t. It is shifted upward only so it is easier to see. The dashed line marks the current t.' },
           ],
         }
   }
@@ -971,7 +1216,7 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
           title: '离散卷积图像读法',
           summary: '从上到下读：上方看 a 和 b 的相对位置，中间看当前重叠项的乘积，下方看输出序列 y。',
           sections: [
-            { title: '上方', body: '青色柱是 a，紫色柱是 b。卷积模式下，紫色 b 已经先被翻转，再随着 k 平移。' },
+            { title: '上方', body: '青色柱是 a，紫色柱是 b。当前重叠项会变亮，但不会改变 a / b 的颜色。卷积模式下，紫色 b 已经先被翻转，再随着 k 平移。' },
             { title: '中间', body: '这里只显示当前 k 下真正重叠的项。每根柱代表一对 a[i] 和 b[k-i] 的乘积。' },
             { title: '下方', body: '黄色输出 y 的高亮柱就是当前 y[k]。它等于中间所有重叠乘积相加。' },
           ],
@@ -981,7 +1226,7 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
           title: 'How to read discrete convolution',
           summary: 'Read top to bottom: relative positions of a and b, current overlap products, then output y.',
           sections: [
-            { title: 'Top', body: 'Teal bars are a and purple bars are b. In convolution mode, b is flipped before it slides with k.' },
+            { title: 'Top', body: 'Teal bars are a and purple bars are b. Current overlaps become brighter, but a and b keep their colors. In convolution mode, b is flipped before it slides with k.' },
             { title: 'Middle', body: 'This band shows only the values that overlap for the current k. Each bar is one product a[i] times b[k-i].' },
             { title: 'Bottom', body: 'The highlighted yellow output bar is y[k]. It equals the sum of the middle overlap products.' },
           ],
@@ -992,12 +1237,12 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
     return locale === 'zh'
       ? {
           eyebrow: '怎么看图',
-          title: '图像 kernel 图像读法',
-          summary: '左边是输入图，右边是应用 kernel 后的输出图。点击像素可以看同一个位置如何被改写。',
+          title: '图像卷积核读法',
+          summary: '左边是输入图，右边是应用卷积核后的输出图。点击像素可以看同一个位置如何被改写。',
           sections: [
             { title: '输入图', body: '这是被处理的原图。选中的小圆点表示当前检查的像素位置。' },
             { title: '输出图', body: '这是每个像素用邻域加权和重新计算后的结果。模糊、锐化和边缘检测都是不同权重造成的。' },
-            { title: 'kernel 网格', body: '控制面板里的数字网格就是权重。中心附近的数字越大，中心像素对结果影响越大；周围数字越大，邻居影响越大。' },
+            { title: '卷积核网格', body: '控制面板里的数字网格就是权重。中心附近的数字越大，中心像素对结果影响越大；周围数字越大，邻居影响越大。' },
           ],
         }
       : {
@@ -1017,10 +1262,10 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
       ? {
           eyebrow: '怎么看图',
           title: '信号滤波图像读法',
-          summary: '上方是输入信号，中间是当前 kernel，下方是滤波后的输出。',
+          summary: '上方是输入信号，中间是当前卷积核，下方是滤波后的输出。',
           sections: [
-            { title: '窗口框', body: '虚线框表示当前 kernel 覆盖的输入范围。移动 kernel 位置时，框会沿信号滑动。' },
-            { title: '输出', body: '下方高亮点是当前索引的输出值，来自窗口内输入值和 kernel 权重的加权和。' },
+            { title: '窗口框', body: '虚线框表示当前卷积核覆盖的输入范围。移动卷积核位置时，框会沿信号滑动。' },
+            { title: '输出', body: '下方高亮点是当前索引的输出值，来自窗口内输入值和卷积核权重的加权和。' },
           ],
         }
       : {
@@ -1068,7 +1313,7 @@ function convolutionTermTopic(term: ConvolutionTermId, locale: Locale): HelpTopi
     'sequence-b': {
       eyebrow: '术语',
       title: 'b 是什么',
-      summary: 'b 是第二个序列，很多场景下也叫 kernel。',
+      summary: 'b 是第二个序列，很多场景下也叫卷积核。',
       sections: [{ title: '在图里', body: 'b 是紫色柱。卷积会先翻转 b，再让它沿 a 滑动；相关则不翻转。' }],
     },
     index: {
@@ -1091,9 +1336,9 @@ function convolutionTermTopic(term: ConvolutionTermId, locale: Locale): HelpTopi
     },
     kernel: {
       eyebrow: '术语',
-      title: 'kernel',
-      summary: 'kernel 是一个小模板或小窗口，用来决定附近数值怎样被加权。',
-      sections: [{ title: '例子', body: '平滑 kernel 会平均邻近值；差分 kernel 会比较相邻值；图像 kernel 会把周围像素按权重混合。' }],
+      title: '卷积核（kernel）',
+      summary: '卷积核是一个小模板或小窗口，用来决定附近数值怎样被加权。',
+      sections: [{ title: '例子', body: '平滑卷积核会平均邻近值；差分卷积核会比较相邻值；图像卷积核会把周围像素按权重混合。' }],
     },
     overlap: {
       eyebrow: '术语',
@@ -1110,8 +1355,8 @@ function convolutionTermTopic(term: ConvolutionTermId, locale: Locale): HelpTopi
     correlation: {
       eyebrow: '术语',
       title: '相关',
-      summary: '相关和卷积很像，但不会先翻转 kernel。',
-      sections: [{ title: '怎么比较', body: '如果 kernel 对称，卷积和相关结果相同；如果 kernel 不对称，两者通常不同。' }],
+      summary: '相关和卷积很像，但不会先翻转卷积核。',
+      sections: [{ title: '怎么比较', body: '如果卷积核对称，卷积和相关结果相同；如果卷积核不对称，两者通常不同。' }],
     },
     boundary: {
       eyebrow: '术语',
@@ -1121,8 +1366,8 @@ function convolutionTermTopic(term: ConvolutionTermId, locale: Locale): HelpTopi
     },
     'image-kernel': {
       eyebrow: '术语',
-      title: '图像 kernel',
-      summary: '图像 kernel 是一个二维权重网格。',
+      title: '图像卷积核',
+      summary: '图像卷积核是一个二维权重网格，在图像处理教材里也常叫卷积模板。',
       sections: [{ title: '作用', body: '它会覆盖像素周围的小邻域，把每个邻居像素乘以对应权重，然后相加得到新像素。' }],
     },
     'continuous-integral': {
@@ -1130,6 +1375,78 @@ function convolutionTermTopic(term: ConvolutionTermId, locale: Locale): HelpTopi
       title: '积分',
       summary: '积分可以理解为连续版本的求和。',
       sections: [{ title: '在连续卷积里', body: '离散卷积把一堆乘积加起来；连续卷积把整段重叠区域的乘积面积加起来。' }],
+    },
+    mode: {
+      eyebrow: '术语',
+      title: 'full / same / valid',
+      summary: 'mode 决定保留哪些滑动位置的输出。',
+      sections: [{ title: '三种选择', body: 'full 显示所有滑动位置，包括只有一点点重叠的位置；same 只保留和原输入长度一样的输出；valid 只保留卷积核完全覆盖输入的位置。' }],
+    },
+    sigma: {
+      eyebrow: '术语',
+      title: 'sigma',
+      summary: 'sigma 控制高斯卷积核的宽度。',
+      sections: [{ title: '直觉', body: 'sigma 越大，平滑范围越宽；sigma 越小，卷积核只看更近的邻居。' }],
+    },
+    noise: {
+      eyebrow: '术语',
+      title: '噪声幅度',
+      summary: '噪声幅度控制随机抖动有多强。',
+      sections: [{ title: '直觉', body: '数值越大，输入信号的小抖动越明显；平滑卷积核的作用也越容易看出来。' }],
+    },
+    seed: {
+      eyebrow: '术语',
+      title: '随机种子',
+      summary: 'seed 控制随机模式。',
+      sections: [{ title: '为什么有它', body: '同一个 seed 会生成同一组噪声，方便你重复观察同一个例子。' }],
+    },
+    'normalize-kernel': {
+      eyebrow: '术语',
+      title: '归一化卷积核',
+      summary: '如果权重总和不是 0，把权重缩放到总和为 1。',
+      sections: [{ title: '为什么常用', body: '模糊或平均时，归一化能帮助保持整体亮度或平均值。边缘检测这种总和为 0 的卷积核不会被强行归一化。' }],
+    },
+    'preserve-alpha': {
+      eyebrow: '术语',
+      title: '保留 alpha',
+      summary: 'alpha 是像素的透明度。',
+      sections: [{ title: '打开时', body: '输出图像沿用原图透明度，只改变颜色通道。关闭时，透明度也会参与卷积核计算。' }],
+    },
+    grayscale: {
+      eyebrow: '术语',
+      title: '先转灰度',
+      summary: '先把颜色转成灰度，再应用卷积核。',
+      sections: [{ title: '什么时候有用', body: '边缘检测时，先转灰度可以让你更专注于明暗变化，而不是颜色差异。' }],
+    },
+    'integration-samples': {
+      eyebrow: '术语',
+      title: '积分采样数',
+      summary: '用多少小片段近似连续积分。',
+      sections: [{ title: '权衡', body: '采样越多，曲线和面积近似越细；计算也会更重。' }],
+    },
+    expectation: {
+      eyebrow: '术语',
+      title: 'E[X]',
+      summary: 'E[X] 是随机变量 X 的平均值或期望值。',
+      sections: [{ title: '在和里面', body: '独立随机变量相加时，E[X+Y] = E[X] + E[Y]。' }],
+    },
+    variance: {
+      eyebrow: '术语',
+      title: 'Var(X + Y)',
+      summary: '方差描述分布分散得有多开。',
+      sections: [{ title: '在和里面', body: '独立随机变量相加时，方差也会相加；这解释了多次随机相加后分布会变宽。' }],
+    },
+    'probability-weight': {
+      eyebrow: '术语',
+      title: '概率贡献',
+      summary: '一个结果对的贡献是两个独立概率的乘积。',
+      sections: [{ title: '公式', body: <>{formula('x+y=s')} 时，这一对贡献 {formula('P_X(x)P_Y(y)')}。把所有满足同一个和的贡献加起来，就得到 {formula('P(S=s)')}。</> }],
+    },
+    'coefficient-sum': {
+      eyebrow: '术语',
+      title: 'C(1)=A(1)B(1)',
+      summary: '把 x=1 代入多项式时，得到的是所有系数的总和。',
+      sections: [{ title: '为什么成立', body: '乘积多项式的系数总和，等于两边系数总和的乘积。所以 C(1) 可以快速检查乘法结果是否合理。' }],
     },
   }
 
@@ -1206,6 +1523,78 @@ function convolutionTermTopic(term: ConvolutionTermId, locale: Locale): HelpTopi
       summary: 'An integral is a continuous version of summing.',
       sections: [{ title: 'In continuous convolution', body: 'Discrete convolution adds a list of products. Continuous convolution adds the product area across a whole overlap region.' }],
     },
+    mode: {
+      eyebrow: 'Term',
+      title: 'full / same / valid',
+      summary: 'Mode decides which sliding positions are kept in the output.',
+      sections: [{ title: 'Three choices', body: 'full keeps every slide position, including tiny overlaps; same keeps an output the same length as the input; valid keeps only positions where the kernel fully covers the input.' }],
+    },
+    sigma: {
+      eyebrow: 'Term',
+      title: 'Sigma',
+      summary: 'Sigma controls the width of a Gaussian kernel.',
+      sections: [{ title: 'Intuition', body: 'Larger sigma spreads smoothing across a wider neighborhood; smaller sigma focuses on closer neighbors.' }],
+    },
+    noise: {
+      eyebrow: 'Term',
+      title: 'Noise amplitude',
+      summary: 'Noise amplitude controls how strong the random jitter is.',
+      sections: [{ title: 'Intuition', body: 'Larger values make the input signal wobble more, making smoothing kernels easier to compare.' }],
+    },
+    seed: {
+      eyebrow: 'Term',
+      title: 'Seed',
+      summary: 'The seed controls the random pattern.',
+      sections: [{ title: 'Why it exists', body: 'The same seed creates the same noise again, so you can repeat and compare one example.' }],
+    },
+    'normalize-kernel': {
+      eyebrow: 'Term',
+      title: 'Normalize kernel',
+      summary: 'If the weight sum is not 0, normalize rescales weights so they sum to 1.',
+      sections: [{ title: 'Why it is common', body: 'For blur or averaging, normalization helps preserve overall brightness or average value. Zero-sum edge kernels are not forced to normalize.' }],
+    },
+    'preserve-alpha': {
+      eyebrow: 'Term',
+      title: 'Preserve alpha',
+      summary: 'Alpha is pixel transparency.',
+      sections: [{ title: 'When enabled', body: 'The output image keeps the original transparency and only changes color channels. When disabled, transparency also goes through the kernel calculation.' }],
+    },
+    grayscale: {
+      eyebrow: 'Term',
+      title: 'Grayscale before apply',
+      summary: 'Convert the image to grayscale before applying the kernel.',
+      sections: [{ title: 'When useful', body: 'For edge detection, grayscale lets you focus on light/dark changes instead of color differences.' }],
+    },
+    'integration-samples': {
+      eyebrow: 'Term',
+      title: 'Integration samples',
+      summary: 'The number of small pieces used to approximate the continuous integral.',
+      sections: [{ title: 'Tradeoff', body: 'More samples make the curve and area approximation finer, but require more computation.' }],
+    },
+    expectation: {
+      eyebrow: 'Term',
+      title: 'E[X]',
+      summary: 'E[X] is the average or expected value of random variable X.',
+      sections: [{ title: 'For sums', body: 'For independent random variables, E[X+Y] = E[X] + E[Y].' }],
+    },
+    variance: {
+      eyebrow: 'Term',
+      title: 'Var(X + Y)',
+      summary: 'Variance describes how spread out a distribution is.',
+      sections: [{ title: 'For sums', body: 'For independent random variables, variances add too; this explains why repeated random sums spread out.' }],
+    },
+    'probability-weight': {
+      eyebrow: 'Term',
+      title: 'Probability contribution',
+      summary: 'One outcome pair contributes the product of two independent probabilities.',
+      sections: [{ title: 'Formula', body: <>When {formula('x+y=s')}, that pair contributes {formula('P_X(x)P_Y(y)')}. Adding all contributions for the same sum gives {formula('P(S=s)')}.</> }],
+    },
+    'coefficient-sum': {
+      eyebrow: 'Term',
+      title: 'C(1)=A(1)B(1)',
+      summary: 'Plugging in x=1 gives the sum of all coefficients.',
+      sections: [{ title: 'Why it works', body: 'The coefficient sum of the product equals the product of the two input coefficient sums, so C(1) is a quick sanity check for multiplication.' }],
+    },
   }
 
   return locale === 'zh' ? zh[term] : en[term]
@@ -1265,55 +1654,104 @@ function PlaybackProgress({ label, value, onChange }: { label: string; value: nu
   )
 }
 
-function SelectControl({ label, value, options, onChange }: { label: string; value: string; options: { value: string; label: ReactNode; textValue?: string }[]; onChange: (value: string) => void }) {
+function SelectControl({
+  label,
+  value,
+  options,
+  onChange,
+  helpTerm,
+  onHelp,
+}: {
+  label: string
+  value: string
+  options: { value: string; label: ReactNode; textValue?: string }[]
+  onChange: (value: string) => void
+  helpTerm?: ConvolutionTermId
+  onHelp?: (term: ConvolutionTermId) => void
+}) {
   return (
-    <label>
-      {label}
+    <div className="control-field">
+      <ControlLabel label={label} helpTerm={helpTerm} onHelp={onHelp} />
       <SelectMenu
         value={value}
         options={options.map((option) => ({ value: option.value, textValue: option.textValue ?? (typeof option.label === 'string' ? option.label : option.value), label: option.label }))}
         onChange={onChange}
         ariaLabel={label}
       />
-    </label>
+    </div>
   )
 }
 
-function Range({ label, value, min, max, step, valueSuffix, onChange }: { label: string; value: number; min: number; max: number; step: number; valueSuffix?: string; onChange: (value: number) => void }) {
+function Range({
+  label,
+  value,
+  min,
+  max,
+  step,
+  valueSuffix,
+  onChange,
+  helpTerm,
+  onHelp,
+}: {
+  label: string
+  value: number
+  min: number
+  max: number
+  step: number
+  valueSuffix?: string
+  onChange: (value: number) => void
+  helpTerm?: ConvolutionTermId
+  onHelp?: (term: ConvolutionTermId) => void
+}) {
   if (valueSuffix) {
     return (
-      <label className="speed-control">
-        <span>{label}</span>
-        <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+      <div className="speed-control">
+        <ControlLabel label={label} helpTerm={helpTerm} onHelp={onHelp} />
+        <input aria-label={label} type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
         <strong>{`${value.toFixed(2)}${valueSuffix}`}</strong>
-      </label>
+      </div>
     )
   }
 
   return (
-    <label className="range-control">
-      <span>
-        {label}: <strong>{formatNumber(value)}</strong>
-      </span>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
-    </label>
+    <div className="range-control">
+      <ControlLabel label={`${label}: ${formatNumber(value)}`} helpTerm={helpTerm} onHelp={onHelp} />
+      <input aria-label={label} type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+    </div>
   )
 }
 
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
+function Toggle({ label, checked, onChange, helpTerm, onHelp }: { label: string; checked: boolean; onChange: (checked: boolean) => void; helpTerm?: ConvolutionTermId; onHelp?: (term: ConvolutionTermId) => void }) {
   return (
-    <label className="checkbox-line">
-      <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
-      {label}
-    </label>
+    <div className="checkbox-line">
+      <label>
+        <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
+        {label}
+      </label>
+      {helpTerm && onHelp && <ControlHelpButton label={label} term={helpTerm} onHelp={onHelp} />}
+    </div>
   )
 }
 
-function SequenceEditor({ label, values, onChange, addLabel }: { label: string; values: number[]; onChange: (values: number[]) => void; addLabel: string }) {
+function SequenceEditor({
+  label,
+  values,
+  onChange,
+  addLabel,
+  helpTerm,
+  onHelp,
+}: {
+  label: string
+  values: number[]
+  onChange: (values: number[]) => void
+  addLabel: string
+  helpTerm?: ConvolutionTermId
+  onHelp?: (term: ConvolutionTermId) => void
+}) {
   return (
     <div className="sequence-editor">
       <div className="section-heading">
-        <strong>{label}</strong>
+        <ControlLabel label={label} helpTerm={helpTerm} onHelp={onHelp} />
         <button type="button" className="mini-button" onClick={() => onChange([...values, 0].slice(0, 12))}>
           {addLabel}
         </button>
@@ -1328,6 +1766,23 @@ function SequenceEditor({ label, values, onChange, addLabel }: { label: string; 
         ))}
       </div>
     </div>
+  )
+}
+
+function ControlLabel({ label, helpTerm, onHelp }: { label: string; helpTerm?: ConvolutionTermId; onHelp?: (term: ConvolutionTermId) => void }) {
+  return (
+    <span className="control-label-row">
+      <span>{label}</span>
+      {helpTerm && onHelp && <ControlHelpButton label={label} term={helpTerm} onHelp={onHelp} />}
+    </span>
+  )
+}
+
+function ControlHelpButton({ label, term, onHelp }: { label: string; term: ConvolutionTermId; onHelp: (term: ConvolutionTermId) => void }) {
+  return (
+    <button type="button" className="mini-help-button" aria-label={`Explain ${label}`} title={`Explain ${label}`} onClick={() => onHelp(term)}>
+      <CircleHelp size={14} />
+    </button>
   )
 }
 
@@ -1355,24 +1810,43 @@ function DistributionTable({
   yDistribution,
   selectedSum,
   ariaLabel,
+  ui,
 }: {
   xDistribution: DiscreteDistribution
   yDistribution: DiscreteDistribution
   selectedSum: number
   ariaLabel: string
+  ui: ConvolutionUiCopy
 }) {
   return (
     <div className="distribution-table" aria-label={ariaLabel}>
       {xDistribution.support.flatMap((xValue, row) =>
         yDistribution.support.map((yValue, column) => {
           const active = xValue + yValue === selectedSum
+          const contribution = (xDistribution.probabilities[row] ?? 0) * (yDistribution.probabilities[column] ?? 0)
           return (
-            <span className={active ? 'active' : ''} key={`${row}-${column}`}>
-              {xValue}+{yValue}
+            <span className={active ? 'active' : ''} key={`${row}-${column}`} title={`${xValue}+${yValue}: ${formatNumber(contribution, ui)}`}>
+              <strong>{xValue}+{yValue}</strong>
+              {active && <small>{formatNumber(contribution, ui)}</small>}
             </span>
           )
         }),
       )}
+    </div>
+  )
+}
+
+function KernelPreview({ title, kernel, ui }: { title: string; kernel: Kernel2D; ui: ConvolutionUiCopy }) {
+  return (
+    <div className="kernel-preview">
+      <ControlLabel label={title} />
+      <div className="kernel-grid-preview" style={{ gridTemplateColumns: `repeat(${kernel[0]?.length ?? 1}, minmax(0, 1fr))` }}>
+        {kernel.map((row, rowIndex) =>
+          row.map((value, columnIndex) => (
+            <span key={`${rowIndex}-${columnIndex}`}>{formatNumber(value, ui)}</span>
+          )),
+        )}
+      </div>
     </div>
   )
 }
@@ -1429,8 +1903,7 @@ function drawDiscreteScene(
 ) {
   fillCanvas(ctx, viewport, theme)
   const bands = splitBands(viewport, 3, 18)
-  drawSequenceBand(ctx, bands[0], theme, state.a, { label: state.operation === 'convolution' ? state.labels.aWithFlippedB : state.labels.aWithDirectB, color: theme.primary })
-  drawSequenceBand(ctx, bands[0], theme, state.b, { label: '', color: theme.secondary, offset: 0.45 })
+  drawDiscreteAlignmentBand(ctx, bands[0], theme, state)
   drawProductBand(ctx, bands[1], theme, state.terms, state.fullIndex, state.labels.overlapProducts)
   drawSequenceBand(ctx, bands[2], theme, state.output, { label: state.labels.outputY, color: theme.warning, highlight: state.currentK })
 }
@@ -1453,13 +1926,15 @@ function drawSignalScene(
   ctx: CanvasRenderingContext2D,
   viewport: GraphViewport,
   theme: GraphTheme,
-  state: { signal: number[]; kernel: number[]; output: number[]; currentIndex: number; operation: OperationMode; labels: ConvolutionUiCopy['canvas'] },
+  state: { signal: number[]; kernel: number[]; output: number[]; currentIndex: number; fullIndex: number; operation: OperationMode; labels: ConvolutionUiCopy['canvas'] },
 ) {
   fillCanvas(ctx, viewport, theme)
   const bands = splitBands(viewport, 3, 18)
-  drawLineBand(ctx, bands[0], theme, state.signal, state.labels.inputSignal, theme.primary, state.currentIndex)
-  drawSequenceBand(ctx, bands[1], theme, state.kernel, { label: state.operation === 'convolution' ? state.labels.kernelFlipped : state.labels.kernelCorrelation, color: theme.secondary })
-  drawWindowOverlay(ctx, bands[0], theme, state.currentIndex, state.kernel.length, state.signal.length)
+  const visualKernel = state.operation === 'convolution' ? flipSequence(state.kernel) : state.kernel
+  drawLineBand(ctx, bands[0], theme, state.signal, state.labels.inputSignal, theme.primary)
+  drawWindowOverlay(ctx, bands[0], theme, state.fullIndex, visualKernel.length, state.signal.length)
+  drawKernelOverlayOnSignal(ctx, bands[0], theme, visualKernel, state.fullIndex, state.signal.length)
+  drawSequenceBand(ctx, bands[1], theme, visualKernel, { label: state.operation === 'convolution' ? state.labels.kernelFlipped : state.labels.kernelCorrelation, color: theme.secondary })
   drawLineBand(ctx, bands[2], theme, state.output, state.labels.filteredOutput, theme.warning, state.currentIndex)
 }
 
@@ -1480,7 +1955,7 @@ function drawContinuousScene(
   ctx: CanvasRenderingContext2D,
   viewport: GraphViewport,
   theme: GraphTheme,
-  state: { f: (x: number) => number; g: (x: number) => number; t: number; product: NumericSample[]; outputCurve: NumericSample[] },
+  state: { f: (x: number) => number; g: (x: number) => number; t: number; product: NumericSample[]; outputCurve: NumericSample[]; labels: ConvolutionUiCopy['canvas'] },
 ) {
   drawGrid(ctx, viewport, theme)
   drawCurve(ctx, viewport, sampleFunction(state.f, viewport.xMin, viewport.xMax, 220), theme.primary, 2)
@@ -1497,6 +1972,12 @@ function drawContinuousScene(
   ctx.stroke()
   ctx.setLineDash([])
   drawText(ctx, `t = ${formatNumber(state.t)}`, marker.x + 8, 22, theme)
+  drawLegend(ctx, theme, [
+    { label: state.labels.continuousF, color: theme.primary },
+    { label: state.labels.continuousShiftedG, color: theme.secondary },
+    { label: state.labels.continuousProduct, color: theme.warning },
+    { label: state.labels.continuousOutputOffset, color: theme.accent },
+  ], 18, viewport.height - 72)
 }
 
 function fillCanvas(ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme) {
@@ -1510,6 +1991,100 @@ function fillCanvas(ctx: CanvasRenderingContext2D, viewport: GraphViewport, them
     ctx.lineTo(viewport.width, y)
     ctx.stroke()
   }
+}
+
+function drawDiscreteAlignmentBand(
+  ctx: CanvasRenderingContext2D,
+  band: DrawBand,
+  theme: GraphTheme,
+  state: {
+    a: number[]
+    b: number[]
+    fullIndex: number
+    terms: TermContribution[]
+    operation: OperationMode
+    labels: ConvolutionUiCopy['canvas']
+  },
+) {
+  const visualB = state.operation === 'convolution' ? flipSequence(state.b) : state.b
+  const label = state.operation === 'convolution' ? state.labels.aWithFlippedB : state.labels.aWithDirectB
+  drawText(ctx, label, band.x, band.y + 14, theme)
+  if (state.a.length === 0 || visualB.length === 0) return
+
+  const activeA = new Set(state.terms.map((term) => term.aIndex))
+  const activeVisualB = new Set(state.terms.map((term) => visualB.length - 1 - term.bIndex))
+  const left = state.fullIndex - visualB.length + 1
+  const minPosition = -(visualB.length - 1)
+  const positionCount = state.a.length + visualB.length - 1
+  const step = band.width / Math.max(1, positionCount)
+  const barWidth = Math.max(7, step * 0.42)
+  const maxMagnitude = Math.max(1, ...state.a.map((value) => Math.abs(value)), ...visualB.map((value) => Math.abs(value)))
+  const baselineA = band.y + band.height * 0.42
+  const baselineB = band.y + band.height * 0.8
+  const rowHeight = band.height * 0.22
+  const xForPosition = (position: number) => band.x + (position - minPosition + 0.5) * step
+
+  state.terms.forEach((term) => {
+    const x = xForPosition(term.aIndex)
+    ctx.fillStyle = theme.fill
+    ctx.globalAlpha = 0.6
+    ctx.fillRect(x - step * 0.42, band.y + 22, step * 0.84, band.height - 28)
+    ctx.globalAlpha = 1
+  })
+
+  drawAlignedBars(ctx, theme, state.a, 0, baselineA, rowHeight, maxMagnitude, xForPosition, theme.primary, activeA, (index) => `a${index}`)
+  drawAlignedBars(
+    ctx,
+    theme,
+    visualB,
+    left,
+    baselineB,
+    rowHeight,
+    maxMagnitude,
+    xForPosition,
+    theme.secondary,
+    activeVisualB,
+    (visualIndex) => (state.operation === 'convolution' ? `b${visualB.length - 1 - visualIndex}` : `b${visualIndex}`),
+    barWidth,
+  )
+
+  drawText(ctx, `k = ${state.fullIndex}`, band.x + band.width - 64, band.y + 14, theme, 11)
+}
+
+function drawAlignedBars(
+  ctx: CanvasRenderingContext2D,
+  theme: GraphTheme,
+  values: number[],
+  leftPosition: number,
+  baseline: number,
+  rowHeight: number,
+  maxMagnitude: number,
+  xForPosition: (position: number) => number,
+  color: string,
+  activeIndexes: Set<number>,
+  indexLabel: (index: number) => string,
+  barWidth = 10,
+) {
+  ctx.strokeStyle = theme.gridMajor
+  ctx.beginPath()
+  const firstX = xForPosition(leftPosition) - barWidth
+  const lastX = xForPosition(leftPosition + values.length - 1) + barWidth
+  ctx.moveTo(firstX, baseline)
+  ctx.lineTo(lastX, baseline)
+  ctx.stroke()
+
+  values.forEach((value, index) => {
+    const position = leftPosition + index
+    const height = (Math.abs(value) / maxMagnitude) * rowHeight
+    const x = xForPosition(position) - barWidth / 2
+    const y = value >= 0 ? baseline - height : baseline
+    const active = activeIndexes.has(index)
+    ctx.fillStyle = color
+    ctx.globalAlpha = active ? 1 : 0.28
+    ctx.fillRect(x, y, barWidth, Math.max(2, height))
+    ctx.globalAlpha = 1
+    drawText(ctx, indexLabel(index), x - 2, baseline + 14, theme, 10)
+  })
 }
 
 function drawSequenceBand(
@@ -1571,11 +2146,17 @@ function drawPairHeatmap(ctx: CanvasRenderingContext2D, band: DrawBand, theme: G
   const cell = Math.min((band.width - 12) / Math.max(1, columns), (band.height - 28) / Math.max(1, rows))
   const startX = band.x
   const startY = band.y + 24
+  const maxContribution = Math.max(
+    0.001,
+    ...xDistribution.probabilities.flatMap((px) => yDistribution.probabilities.map((py) => px * py)),
+  )
   for (let row = 0; row < rows; row += 1) {
     for (let column = 0; column < columns; column += 1) {
       const sum = xDistribution.support[row] + yDistribution.support[column]
-      ctx.fillStyle = sum === selectedSum ? theme.accent : theme.gridMajor
-      ctx.globalAlpha = sum === selectedSum ? 0.85 : 0.34
+      const contribution = (xDistribution.probabilities[row] ?? 0) * (yDistribution.probabilities[column] ?? 0)
+      const active = sum === selectedSum
+      ctx.fillStyle = active ? theme.accent : theme.gridMajor
+      ctx.globalAlpha = active ? 0.35 + 0.55 * (contribution / maxContribution) : 0.22
       ctx.fillRect(startX + column * cell, startY + row * cell, cell - 2, cell - 2)
       ctx.globalAlpha = 1
     }
@@ -1608,13 +2189,42 @@ function drawLineBand(ctx: CanvasRenderingContext2D, band: DrawBand, theme: Grap
   }
 }
 
-function drawWindowOverlay(ctx: CanvasRenderingContext2D, band: DrawBand, theme: GraphTheme, index: number, kernelLength: number, signalLength: number) {
-  const step = band.width / Math.max(1, signalLength)
-  const start = band.x + Math.max(0, index - Math.floor(kernelLength / 2)) * step
+function drawWindowOverlay(ctx: CanvasRenderingContext2D, band: DrawBand, theme: GraphTheme, fullIndex: number, kernelLength: number, signalLength: number) {
+  const step = band.width / Math.max(1, signalLength - 1)
+  const left = fullIndex - kernelLength + 1
+  const start = band.x + left * step - step * 0.5
+  const width = Math.max(step, kernelLength * step)
   ctx.strokeStyle = theme.accent
   ctx.setLineDash([6, 4])
-  ctx.strokeRect(start, band.y + 22, Math.max(step, kernelLength * step), band.height - 34)
+  ctx.strokeRect(start, band.y + 22, width, band.height - 34)
   ctx.setLineDash([])
+}
+
+function drawKernelOverlayOnSignal(ctx: CanvasRenderingContext2D, band: DrawBand, theme: GraphTheme, kernel: number[], fullIndex: number, signalLength: number) {
+  if (kernel.length === 0 || signalLength === 0) return
+  const step = band.width / Math.max(1, signalLength - 1)
+  const left = fullIndex - kernel.length + 1
+  const baseY = band.y + band.height - 26
+  const maxWeight = Math.max(0.001, ...kernel.map((value) => Math.abs(value)))
+  kernel.forEach((weight, kernelIndex) => {
+    const signalIndex = left + kernelIndex
+    const x = band.x + signalIndex * step
+    if (x < band.x - step || x > band.x + band.width + step) return
+    const height = (Math.abs(weight) / maxWeight) * band.height * 0.22
+    const y = weight >= 0 ? baseY - height : baseY
+    const inside = signalIndex >= 0 && signalIndex < signalLength
+    ctx.strokeStyle = inside ? theme.secondary : theme.gridMajor
+    ctx.fillStyle = inside ? theme.secondary : theme.gridMajor
+    ctx.globalAlpha = inside ? 0.82 : 0.35
+    ctx.beginPath()
+    ctx.moveTo(x, baseY)
+    ctx.lineTo(x, weight >= 0 ? y : y + height)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.arc(x, weight >= 0 ? y : y + height, 3.5, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.globalAlpha = 1
+  })
 }
 
 function drawPolynomialGrid(ctx: CanvasRenderingContext2D, band: DrawBand, theme: GraphTheme, a: number[], b: number[], currentK: number, label: string) {
@@ -1687,6 +2297,15 @@ function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
   ctx.fillStyle = theme.text
   ctx.font = `${size}px Inter, system-ui, sans-serif`
   ctx.fillText(text, x, y)
+}
+
+function drawLegend(ctx: CanvasRenderingContext2D, theme: GraphTheme, items: { label: string; color: string }[], x: number, y: number) {
+  items.forEach((item, index) => {
+    const itemY = y + index * 18
+    ctx.fillStyle = item.color
+    ctx.fillRect(x, itemY - 8, 10, 10)
+    drawText(ctx, item.label, x + 16, itemY, theme, 11)
+  })
 }
 
 type DrawBand = {
@@ -1799,6 +2418,40 @@ function coerceContinuousPreset(value: string): ContinuousPresetId {
   return continuousPresetOptions.some((preset) => preset.id === value) ? (value as ContinuousPresetId) : 'rectangle'
 }
 
+function operationFormula(lessonId: 'discrete' | 'signal' | 'image-kernel', operation: OperationMode, ui: ConvolutionUiCopy): FormulaDisplay {
+  const note = ui.formulaOperationNote
+  if (lessonId === 'image-kernel') {
+    if (operation === 'correlation') {
+      return {
+        formula: 'out[x,y] = sum_u sum_v I[x+u,y+v] K[u,v]',
+        formulaTex: '\\operatorname{out}[x,y]=\\sum_{u,v} I[x+u,y+v]K[u,v]',
+        note,
+      }
+    }
+    return {
+      formula: 'out[x,y] = sum_u sum_v I[x-u,y-v] K[u,v]',
+      formulaTex: '\\operatorname{out}[x,y]=\\sum_{u,v} I[x-u,y-v]K[u,v]',
+      note,
+    }
+  }
+
+  const outputName = lessonId === 'signal' ? 'y' : 'y'
+  const inputName = lessonId === 'signal' ? 'x' : 'a'
+  const kernelName = lessonId === 'signal' ? 'h' : 'b'
+  if (operation === 'correlation') {
+    return {
+      formula: `${outputName}[k] = sum_i ${inputName}[i] ${kernelName}[i - k]`,
+      formulaTex: `${outputName}[k]=\\sum_i ${inputName}[i]${kernelName}[i-k]`,
+      note,
+    }
+  }
+  return {
+    formula: `${outputName}[k] = sum_i ${inputName}[i] ${kernelName}[k - i]`,
+    formulaTex: `${outputName}[k]=\\sum_i ${inputName}[i]${kernelName}[k-i]`,
+    note,
+  }
+}
+
 function readParams(): URLSearchParams {
   if (typeof window === 'undefined') return new URLSearchParams()
   return new URLSearchParams(window.location.search)
@@ -1824,7 +2477,44 @@ function todayStamp(): string {
 
 function formatTerms(terms: TermContribution[], ui: ConvolutionUiCopy): string {
   if (terms.length === 0) return ui.noOverlap
-  return terms.map((term) => `a[${term.aIndex}]b[${term.bIndex}]=${formatNumber(term.product, ui)}`).join(' + ')
+  return terms.map((term) => `a[${term.aIndex}] × b[${term.bIndex}] = ${formatNumber(term.aValue, ui)} × ${formatNumber(term.bValue, ui)} = ${formatNumber(term.product, ui)}`).join(' + ')
+}
+
+function formatTermCalculation(terms: TermContribution[], ui: ConvolutionUiCopy, outputSymbol: string, index: number, value?: number): string {
+  const total = value ?? terms.reduce((sum, term) => sum + term.product, 0)
+  if (terms.length === 0) return `${outputSymbol}[${index}] = ${ui.noOverlap} = ${formatNumber(total, ui)}`
+  const compactProducts = terms.map((term) => `${formatNumber(term.aValue, ui)}×${formatNumber(term.bValue, ui)}`).join(' + ')
+  const indexedProducts = terms.length <= 4 ? ` (${formatTerms(terms, ui)})` : ''
+  return `${outputSymbol}[${index}] = ${compactProducts} = ${formatNumber(total, ui)}${indexedProducts}`
+}
+
+function termsForDisplayedKernel(terms: TermContribution[], kernelLength: number, operation: OperationMode): TermContribution[] {
+  if (operation !== 'correlation') return terms
+  return terms.map((term) => ({ ...term, bIndex: kernelLength - 1 - term.bIndex }))
+}
+
+function probabilityPairTerms(xDistribution: DiscreteDistribution, yDistribution: DiscreteDistribution, selectedSum: number): { x: number; y: number; px: number; py: number; contribution: number }[] {
+  const terms: { x: number; y: number; px: number; py: number; contribution: number }[] = []
+  xDistribution.support.forEach((x, xIndex) => {
+    yDistribution.support.forEach((y, yIndex) => {
+      if (x + y !== selectedSum) return
+      const px = xDistribution.probabilities[xIndex] ?? 0
+      const py = yDistribution.probabilities[yIndex] ?? 0
+      terms.push({ x, y, px, py, contribution: px * py })
+    })
+  })
+  return terms
+}
+
+function formatProbabilityCalculation(terms: ReturnType<typeof probabilityPairTerms>, selectedSum: number, probability: number, ui: ConvolutionUiCopy): string {
+  if (terms.length === 0) return `P(S=${selectedSum}) = 0`
+  const parts = terms.map((term) => `${formatNumber(term.px, ui)}×${formatNumber(term.py, ui)}`)
+  return `P(S=${selectedSum}) = ${parts.join(' + ')} = ${formatNumber(probability, ui)}`
+}
+
+function previewAppliedKernel(kernel: Kernel2D, operation: OperationMode, normalize: boolean): Kernel2D {
+  const oriented = operation === 'convolution' ? flipKernel2D(kernel) : kernel.map((row) => [...row])
+  return normalize ? normalizeKernel2D(oriented) : oriented
 }
 
 function replaceAt(values: number[], index: number, nextValue: number): number[] {
