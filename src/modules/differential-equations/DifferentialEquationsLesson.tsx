@@ -1353,7 +1353,7 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
       ? {
           eyebrow: '从零开始',
           title: '热方程在让曲线变平',
-          summary: '这里不是在画箭头轨迹，而是在看一根杆上的温度分布如何随时间扩散。',
+          summary: '这里是在看一根杆上的温度分布如何随时间扩散。',
           sections: [
             {
               title: '图上的对象',
@@ -1364,7 +1364,7 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
               ),
             },
             {
-              title: 'u_xx 的直觉',
+              title: 'uₓₓ 的直觉',
               body: (
                 <>
                   {formula('u_{xx}')} 可以理解成“这个点和附近平均温度的差”。比邻居高很多时通常会降温；比邻居低时通常会升温；平坦区域变化很慢。
@@ -1391,7 +1391,7 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
               ),
             },
             {
-              title: 'Intuition for u_xx',
+              title: 'Intuition for uₓₓ',
               body: (
                 <>
                   {formula('u_{xx}')} can be read as “how this point compares with nearby average temperature.” A point much hotter than neighbors usually cools; a point cooler than neighbors warms; flat regions change slowly.
@@ -1852,11 +1852,11 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
     },
     'heat-uxx': {
       eyebrow: 'Variable',
-      title: 'What u_xx means',
-      summary: 'u_xx is the second derivative with respect to position. You can read it as how this point compares with the local average nearby.',
+      title: 'What uₓₓ means',
+      summary: 'uₓₓ is the second derivative with respect to position. You can read it as how this point compares with the local average nearby.',
       sections: [
-        { title: 'Sign', body: 'If a point is much hotter than its neighbors, u_xx is usually negative and it cools. If it is cooler than neighbors, u_xx is usually positive and it warms.' },
-        { title: 'In the heat equation', body: 'u_t = alpha u_xx says temperature change is driven by nearby temperature difference. Flat regions change slowly.' },
+        { title: 'Sign', body: 'If a point is much hotter than its neighbors, uₓₓ is usually negative and it cools. If it is cooler than neighbors, uₓₓ is usually positive and it warms.' },
+        { title: 'In the heat equation', body: 'uₜ = αuₓₓ says temperature change is driven by nearby temperature difference. Flat regions change slowly.' },
       ],
     },
     'heat-boundary': {

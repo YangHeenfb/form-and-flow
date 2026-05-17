@@ -2116,8 +2116,8 @@ dt {
   gap: 7px;
 }
 
-.learning-help-body .formula-render {
-  color: var(--focus);
+.learning-drawer .formula-render {
+  color: currentColor;
 }
 
 .calculus-playback {
