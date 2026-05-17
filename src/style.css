@@ -1890,7 +1890,9 @@ dt {
   flex: 0 0 auto;
 }
 
-.calculus-controls label {
+.calculus-controls label,
+.calculus-controls .calculus-field,
+.calculus-controls .range-control {
   display: grid;
   gap: 6px;
   color: var(--text-muted);
@@ -1936,7 +1938,7 @@ dt {
 }
 
 .math-formula-preview .formula-render {
-  color: var(--focus);
+  color: var(--text-main);
   white-space: nowrap;
 }
 
@@ -1993,6 +1995,12 @@ dt {
   white-space: nowrap;
 }
 
+.learning-help-trigger span {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
 .learning-help-trigger-graph {
   position: absolute;
   z-index: 5;
@@ -2046,6 +2054,14 @@ dt {
 .concept-term:hover {
   color: var(--text-main);
   background: color-mix(in srgb, var(--focus) 14%, transparent);
+}
+
+.concept-term .formula-render {
+  color: inherit;
+  display: inline-block;
+  padding-bottom: 1px;
+  border-bottom: 1px solid currentColor;
+  text-decoration: none;
 }
 
 .concept-term:active {
@@ -2133,7 +2149,7 @@ dt {
 }
 
 .learning-help-body .formula-render {
-  color: var(--focus);
+  color: inherit;
 }
 
 .calculus-playback {
@@ -2149,8 +2165,10 @@ dt {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 0 0 auto;
+  flex: 1 1 280px;
   flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .calculus-playback > .speed-control {
@@ -2172,7 +2190,8 @@ dt {
   word-break: keep-all;
 }
 
-.calculus-playback label {
+.calculus-playback label,
+.calculus-playback .range-control {
   color: var(--text-muted);
   display: grid;
 }
@@ -2201,12 +2220,22 @@ dt {
 .calculus-explanation dl div {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
   gap: 14px;
 }
 
+.calculus-explanation dt,
 .calculus-explanation dd {
+  min-width: 0;
+}
+
+.calculus-explanation dd {
+  flex: 1 1 120px;
   margin: 0;
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 
 .formula-text {
@@ -2226,7 +2255,7 @@ dt {
 }
 
 .formula-card .formula-render {
-  color: var(--focus);
+  color: var(--text-main);
 }
 
 .formula-render {
@@ -2292,7 +2321,7 @@ dt {
   display: inline-flex;
   align-items: center;
   padding: 3px 9px;
-  text-decoration: none;
+  text-decoration: underline;
 }
 
 .interactive-graph-canvas {
@@ -3000,6 +3029,12 @@ dt {
   gap: 10px;
   flex: 0 0 auto;
   flex-wrap: wrap;
+}
+
+.calculus-playback .calculus-playback-buttons {
+  flex: 1 1 280px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 :where(

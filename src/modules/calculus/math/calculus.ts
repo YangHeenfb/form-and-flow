@@ -1,14 +1,47 @@
 export type RealFunction = (x: number) => number | null
 export type RiemannMethod = 'left' | 'right' | 'midpoint' | 'trapezoid'
+export type TaylorPresetId = 'sin' | 'cos' | 'exp' | 'log1p' | 'geometric'
+
+export type DerivativeDiagnostic = {
+  value: number | null
+  leftSlope: number | null
+  rightSlope: number | null
+  reason: 'one-sided-mismatch' | 'not-finite' | null
+}
+
+const taylorPresetIds = new Set<string>(['sin', 'cos', 'exp', 'log1p', 'geometric'])
 
 export function finiteDifference(fn: RealFunction, x: number, h: number): number | null {
-  const step = clampStep(h)
+  const step = nonzeroStep(h)
   const a = fn(x)
   const b = fn(x + step)
   if (!isFiniteNumber(a) || !isFiniteNumber(b)) {
     return null
   }
   return finite((b - a) / step)
+}
+
+export function oneSidedDerivativeSlopes(fn: RealFunction, x: number, h = 1e-4): Pick<DerivativeDiagnostic, 'leftSlope' | 'rightSlope'> {
+  const step = clampStep(h)
+  const yLeft = fn(x - step)
+  const yCenter = fn(x)
+  const yRight = fn(x + step)
+  return {
+    leftSlope: isFiniteNumber(yLeft) && isFiniteNumber(yCenter) ? finite((yCenter - yLeft) / step) : null,
+    rightSlope: isFiniteNumber(yCenter) && isFiniteNumber(yRight) ? finite((yRight - yCenter) / step) : null,
+  }
+}
+
+export function derivativeDiagnostic(fn: RealFunction, x: number, h = 1e-4, tolerance = 1e-2): DerivativeDiagnostic {
+  const slopes = oneSidedDerivativeSlopes(fn, x, h)
+  if (!isFiniteNumber(slopes.leftSlope) || !isFiniteNumber(slopes.rightSlope)) {
+    return { ...slopes, value: null, reason: 'not-finite' }
+  }
+  const scale = Math.max(1, Math.abs(slopes.leftSlope), Math.abs(slopes.rightSlope))
+  if (Math.abs(slopes.leftSlope - slopes.rightSlope) > tolerance * scale) {
+    return { ...slopes, value: null, reason: 'one-sided-mismatch' }
+  }
+  return { ...slopes, value: finite((slopes.leftSlope + slopes.rightSlope) / 2), reason: null }
 }
 
 export function centralDifference(fn: RealFunction, x: number, h = 1e-4): number | null {
@@ -85,23 +118,29 @@ export function taylorPolynomialValue(coefficients: number[], center: number, x:
   return coefficients.reduce((sum, coefficient, index) => sum + coefficient * (x - center) ** index, 0)
 }
 
-export function buildTaylorCoefficientsForPreset(presetId: string, center: number, degree: number): number[] {
+export function isTaylorPresetId(presetId: string | undefined): presetId is TaylorPresetId {
+  return typeof presetId === 'string' && taylorPresetIds.has(presetId)
+}
+
+export function buildTaylorCoefficientsForPreset(presetId: TaylorPresetId, center: number, degree: number): number[] {
   const count = clampInteger(degree, 0, 10)
   return Array.from({ length: count + 1 }, (_, k) => nthDerivativeForPreset(presetId, k, center) / factorial(k))
 }
 
-export function estimateMaxError(fn: RealFunction, approximationFn: RealFunction, xMin: number, xMax: number, samples: number): number {
+export function estimateMaxError(fn: RealFunction, approximationFn: RealFunction, xMin: number, xMax: number, samples: number): number | null {
   const count = clampInteger(samples, 2, 1000)
   let max = 0
+  let compared = 0
   for (let index = 0; index < count; index += 1) {
     const x = xMin + ((xMax - xMin) * index) / (count - 1)
     const original = fn(x)
     const approximation = approximationFn(x)
     if (isFiniteNumber(original) && isFiniteNumber(approximation)) {
       max = Math.max(max, Math.abs(original - approximation))
+      compared += 1
     }
   }
-  return max
+  return compared > 0 ? max : null
 }
 
 export function approximateLeftLimit(fn: RealFunction, a: number, epsilon: number): number | null {
@@ -119,7 +158,7 @@ export function classifyLimit(left: number | null, right: number | null, toleran
   return Math.abs(left - right) <= tolerance ? 'exists' : 'does-not-exist'
 }
 
-function nthDerivativeForPreset(presetId: string, n: number, x: number): number {
+function nthDerivativeForPreset(presetId: TaylorPresetId, n: number, x: number): number {
   if (presetId === 'sin') {
     const mod = n % 4
     return mod === 0 ? Math.sin(x) : mod === 1 ? Math.cos(x) : mod === 2 ? -Math.sin(x) : -Math.cos(x)
@@ -138,20 +177,7 @@ function nthDerivativeForPreset(presetId: string, n: number, x: number): number 
   if (presetId === 'geometric') {
     return factorial(n) / (1 - x) ** (n + 1)
   }
-  return n <= 4 ? numericalNthDerivative(defaultTaylorFunction(presetId), x, n) : 0
-}
-
-function numericalNthDerivative(fn: RealFunction, x: number, n: number): number {
-  if (n === 0) {
-    return fn(x) ?? 0
-  }
-  return centralDifference((value) => numericalNthDerivative(fn, value, n - 1), x, 1e-3) ?? 0
-}
-
-function defaultTaylorFunction(presetId: string): RealFunction {
-  if (presetId === 'cos') return Math.cos
-  if (presetId === 'exp') return Math.exp
-  return Math.sin
+  return 0
 }
 
 function finite(value: number): number | null {
@@ -165,6 +191,11 @@ function isFiniteNumber(value: unknown): value is number {
 function clampStep(h: number): number {
   const abs = Math.abs(h)
   return Math.max(1e-6, Math.min(1, abs || 1e-4))
+}
+
+function nonzeroStep(h: number): number {
+  const abs = Math.abs(h)
+  return Math.max(1e-6, Number.isFinite(abs) ? abs || 1e-4 : 1e-4)
 }
 
 function clampInteger(value: number, min: number, max: number): number {

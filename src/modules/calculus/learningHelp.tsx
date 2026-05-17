@@ -7,6 +7,8 @@ export type CalculusHelpTopicId =
   | 'graph'
   | 'function'
   | 'derivative'
+  | 'secant-slope'
+  | 'derivative-notation'
   | 'secant-tangent'
   | 'limit'
   | 'integral'
@@ -118,6 +120,57 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
             '直线的斜率表示“往右走 1，往上或往下走多少”。',
             '曲线每一点的方向都可能不同，所以我们看那一点附近的切线斜率。',
             '如果切线很陡，函数变化快；如果切线接近水平，函数变化慢。',
+            '导数不是一条新规则，而是曲线在局部看起来越来越像一条直线。',
+          ],
+        },
+      ],
+    },
+    'secant-slope': {
+      eyebrow: '符号',
+      title: 'm_h 是什么？',
+      summary: (
+        <>
+          <Formula tex="m_h" /> 是当前步长 <Formula tex="h" /> 下的割线斜率，也就是两个点之间的平均变化率。
+        </>
+      ),
+      sections: [
+        {
+          title: '它和滑杆的关系',
+          items: [
+            <>
+              <Formula tex="h" /> 滑杆改变第二个点离 <Formula tex="x_0" /> 有多远。
+            </>,
+            <>
+              <Formula tex="m_h" /> 会跟着 <Formula tex="h" /> 改变，因为它算的是当前这两个点之间的斜率。
+            </>,
+            <>
+              <Formula tex="h" /> 还比较大时，<Formula tex="m_h" /> 只是平均变化率，不一定等于导数。
+            </>,
+          ],
+        },
+      ],
+    },
+    'derivative-notation': {
+      eyebrow: '符号',
+      title: "f'(x0) 是什么？",
+      summary: (
+        <>
+          <Formula tex="f'(x_0)" /> 表示函数在 <Formula tex="x_0" /> 这个点的导数，也就是这一点附近的瞬时斜率。
+        </>
+      ),
+      sections: [
+        {
+          title: '它和 m_h 的区别',
+          items: [
+            <>
+              <Formula tex="m_h" /> 是当前 <Formula tex="h" /> 下的割线斜率，会随 <Formula tex="h" /> 滑杆变化。
+            </>,
+            <>
+              <Formula tex="f'(x_0)" /> 是 <Formula tex="h" /> 越来越小时想靠近的稳定值。
+            </>,
+            <>
+              如果从左边和右边靠近时斜率不一样，<Formula tex="f'(x_0)" /> 就不存在。
+            </>,
           ],
         },
       ],
@@ -131,9 +184,24 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
           title: '导数实验为什么让 h 变小',
           body: (
             <>
-              两点之间的平均斜率是 <Formula tex="\\frac{f(x_0+h)-f(x_0)}{h}" />。当 <Formula tex="h" /> 越来越小，第二个点靠近第一个点，割线就越来越像切线。
+              两点之间的平均斜率是 <Formula tex="\frac{f(x_0+h)-f(x_0)}{h}" />。当 <Formula tex="h" /> 越来越小，第二个点靠近第一个点，割线就越来越像切线。
             </>
           ),
+        },
+        {
+          title: "m 和 f' 分别是什么",
+          body: (
+            <>
+              <Formula tex="m_h" /> 是当前这个 <Formula tex="h" /> 对应的割线斜率，也就是两个点之间的平均变化率。<Formula tex="f'(x_0)" /> 是当第二个点从左右两边都靠近 <Formula tex="x_0" /> 时，如果斜率稳定到同一个值，就把那个稳定值叫作导数。
+            </>
+          ),
+        },
+        {
+          title: '你可以试试',
+          items: [
+            '把 h 从 1 拖到 0.05，看割线怎样靠近切线方向。',
+            '把函数改成 abs(x)，并把 x0 拖到 0，观察导数为什么显示不存在。',
+          ],
         },
       ],
     },
@@ -156,7 +224,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
       title: '积分是什么？',
       summary: (
         <>
-          定积分 <Formula tex="\\int_a^b f(x)\\,dx" /> 可以先理解成从 <Formula tex="a" /> 到 <Formula tex="b" /> 这段区间里，曲线下方累积的有符号面积。
+          定积分 <Formula tex="\int_a^b f(x)\,dx" /> 可以先理解成从 <Formula tex="a" /> 到 <Formula tex="b" /> 这段区间里，曲线下方累积的有符号面积。
         </>
       ),
       sections: [
@@ -166,6 +234,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
             '如果 f(x) 表示速度，面积就像这段时间走过的位移。',
             '如果 f(x) 表示流量，面积就像这段时间流过的总量。',
             '很多实际问题不是只看某一瞬间，而是看一段时间内的累计效果。',
+            '积分不是只算面积；它是在把一段连续变化累积成一个总效果。',
           ],
         },
       ],
@@ -180,7 +249,8 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
           items: [
             '每个小矩形只近似一小段曲线下的面积。',
             '矩形越窄，每一小段的误差通常越小。',
-            '左端点、右端点、中点和梯形只是取高度的方式不同。',
+            '左端点、右端点、中点是选一个高度；梯形法是连接两端高度。',
+            '把 n 从 4 拖到 60，可以观察有符号面积估计怎样靠近参考积分。',
           ],
         },
       ],
@@ -201,7 +271,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
       title: '微积分基本定理在说什么？',
       summary: (
         <>
-          它把积分和导数连起来：如果 <Formula tex="A(x)=\\int_a^x f(t)\\,dt" /> 表示从起点累积到 <Formula tex="x" /> 的面积，那么 <Formula tex="A'(x)=f(x)" />。
+          它把积分和导数连起来：如果 <Formula tex="A(x)=\int_a^x f(t)\,dt" /> 表示从起点累积到 <Formula tex="x" /> 的面积，那么 <Formula tex="A'(x)=f(x)" />。
         </>
       ),
       sections: [
@@ -211,6 +281,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
             '上方函数 f(x) 给出当前位置的高度。',
             '下方 A(x) 记录从起点到当前位置累积了多少面积。',
             '当前位置的高度越高，累积面积增长得越快。',
+            '面积函数的斜率等于原函数高度，因为每次多走一点点，新增面积主要由当前位置的高度决定。',
           ],
         },
       ],
@@ -237,6 +308,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
             '泰勒多项式会尽量匹配函数在中心点的高度、斜率、弯曲程度等局部信息。',
             '离中心越远，这些局部信息越不够用，误差可能变大。',
             '提高阶数通常能改善中心附近的贴合，但不保证所有地方都好。',
+            '先固定中心 c，再逐渐增加阶数；然后缩小或放大视野，看它从哪里开始失效。',
           ],
         },
       ],
@@ -256,22 +328,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
         },
       ],
     },
-    formula: {
-      eyebrow: '公式',
-      title: '当前公式应该怎么读？',
-      summary: '公式是图像变化的压缩写法。先把每个符号对应回图上的点、区间、面积或曲线，不需要一开始就做推导。',
-      sections: [
-        {
-          title: '常见符号',
-          items: [
-            'f(x)：输入 x 时函数的高度。',
-            "f'(x)：函数在 x 附近的瞬时斜率。",
-            '∫：把一段区间里的小量累积起来。',
-            'Σ：把很多项相加。',
-          ],
-        },
-      ],
-    },
+    formula: zhFormulaTopic(lessonId),
     values: {
       eyebrow: '数值',
       title: '当前数值在帮你看什么？',
@@ -287,6 +344,122 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
         },
       ],
     },
+  }
+}
+
+function zhFormulaTopic(lessonId: string): HelpTopic {
+  if (lessonId === 'integral') {
+    return {
+      eyebrow: '公式',
+      title: '积分公式怎么对应图像？',
+      summary: (
+        <>
+          <Formula tex="\int_a^b f(x)\,dx" /> 表示从 <Formula tex="a" /> 到 <Formula tex="b" /> 把每个位置的小贡献累积起来。
+        </>
+      ),
+      sections: [
+        {
+          title: '符号对应',
+          items: [
+            'a 和 b：累积的起点和终点。',
+            'f(x)：每个位置的高度，决定这一小段贡献有多大。',
+            'dx：很窄的一段宽度。',
+            '∫：把这些“小高度 × 小宽度”加起来。',
+          ],
+        },
+        {
+          title: '什么时候要小心',
+          items: [
+            '这里的参考积分值是高采样数值近似，不是解析精确值。',
+            '如果函数有断点或剧烈震荡，有限个矩形或梯形可能不可靠。',
+          ],
+        },
+      ],
+    }
+  }
+  if (lessonId === 'fundamental-theorem') {
+    return {
+      eyebrow: '公式',
+      title: 'A(x) 公式怎么读？',
+      summary: (
+        <>
+          <Formula tex="A(x)=\int_a^x f(t)\,dt" /> 表示“从起点 <Formula tex="a" /> 累积到当前 <Formula tex="x" /> 的面积”。
+        </>
+      ),
+      sections: [
+        {
+          title: '关键对应',
+          items: [
+            'A(x)：当前已经累积的有符号面积。',
+            "A'(x)：累积面积当前变化得多快。",
+            'f(x)：当前位置的高度，也就是 A(x) 当前的斜率。',
+          ],
+        },
+        {
+          title: '什么时候要小心',
+          items: ['这个图展示的是连续或足够良好的函数上的直觉，不是严格证明。'],
+        },
+      ],
+    }
+  }
+  if (lessonId === 'taylor') {
+    return {
+      eyebrow: '公式',
+      title: 'Taylor 公式怎么读？',
+      summary: (
+        <>
+          <Formula tex="P_n(x)" /> 是围绕中心 <Formula tex="c" /> 构造的多项式，用有限层局部信息近似原函数。
+        </>
+      ),
+      sections: [
+        {
+          title: '符号对应',
+          items: [
+            'c：近似的中心点。',
+            'n：阶数，也就是使用多少层局部信息。',
+            'f^(k)(c)：函数在中心点的第 k 层局部信息。',
+            '(x-c)^k：当前位置离中心多远，会影响这一项的大小。',
+          ],
+        },
+        {
+          title: '什么时候要小心',
+          items: [
+            'Taylor 近似目前只对指定预设使用解析系数；自定义函数不会被悄悄近似成别的函数。',
+            '高阶不等于处处更好；远离中心时可能变差。',
+          ],
+        },
+      ],
+    }
+  }
+  return {
+    eyebrow: '公式',
+    title: '导数公式怎么对应图像？',
+    summary: (
+      <>
+        <Formula tex="\frac{f(x_0+h)-f(x_0)}{h}" /> 是两个点之间的平均斜率。让 <Formula tex="h" /> 变小，是在看这个平均斜率能不能稳定成当前点的瞬时斜率。
+      </>
+    ),
+    sections: [
+      {
+        title: '符号对应',
+        items: [
+          'x0：当前研究的点。',
+          'h：第二个点离当前点的水平距离。',
+          'm_h：当前 h 下的割线斜率，会随着 h 滑杆一起改变。',
+          "f'(x0)：当前点的导数估计，不是直接用这个 h 算出来的割线斜率。",
+          '分子：两个点的高度变化。',
+          '分母：两个点的水平距离。',
+          '整个分式：割线斜率，也就是平均变化率。',
+        ],
+      },
+      {
+        title: '什么时候要小心',
+        items: [
+          '这里的导数值是数值估计，不是符号推导。',
+          '如果左右两边靠近时斜率不一样，比如 abs(x) 在 0 点，导数不存在。',
+        ],
+      },
+    ],
   }
 }
 
@@ -424,6 +597,57 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
             'A line slope says how much y changes when x moves by 1.',
             'A curve can have a different direction at each point, so we use the tangent slope near that point.',
             'A steep tangent means fast change; a nearly flat tangent means slow change.',
+            'A derivative is not a separate new rule; it is the curve becoming locally line-like.',
+          ],
+        },
+      ],
+    },
+    'secant-slope': {
+      eyebrow: 'Symbol',
+      title: 'What is m_h?',
+      summary: (
+        <>
+          <Formula tex="m_h" /> is the secant slope for the current step size <Formula tex="h" />. It is the average rate of change between two visible points.
+        </>
+      ),
+      sections: [
+        {
+          title: 'How it connects to the slider',
+          items: [
+            <>
+              The <Formula tex="h" /> slider controls how far the second point is from <Formula tex="x_0" />.
+            </>,
+            <>
+              <Formula tex="m_h" /> changes when <Formula tex="h" /> changes because it uses the two currently visible points.
+            </>,
+            <>
+              When <Formula tex="h" /> is still large, <Formula tex="m_h" /> is an average rate of change, not necessarily the derivative.
+            </>,
+          ],
+        },
+      ],
+    },
+    'derivative-notation': {
+      eyebrow: 'Symbol',
+      title: "What is f'(x0)?",
+      summary: (
+        <>
+          <Formula tex="f'(x_0)" /> means the derivative at <Formula tex="x_0" />: the instantaneous slope near that point.
+        </>
+      ),
+      sections: [
+        {
+          title: 'How it differs from m_h',
+          items: [
+            <>
+              <Formula tex="m_h" /> is the secant slope for the current <Formula tex="h" />, so it changes with the <Formula tex="h" /> slider.
+            </>,
+            <>
+              <Formula tex="f'(x_0)" /> is the stable value those slopes approach as <Formula tex="h" /> gets smaller.
+            </>,
+            <>
+              If left and right approaches do not settle to the same slope, <Formula tex="f'(x_0)" /> does not exist.
+            </>,
           ],
         },
       ],
@@ -437,9 +661,24 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
           title: 'Why the derivative lab shrinks h',
           body: (
             <>
-              The average slope between two points is <Formula tex="\\frac{f(x_0+h)-f(x_0)}{h}" />. As <Formula tex="h" /> gets smaller, the second point moves toward the first and the secant becomes more tangent-like.
+              The average slope between two points is <Formula tex="\frac{f(x_0+h)-f(x_0)}{h}" />. As <Formula tex="h" /> gets smaller, the second point moves toward the first and the secant becomes more tangent-like.
             </>
           ),
+        },
+        {
+          title: "What m and f' mean",
+          body: (
+            <>
+              <Formula tex="m_h" /> is the secant slope for the current <Formula tex="h" />, so it is the average rate of change between two visible points. <Formula tex="f'(x_0)" /> is the derivative: if slopes from the left and right settle to the same value as the second point approaches <Formula tex="x_0" />, that stable value is the instantaneous slope.
+            </>
+          ),
+        },
+        {
+          title: 'Try this',
+          items: [
+            'Drag h from 1 down to 0.05 and watch the secant approach the tangent direction.',
+            'Switch to abs(x), move x0 to 0, and watch why the derivative becomes undefined.',
+          ],
         },
       ],
     },
@@ -462,7 +701,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
       title: 'What is an integral?',
       summary: (
         <>
-          A definite integral <Formula tex="\\int_a^b f(x)\\,dx" /> can be read as signed area accumulated under the curve from <Formula tex="a" /> to <Formula tex="b" />.
+          A definite integral <Formula tex="\int_a^b f(x)\,dx" /> can be read as signed area accumulated under the curve from <Formula tex="a" /> to <Formula tex="b" />.
         </>
       ),
       sections: [
@@ -472,6 +711,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
             'If f(x) is velocity, area acts like displacement over time.',
             'If f(x) is flow rate, area acts like total amount flowed.',
             'Many problems need accumulated effect, not just one instant.',
+            'An integral is not only area; it turns continuous change into a total effect.',
           ],
         },
       ],
@@ -486,7 +726,8 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
           items: [
             'Each small shape approximates one small slice of area.',
             'Narrower slices usually reduce the error in each slice.',
-            'Left, right, midpoint, and trapezoid methods choose heights differently.',
+            'Left, right, and midpoint choose one height; trapezoid connects the two endpoint heights.',
+            'Drag n from 4 to 60 and compare the signed area estimate with the reference integral.',
           ],
         },
       ],
@@ -507,7 +748,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
       title: 'What does the fundamental theorem say?',
       summary: (
         <>
-          It connects integrals and derivatives: if <Formula tex="A(x)=\\int_a^x f(t)\\,dt" /> is accumulated area up to <Formula tex="x" />, then <Formula tex="A'(x)=f(x)" />.
+          It connects integrals and derivatives: if <Formula tex="A(x)=\int_a^x f(t)\,dt" /> is accumulated area up to <Formula tex="x" />, then <Formula tex="A'(x)=f(x)" />.
         </>
       ),
       sections: [
@@ -517,6 +758,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
             'The upper graph f(x) gives the current height.',
             'The lower graph A(x) records accumulated area so far.',
             'The higher the current height, the faster accumulated area grows.',
+            'The slope of the area function equals the original height because each tiny move adds about current height times tiny width.',
           ],
         },
       ],
@@ -543,6 +785,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
             'It tries to match the function height, slope, curvature, and other local information at the center.',
             'Farther from the center, that local information may no longer be enough.',
             'Higher degree often helps near the center, but it does not guarantee a good fit everywhere.',
+            'Keep c fixed, raise the degree, then zoom out to see where the approximation starts failing.',
           ],
         },
       ],
@@ -562,22 +805,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
         },
       ],
     },
-    formula: {
-      eyebrow: 'Formula',
-      title: 'How should I read the current formula?',
-      summary: 'The formula is a compressed version of the graph behavior. Match each symbol back to a point, interval, area, or curve before worrying about proof.',
-      sections: [
-        {
-          title: 'Common symbols',
-          items: [
-            'f(x): the function height at input x.',
-            "f'(x): instantaneous slope near x.",
-            '∫: accumulate tiny pieces over an interval.',
-            'Σ: add many terms together.',
-          ],
-        },
-      ],
-    },
+    formula: enFormulaTopic(lessonId),
     values: {
       eyebrow: 'Values',
       title: 'What are the current values for?',
@@ -593,6 +821,122 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
         },
       ],
     },
+  }
+}
+
+function enFormulaTopic(lessonId: string): HelpTopic {
+  if (lessonId === 'integral') {
+    return {
+      eyebrow: 'Formula',
+      title: 'How does the integral formula match the graph?',
+      summary: (
+        <>
+          <Formula tex="\int_a^b f(x)\,dx" /> means accumulate small contributions from <Formula tex="a" /> to <Formula tex="b" />.
+        </>
+      ),
+      sections: [
+        {
+          title: 'Symbol map',
+          items: [
+            'a and b: the start and end of the accumulation interval.',
+            'f(x): the height at each position.',
+            'dx: a tiny slice of width.',
+            '∫: add the tiny “height × width” contributions.',
+          ],
+        },
+        {
+          title: 'When to be careful',
+          items: [
+            'The reference integral here is a high-sample numerical approximation, not an exact symbolic integral.',
+            'If a function jumps or oscillates sharply, finitely many rectangles or trapezoids may be unreliable.',
+          ],
+        },
+      ],
+    }
+  }
+  if (lessonId === 'fundamental-theorem') {
+    return {
+      eyebrow: 'Formula',
+      title: 'How should I read A(x)?',
+      summary: (
+        <>
+          <Formula tex="A(x)=\int_a^x f(t)\,dt" /> means “accumulated signed area from the start <Formula tex="a" /> up to the current <Formula tex="x" />.”
+        </>
+      ),
+      sections: [
+        {
+          title: 'Key match',
+          items: [
+            'A(x): accumulated signed area so far.',
+            "A'(x): how fast the accumulated area is changing now.",
+            'f(x): the current height, which is the current slope of A(x).',
+          ],
+        },
+        {
+          title: 'When to be careful',
+          items: ['The picture shows the intuition for continuous or well-behaved functions; it is not a formal proof.'],
+        },
+      ],
+    }
+  }
+  if (lessonId === 'taylor') {
+    return {
+      eyebrow: 'Formula',
+      title: 'How should I read the Taylor formula?',
+      summary: (
+        <>
+          <Formula tex="P_n(x)" /> is a polynomial built around the center <Formula tex="c" /> from a finite amount of local information.
+        </>
+      ),
+      sections: [
+        {
+          title: 'Symbol map',
+          items: [
+            'c: the approximation center.',
+            'n: degree, or how many layers of local information are used.',
+            'f^(k)(c): the kth layer of local information at the center.',
+            '(x-c)^k: how distance from the center affects that term.',
+          ],
+        },
+        {
+          title: 'When to be careful',
+          items: [
+            'Taylor approximation currently uses analytic coefficients only for selected presets; custom functions are not silently replaced by another function.',
+            'Higher degree does not mean good everywhere; far from the center the approximation can get worse.',
+          ],
+        },
+      ],
+    }
+  }
+  return {
+    eyebrow: 'Formula',
+    title: 'How does the derivative formula match the graph?',
+    summary: (
+      <>
+        <Formula tex="\frac{f(x_0+h)-f(x_0)}{h}" /> is the average slope between two points. Shrinking <Formula tex="h" /> checks whether that average slope settles into an instantaneous slope.
+      </>
+    ),
+    sections: [
+      {
+        title: 'Symbol map',
+        items: [
+          'x0: the point being studied.',
+          'h: the horizontal distance to the second point.',
+          'm_h: the secant slope for the current h, so it changes when the h slider changes.',
+          "f'(x0): the derivative estimate at the current point, not the same as the secant slope from the slider.",
+          'The numerator: height change.',
+          'The denominator: horizontal change.',
+          'The whole fraction: secant slope, or average rate of change.',
+        ],
+      },
+      {
+        title: 'When to be careful',
+        items: [
+          'The derivative value here is a numerical estimate, not symbolic differentiation.',
+          'If left and right approaches give different slopes, such as abs(x) at 0, the derivative is undefined.',
+        ],
+      },
+    ],
   }
 }
 

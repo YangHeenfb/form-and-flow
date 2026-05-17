@@ -29,7 +29,7 @@ export function Formula({ tex, block = false, label }: Props) {
 }
 
 const inlineFormulaPattern =
-  /(y'\s*=\s*f\(t,y\)|R[²³]|[PCEAHfgxyu]\s*\([^)]{1,36}\)|[abxy]\[[^\]]{1,12}\]|x\^[a-zA-Z0-9]+|u[ₜₓ]+|[αβλσθω]|f\s*=\s*\d+)/g
+  /(f'\(x_?0\)|m_h|x_?0|y'\s*=\s*f\(t,y\)|R[²³]|[PCEAHfgxyu]\s*\([^)]{1,36}\)|[abxy]\[[^\]]{1,12}\]|x\^[a-zA-Z0-9]+|u[ₜₓ]+|[αβλσθω]|f\s*=\s*\d+)/g
 
 export function MathText({ text }: { text: string }) {
   const parts = text.split(inlineFormulaPattern)
@@ -52,6 +52,8 @@ export function renderMathText(node: ReactNode): ReactNode {
 
 function toInlineTex(value: string) {
   return value
+    .replace(/f'\(x_?0\)/g, "f'(x_0)")
+    .replace(/\bx_?0\b/g, 'x_0')
     .replace(/R²/g, '\\mathbb{R}^2')
     .replace(/R³/g, '\\mathbb{R}^3')
     .replace(/∩/g, '\\cap ')

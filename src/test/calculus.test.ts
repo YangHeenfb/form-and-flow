@@ -2,8 +2,13 @@ import { describe, expect, it } from 'vitest'
 import { compileExpression } from '../core/math/expression.ts'
 import {
   approximateDerivative,
+  buildTaylorCoefficientsForPreset,
   classifyLimit,
+  derivativeDiagnostic,
+  estimateMaxError,
   factorial,
+  finiteDifference,
+  isTaylorPresetId,
   referenceIntegral,
   riemannSum,
   taylorPolynomialValue,
@@ -63,6 +68,19 @@ describe('calculus numerics', () => {
     expect(approximateDerivative(Math.sin, 0)).toBeCloseTo(1, 3)
   })
 
+  it('keeps displayed secant slope tied to the chosen h', () => {
+    expect(finiteDifference((x) => x * x, 1, 2)).toBeCloseTo(4)
+  })
+
+  it('marks abs(x) at 0 as not differentiable', () => {
+    const diagnostic = derivativeDiagnostic(Math.abs, 0)
+
+    expect(diagnostic.value).toBeNull()
+    expect(diagnostic.reason).toBe('one-sided-mismatch')
+    expect(diagnostic.leftSlope).toBeCloseTo(-1)
+    expect(diagnostic.rightSlope).toBeCloseTo(1)
+  })
+
   it('integrates x from 0 to 1 near 0.5', () => {
     expect(referenceIntegral((x) => x, 0, 1)).toBeCloseTo(0.5, 3)
   })
@@ -82,6 +100,24 @@ describe('calculus numerics', () => {
 
   it('taylor polynomial helper evaluates coefficients', () => {
     expect(taylorPolynomialValue([1, 1, 0.5], 0, 2)).toBe(5)
+  })
+
+  it('only builds Taylor coefficients for supported analytic presets', () => {
+    expect(isTaylorPresetId('sin')).toBe(true)
+    expect(isTaylorPresetId('x2')).toBe(false)
+    const coefficients = buildTaylorCoefficientsForPreset('sin', 0, 3)
+
+    expect(coefficients[0]).toBeCloseTo(0)
+    expect(coefficients[1]).toBeCloseTo(1)
+    expect(coefficients[2]).toBeCloseTo(0)
+    expect(coefficients[3]).toBeCloseTo(-1 / 6)
+  })
+
+  it('estimates max Taylor error across a sampled window', () => {
+    const coefficients = buildTaylorCoefficientsForPreset('sin', 0, 3)
+    const approximation = (x: number) => taylorPolynomialValue(coefficients, 0, x)
+
+    expect(estimateMaxError(Math.sin, approximation, -0.5, 0.5, 50)).toBeLessThan(0.003)
   })
 
   it('classifies matching one-sided values as an existing numerical limit', () => {
