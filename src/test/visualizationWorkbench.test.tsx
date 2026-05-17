@@ -2,10 +2,12 @@ import { act, useRef, type ReactElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { identityMatrix } from '../math/matrix.ts'
 import { MatrixMotionLab } from '../modules/matrix/MatrixMotionLab.tsx'
 import { useResizeObserver } from '../platform/useElementSize.ts'
 import { VisualizationWorkbench } from '../platform/VisualizationWorkbench.tsx'
 import type { OverlayPanelDefinition } from '../platform/visualizationLayoutTypes.ts'
+import { useAppState } from '../state/useAppState.ts'
 
 const reactActGlobal = globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
 reactActGlobal.IS_REACT_ACT_ENVIRONMENT = true
@@ -123,6 +125,25 @@ describe('MatrixMotionLab workbench integration', () => {
     expect(html).not.toContain('Fullscreen')
     expect(html).toContain('visualization-header-focus-toggle')
   })
+
+  it('keeps default vectors visible when the first matrix input changes to R3', async () => {
+    type AppState = ReturnType<typeof useAppState>
+    let latest: AppState | null = null
+    const readState = (): AppState => {
+      expect(latest).toBeTruthy()
+      return latest as AppState
+    }
+    const { container, unmount } = render(<AppStateHarness onState={(state) => { latest = state }} />)
+
+    expect(readState().vectors.map((vector) => vector.dim)).toEqual([2, 2])
+    await click(getButton(container, 'Make first map 3D'))
+
+    expect(readState().inputDim).toBe(3)
+    expect(readState().vectors.map((vector) => vector.dim)).toEqual([3, 3])
+    expect(readState().vectors.map((vector) => vector.values.length)).toEqual([3, 3])
+
+    unmount()
+  })
 })
 
 function WorkbenchHarness({ onTogglePlay = vi.fn() }: { onTogglePlay?: () => void }) {
@@ -150,6 +171,26 @@ function ResizeHarness({ onResize }: { onResize: (rect: DOMRectReadOnly) => void
   const ref = useRef<HTMLDivElement | null>(null)
   useResizeObserver(ref, onResize)
   return <div ref={ref} />
+}
+
+function AppStateHarness({ onState }: { onState: (state: ReturnType<typeof useAppState>) => void }) {
+  const state = useAppState()
+  onState(state)
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        state.updateMap(state.maps[0].id, (map) => ({
+          ...map,
+          inputDim: 3,
+          outputDim: 3,
+          matrix: identityMatrix(3),
+        }))
+      }
+    >
+      Make first map 3D
+    </button>
+  )
 }
 
 function render(ui: ReactElement): { container: HTMLElement; root: Root; unmount: () => void } {

@@ -223,6 +223,10 @@ function InvariantCard({
 
   if (square) {
     const det = map.inputDim === 2 ? determinant2(map.matrix) : determinant3(map.matrix)
+    const detAbs = Math.abs(det)
+    const nearZero = detAbs < 1e-8
+    const scaleLabel = map.inputDim === 2 ? copy.areaScaleFactor : copy.volumeScaleFactor
+    const orientationCopy = nearZero ? copy.orientationDegenerate : det < 0 ? copy.orientationFlipped : copy.orientationPreserved
     return (
       <section className="info-card">
         <h2>
@@ -233,8 +237,11 @@ function InvariantCard({
         <p>
           <Formula tex={`\\det(T)=${formatNumber(det, 4)}`} />
         </p>
-        {Math.abs(det) < 1e-8 && <p className="warning-text">{copy.notInvertible}</p>}
-        {det < 0 && <p className="warning-text">{copy.orientationFlipped}</p>}
+        <p>
+          {scaleLabel}: <Formula tex={`\\left|\\det(T)\\right|=${formatNumber(detAbs, 4)}`} />
+        </p>
+        <p className={nearZero || det < 0 ? 'warning-text' : 'muted compact'}>{orientationCopy}</p>
+        {nearZero && <p className="warning-text">{copy.notInvertible}</p>}
       </section>
     )
   }

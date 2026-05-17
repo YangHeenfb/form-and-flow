@@ -218,7 +218,12 @@ export class Three3DRenderer {
     for (let index = 0; index < payload.inputDim; index += 1) {
       const values = Array.from({ length: payload.inputDim }, (_, col) => (col === index ? 1 : 0))
       const end = transformPoint(payload.visualMatrix, values, payload.inputDim)
-      this.scene.add(arrow(end, colors[index], `basis-${index}`, `T(${basisLabel(index)})`, payload.theme.surfaceMode))
+      this.scene.add(
+        arrow(end, colors[index], `basis-${index}`, {
+          label: `T(${basisLabel(index)})`,
+          surfaceMode: payload.theme.surfaceMode,
+        }),
+      )
     }
   }
 
@@ -227,7 +232,7 @@ export class Three3DRenderer {
       .filter((vector) => vector.dim === payload.inputDim)
       .forEach((vector) => {
         const output = applyMatrixToVector(payload.visualMatrix, vector.values) as Point3
-        this.scene.add(arrow(output, vector.color ?? payload.theme.colors.inputVector, vector.name, `T(${vector.name})`, payload.theme.surfaceMode))
+        this.scene.add(emphasizedVectorArrow(output, vector.color ?? payload.theme.colors.inputVector, vector.name, payload.theme.surfaceMode))
       })
   }
 }
@@ -237,7 +242,19 @@ function transformPoint(matrix: Matrix, values: number[], inputDim: number): Poi
   return [output[0] ?? 0, output[1] ?? 0, output[2] ?? 0]
 }
 
-function arrow(end: Point3, color: string, name: string, label?: string, surfaceMode: ThemeSurfaceMode = 'dark'): THREE.Object3D {
+type ArrowOptions = {
+  headLength?: number
+  headWidth?: number
+  label?: string
+  surfaceMode?: ThemeSurfaceMode
+}
+
+function arrow(
+  end: Point3,
+  color: string,
+  name: string,
+  options: ArrowOptions = {},
+): THREE.Object3D {
   const vector = new THREE.Vector3(...end)
   const length = vector.length()
   const group = new THREE.Group()
@@ -250,12 +267,19 @@ function arrow(end: Point3, color: string, name: string, label?: string, surface
     dot.name = name
     group.add(dot)
   } else {
-    const helper = new THREE.ArrowHelper(vector.clone().normalize(), new THREE.Vector3(0, 0, 0), length, color, 0.18, 0.1)
+    const helper = new THREE.ArrowHelper(
+      vector.clone().normalize(),
+      new THREE.Vector3(0, 0, 0),
+      length,
+      color,
+      options.headLength ?? 0.18,
+      options.headWidth ?? 0.1,
+    )
     helper.name = name
     group.add(helper)
   }
-  if (label) {
-    const sprite = vectorLabel(label, color, surfaceMode)
+  if (options.label) {
+    const sprite = vectorLabel(options.label, color, options.surfaceMode ?? 'dark')
     sprite.position.copy(labelPosition(vector))
     group.add(sprite)
   }
@@ -333,6 +357,49 @@ function drawRoundedRect(
   context.lineTo(x, y + boundedRadius)
   context.quadraticCurveTo(x, y, x + boundedRadius, y)
   context.closePath()
+}
+
+function emphasizedVectorArrow(end: Point3, color: string, name: string, surfaceMode: ThemeSurfaceMode): THREE.Object3D {
+  const group = new THREE.Group()
+  group.name = name
+  group.renderOrder = 20
+  const vector = new THREE.Vector3(...end)
+  const length = vector.length()
+  const arrowObject = arrow(end, color, `${name}-arrow`, { headLength: 0.28, headWidth: 0.16 })
+  group.add(arrowObject)
+
+  const endpoint = new THREE.Mesh(
+    new THREE.SphereGeometry(0.09, 18, 18),
+    new THREE.MeshBasicMaterial({ color, depthTest: false, depthWrite: false }),
+  )
+  endpoint.position.set(...end)
+  endpoint.name = `${name}-endpoint`
+  endpoint.renderOrder = 21
+  group.add(endpoint)
+
+  const labelOffset = length < 1e-6 ? new THREE.Vector3(0.22, 0.22, 0.22) : vector.clone().normalize().multiplyScalar(0.28)
+  const label = vectorLabel(`T(${name})`, color, surfaceMode)
+  label.position.copy(vector.clone().add(labelOffset))
+  label.renderOrder = 22
+  group.add(label)
+
+  keepVisible(group)
+  return group
+}
+
+function keepVisible(object: THREE.Object3D): void {
+  object.traverse((child) => {
+    child.renderOrder = Math.max(child.renderOrder, 20)
+    const material = (child as THREE.Mesh | THREE.Line).material
+    if (!material) {
+      return
+    }
+    const materials = Array.isArray(material) ? material : [material]
+    materials.forEach((item) => {
+      item.depthTest = false
+      item.depthWrite = false
+    })
+  })
 }
 
 function lineSegments(points: Point3[], color: string, opacity: number, lineWidth = 1): THREE.LineSegments {

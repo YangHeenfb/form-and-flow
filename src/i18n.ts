@@ -6,6 +6,9 @@ function spacePlain(dim: number): string {
   return dim === 2 ? 'R²' : dim === 3 ? 'R³' : `R^${dim}`
 }
 
+const basisNames = ['i', 'j', 'k']
+const coordinateNames = ['x', 'y', 'z']
+
 type ViewOptionKey = keyof ViewOptions
 type ThemeColorKey = keyof ThemeSettings['colors']
 
@@ -53,6 +56,7 @@ export type AppCopy = {
     moveUp: (name: string) => string
     moveDown: (name: string) => string
     deleteMap: (name: string) => string
+    entryTooltip: (row: number, col: number) => string
     stepNote: (step: number) => string
   }
   vectorPanel: {
@@ -83,7 +87,9 @@ export type AppCopy = {
     zoom: string
     playbackMode: string
     combined: string
+    combinedHelp: string
     step: string
+    stepHelp: string
     viewLabels: Record<ViewOptionKey, string>
   }
   threeView: {
@@ -110,10 +116,14 @@ export type AppCopy = {
     matrixShape: string
     finalMatrix: string
     areaScale: string
+    areaScaleFactor: string
     volumeScale: string
+    volumeScaleFactor: string
     determinant: string
     notInvertible: string
+    orientationPreserved: string
     orientationFlipped: string
+    orientationDegenerate: string
     rankAndNullity: string
     rank: string
     nullity: string
@@ -174,7 +184,7 @@ export const appCopy: Record<Locale, AppCopy> = {
           return `${spacePlain(3)} → ${spacePlain(2)} Bridge View`
         }
         if (inputDim === 2 && outputDim === 3) {
-          return `${spacePlain(2)} → ${spacePlain(3)} Embedded View`
+          return `${spacePlain(2)} → ${spacePlain(3)} Map Into 3D`
         }
         return `${spacePlain(inputDim)} → ${spacePlain(outputDim)} View`
       },
@@ -183,7 +193,7 @@ export const appCopy: Record<Locale, AppCopy> = {
           return 'The output plane is embedded in 3D as z = 0, so Av appears as (Av.x, Av.y, 0).'
         }
         if (inputDim === 2 && outputDim === 3) {
-          return `The 2D input plane unfolds into ${spacePlain(3)} according to the current 3x2 matrix.`
+          return `The 2D input directions land in ${spacePlain(3)} according to the current 3x2 matrix. Full rank makes a plane; lower rank collapses to a line or point.`
         }
         return 'The 3D grid, basis, unit shape, and vectors are computed from the current linear map.'
       },
@@ -207,7 +217,7 @@ export const appCopy: Record<Locale, AppCopy> = {
     matrixSequence: {
       title: 'Matrix Sequence',
       add: 'Add',
-      help: 'User order [A₁, A₂, A₃] means first A₁, then A₂, then A₃. The composed matrix is A₃A₂A₁.',
+      help: 'User order [A₁, A₂, A₃] means first A₁, then A₂, then A₃. In multiplication the vector sits on the right, so the composed matrix is A₃A₂A₁.',
       presetTitle: 'Preset Library',
       presetSummary: 'Expand to apply common maps',
       presetNames: identityPresetNames,
@@ -218,12 +228,18 @@ export const appCopy: Record<Locale, AppCopy> = {
       moveUp: (name) => `Move ${name} up`,
       moveDown: (name) => `Move ${name} down`,
       deleteMap: (name) => `Delete ${name}`,
+      entryTooltip: (row, col) => {
+        const basis = basisNames[col] ?? `basis ${col + 1}`
+        const inputCoordinate = coordinateNames[col] ?? `input ${col + 1}`
+        const outputCoordinate = coordinateNames[row] ?? `output ${row + 1}`
+        return `a${row + 1}${col + 1}: the transformed ${basis} vector's ${outputCoordinate} coordinate. Also: original ${inputCoordinate} contributes this much to output ${outputCoordinate}.`
+      },
       stepNote: (step) => `Step ${step}: this map acts after all maps above it.`,
     },
     vectorPanel: {
       title: 'Vectors',
       add: 'Add',
-      help: (dim) => `Input vectors must live in ${spacePlain(dim)}, matching the first matrix input dimension.`,
+      help: (dim) => `Enter the vector before the matrix acts. It must live in ${spacePlain(dim)}, and the right panel shows where Av lands.`,
       mismatch: (name, vectorDim, requiredDim) => `${name} was ${spacePlain(vectorDim)}; editing it here will resize it to ${spacePlain(requiredDim)}.`,
     },
     vectorInput: {
@@ -257,7 +273,9 @@ export const appCopy: Record<Locale, AppCopy> = {
       zoom: 'Zoom',
       playbackMode: 'Playback mode',
       combined: 'Combined',
+      combinedHelp: 'Combined: show the final effect of the whole sequence at once.',
       step: 'Step',
+      stepHelp: 'Step: play each matrix after the previous result, one map at a time.',
       viewLabels: {
         showGrid: 'Grid',
         showBasis: 'Basis',
@@ -284,7 +302,7 @@ export const appCopy: Record<Locale, AppCopy> = {
         '2-2': '2x2 square map',
         '3-3': '3x3 square map',
         '3-2': '2x3 compression',
-        '2-3': '3x2 embedding',
+        '2-3': '3x2 map into 3D',
       },
       title: 'Explanation',
       sequence: (names, composedName, inputDim, outputDim) =>
@@ -296,11 +314,15 @@ export const appCopy: Record<Locale, AppCopy> = {
       outputDimension: 'Output dimension',
       matrixShape: 'Matrix shape',
       finalMatrix: 'Final Matrix',
-      areaScale: 'Area Scale',
-      volumeScale: 'Volume Scale',
+      areaScale: 'Determinant and Area',
+      areaScaleFactor: 'Area scale',
+      volumeScale: 'Determinant and Volume',
+      volumeScaleFactor: 'Volume scale',
       determinant: 'determinant',
-      notInvertible: 'The determinant is close to 0, so this map is not invertible.',
-      orientationFlipped: 'The determinant is negative, so orientation is flipped.',
+      notInvertible: 'When det(T) is 0, the map is not invertible. This value is extremely close to 0, so the picture treats it like a near-collapse.',
+      orientationPreserved: 'Positive determinant: orientation is preserved.',
+      orientationFlipped: 'Negative determinant: use the absolute value for size, but the direction order has flipped.',
+      orientationDegenerate: 'Numerically near-zero determinant: orientation is unstable after the near-collapse.',
       rankAndNullity: 'Rank And Nullity',
       rank: 'rank',
       nullity: 'nullity',
@@ -310,7 +332,7 @@ export const appCopy: Record<Locale, AppCopy> = {
       compressionRank0: 'Every vector is collapsed to the zero vector.',
       transformedBasis: 'Transformed Basis',
       r3ToR2BasisNote: `The i, j, and k columns each land in true ${spacePlain(2)} output coordinates.`,
-      r2ToR3BasisNote: `The i and j columns each land in ${spacePlain(3)}, defining the embedded output plane.`,
+      r2ToR3BasisNote: `The i and j columns land in ${spacePlain(3)}. If they are independent, they span an output plane; otherwise they collapse toward a line or point.`,
       transformedVectors: 'Transformed Vectors',
       vectorMismatch: (name, vectorDim, requiredDim) => `${name} is ${spacePlain(vectorDim)}; it must be ${spacePlain(requiredDim)}.`,
       stepMatrices: 'Step Matrices',
@@ -333,7 +355,7 @@ export const appCopy: Record<Locale, AppCopy> = {
           return `${spacePlain(3)} → ${spacePlain(2)} 桥接视图`
         }
         if (inputDim === 2 && outputDim === 3) {
-          return `${spacePlain(2)} → ${spacePlain(3)} 嵌入视图`
+          return `${spacePlain(2)} → ${spacePlain(3)} 进入 3D 视图`
         }
         return `${spacePlain(inputDim)} → ${spacePlain(outputDim)} 视图`
       },
@@ -342,7 +364,7 @@ export const appCopy: Record<Locale, AppCopy> = {
           return '输出平面嵌入三维场景的 z = 0 平面，Av 显示为 (Av.x, Av.y, 0)。'
         }
         if (inputDim === 2 && outputDim === 3) {
-          return `二维输入平面会按照当前 3x2 矩阵展开到 ${spacePlain(3)}。`
+          return `二维输入方向会按照当前 3x2 矩阵落到 ${spacePlain(3)}。秩为 2 时像一张平面；秩更低时会退化成线或点。`
         }
         return '三维网格、基向量、单位形状和向量都由当前线性映射计算。'
       },
@@ -366,7 +388,7 @@ export const appCopy: Record<Locale, AppCopy> = {
     matrixSequence: {
       title: '矩阵序列',
       add: '添加',
-      help: '用户顺序 [A₁, A₂, A₃] 表示先作用 A₁，再作用 A₂，再作用 A₃；合成矩阵是 A₃A₂A₁。',
+      help: '用户顺序 [A₁, A₂, A₃] 表示先作用 A₁，再作用 A₂，再作用 A₃。写乘法时向量在最右边，所以合成矩阵是 A₃A₂A₁。',
       presetTitle: '预设库',
       presetSummary: '展开后应用常见映射',
       presetNames: presetNameZh,
@@ -377,12 +399,18 @@ export const appCopy: Record<Locale, AppCopy> = {
       moveUp: (name) => `上移 ${name}`,
       moveDown: (name) => `下移 ${name}`,
       deleteMap: (name) => `删除 ${name}`,
+      entryTooltip: (row, col) => {
+        const basis = basisNames[col] ?? `第 ${col + 1} 个基向量`
+        const inputCoordinate = coordinateNames[col] ?? `第 ${col + 1} 个输入坐标`
+        const outputCoordinate = coordinateNames[row] ?? `第 ${row + 1} 个输出坐标`
+        return `a${row + 1}${col + 1}：${basis} 向量变换后的 ${outputCoordinate} 坐标。也可以理解为：原来的 ${inputCoordinate} 方向，会给输出 ${outputCoordinate} 贡献多少。`
+      },
       stepNote: (step) => `第 ${step} 步：这个映射会在上方所有映射之后作用。`,
     },
     vectorPanel: {
       title: '向量',
       add: '添加',
-      help: (dim) => `输入向量必须属于 ${spacePlain(dim)}，与第一个矩阵的输入维度一致。`,
+      help: (dim) => `这里填的是向量变换前的位置。它必须属于 ${spacePlain(dim)}；右侧会显示矩阵作用后的 Av。`,
       mismatch: (name, vectorDim, requiredDim) => `${name} 原本是 ${spacePlain(vectorDim)}；在这里编辑会把它调整为 ${spacePlain(requiredDim)}。`,
     },
     vectorInput: {
@@ -416,7 +444,9 @@ export const appCopy: Record<Locale, AppCopy> = {
       zoom: '缩放',
       playbackMode: '播放模式',
       combined: '合成',
+      combinedHelp: '合成：直接看整个矩阵序列的最终效果。',
       step: '分步',
+      stepHelp: '分步：一步一步看每个矩阵接着前面的结果继续作用。',
       viewLabels: {
         showGrid: '网格',
         showBasis: '基向量',
@@ -443,7 +473,7 @@ export const appCopy: Record<Locale, AppCopy> = {
         '2-2': '2x2 方阵映射',
         '3-3': '3x3 方阵映射',
         '3-2': '2x3 压缩映射',
-        '2-3': '3x2 嵌入映射',
+        '2-3': '3x2：把 2D 输入放到 3D 输出中',
       },
       title: '解释',
       sequence: (names, composedName, inputDim, outputDim) =>
@@ -455,11 +485,15 @@ export const appCopy: Record<Locale, AppCopy> = {
       outputDimension: '输出维度',
       matrixShape: '矩阵形状',
       finalMatrix: '最终矩阵',
-      areaScale: '面积缩放',
-      volumeScale: '体积缩放',
+      areaScale: '行列式与面积',
+      areaScaleFactor: '面积缩放',
+      volumeScale: '行列式与体积',
+      volumeScaleFactor: '体积缩放',
       determinant: '行列式',
-      notInvertible: '行列式接近 0，因此这个映射不可逆。',
-      orientationFlipped: '行列式为负，因此空间取向被翻转。',
+      notInvertible: '行列式为 0 时，这个变换不可逆。现在的值非常接近 0，画面会把它当作“几乎被压扁”。',
+      orientationPreserved: '行列式为正：方向顺序保持。',
+      orientationFlipped: '行列式为负：大小看绝对值，但方向顺序被翻过来了。',
+      orientationDegenerate: '按数值阈值接近 0：几乎压扁后，方向判断会变得不稳定。',
       rankAndNullity: '秩与零化度',
       rank: '秩',
       nullity: '零化度',
@@ -469,7 +503,7 @@ export const appCopy: Record<Locale, AppCopy> = {
       compressionRank0: '所有向量都被压成零向量。',
       transformedBasis: '变换后的基向量',
       r3ToR2BasisNote: `i、j、k 三列分别落在真实的 ${spacePlain(2)} 输出坐标中。`,
-      r2ToR3BasisNote: `i、j 两列分别落在 ${spacePlain(3)} 中，并定义嵌入后的输出平面。`,
+      r2ToR3BasisNote: `i、j 两列分别落在 ${spacePlain(3)} 中。若它们独立，会张成一个输出平面；若秩更低，会退化成线或点。`,
       transformedVectors: '变换后的向量',
       vectorMismatch: (name, vectorDim, requiredDim) => `${name} 是 ${spacePlain(vectorDim)}；它必须是 ${spacePlain(requiredDim)}。`,
       stepMatrices: '分步矩阵',
