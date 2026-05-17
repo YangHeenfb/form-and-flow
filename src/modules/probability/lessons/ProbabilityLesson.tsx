@@ -1048,11 +1048,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
 
       explanation={
         <>
-        <h2>
-          <HelpLabel topic="graph" onOpenHelpTopic={openHelpTopic}>
-            {ui.sections.what}
-          </HelpLabel>
-        </h2>
+        <h2>{ui.sections.what}</h2>
         <p>{currentCopy.what}</p>
         <h2>
           <HelpLabel topic={conceptTopicForLesson(lessonId)} onOpenHelpTopic={openHelpTopic}>
