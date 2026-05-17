@@ -52,6 +52,7 @@ export function renderMathText(node: ReactNode): ReactNode {
 
 function toInlineTex(value: string) {
   return value
+    .replace(/u([ₜₓ]+)/g, (_, subscript: string) => `u_{${subscript.replace(/ₜ/g, 't').replace(/ₓ/g, 'x')}}`)
     .replace(/f'\(x_?0\)/g, "f'(x_0)")
     .replace(/\bx_?0\b/g, 'x_0')
     .replace(/R²/g, '\\mathbb{R}^2')
