@@ -16,7 +16,7 @@ export function FourierHome() {
           <h1>{module.title}</h1>
           <p>
             {locale === 'zh'
-              ? '通过缠绕信号、扫描频率空间和用 Fourier 系数重建信号，探索信号如何分解成频率。'
+              ? '通过缠绕信号、扫描频率空间和用傅里叶系数重建信号，探索信号如何分解成频率。'
               : 'Explore how signals decompose into frequencies by winding them around circles, scanning frequency space, and reconstructing signals from Fourier coefficients.'}
           </p>
         </div>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Pause, Play, RotateCcw } from 'lucide-react'
+import { CircleHelp, Pause, Play, RotateCcw } from 'lucide-react'
 import { GraphCanvas } from '../../core/graph2d/GraphCanvas.tsx'
 import type { GraphTheme, GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
@@ -13,9 +13,9 @@ import { ModuleFocusFrame } from '../../platform/ModuleFocusFrame.tsx'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
 import { calculusFunctionNames, completeBareFunctionInput, normalizeMathInput } from '../calculus/shared/mathInput.ts'
 import type { FilterConfig, FilterType, FourierCoefficient, ReconstructionMode, Spectrum, WindingPoint } from './fourierTypes.ts'
-import { compileFourierExpression, fourierPresets, getFourierPreset, sampleFourierExpression, sampleFourierPreset } from './fourierPresets.ts'
+import { compileFourierExpression, fourierPresets, getFourierPreset, sampleFourierExpression, sampleFourierPreset, type SignalPreset } from './fourierPresets.ts'
 import { applyFilter } from './math/filters.ts'
-import { computeCoefficientAtFrequency, computeIntegerSpectrum, computeSpectrum, computeWindingPoints, findDominantFrequencies, selectTopCoefficients } from './math/fourier.ts'
+import { computeCoefficientAtFrequency, computeIntegerSpectrum, computeSpectrum, computeWindingPoints, findDominantFrequencies, selectPairedFrequencyBlocks, selectTopCoefficients } from './math/fourier.ts'
 import { maxAbsError, meanSquaredError, reconstructSamples } from './math/reconstruction.ts'
 
 type Props = {
@@ -24,7 +24,8 @@ type Props = {
 
 type FourierLocale = Locale
 type FourierTermId = 'winding' | 'frequency' | 'coefficient' | 'center-of-mass' | 'spectrum' | 'phase' | 'reconstruction' | 'filtering'
-type FourierHelpMode = { kind: 'beginner' } | { kind: 'graph' } | { kind: 'term'; term: FourierTermId }
+type FourierControlGroupId = 'samples' | 'spectrum' | 'reconstruction' | 'filtering' | 'display'
+type FourierHelpMode = { kind: 'beginner' } | { kind: 'control'; group: FourierControlGroupId } | { kind: 'graph' } | { kind: 'term'; term: FourierTermId }
 
 type LessonCopy = {
   title: string
@@ -94,6 +95,7 @@ const fourierCopy: Record<FourierLocale, {
     values: string
     watch: string
     beginnerHelp: string
+    controlHelp: string
     graphHelp: string
     closeHelp: string
     display: string
@@ -127,6 +129,7 @@ const fourierCopy: Record<FourierLocale, {
       values: 'Current values',
       watch: 'Watch for',
       beginnerHelp: 'Beginner explanation',
+      controlHelp: 'Control help',
       graphHelp: 'Read the graph',
       closeHelp: 'Close explanation',
       display: 'Display',
@@ -141,6 +144,7 @@ const fourierCopy: Record<FourierLocale, {
         frequencyMax: 'frequency max',
         frequencyStep: 'frequency step',
         maxHarmonic: 'max harmonic',
+        frequencyBlocks: 'frequency blocks',
         coefficientCount: 'coefficient count',
         mode: 'mode',
         filterType: 'filter type',
@@ -167,27 +171,27 @@ const fourierCopy: Record<FourierLocale, {
     lessons: {
       spectrum: {
         title: 'Frequency Spectrum',
-        what: 'The spectrum is built by trying many winding frequencies and measuring the size of the average point.',
-        why: 'Large peaks mean the signal contains a strong component at that frequency.',
-        formula: '|C(f)| = |average of x(t)e^{-i2πft}|',
-        formulaTex: '|C(f)|=\\left|\\operatorname{avg}\\left(x(t)e^{-i2\\pi ft}\\right)\\right|',
-        watch: 'A signal made from sin(2πt) and sin(6πt) should create peaks near frequencies 1 and 3.',
+        what: 'A spectrum is the result of testing many frequencies and measuring how far each average point moves from the center.',
+        why: 'Large peaks mean that frequency is strong. Real signals often show mirror peaks at +f and -f because those are two rotation directions.',
+        formula: '|C(f)| = |1/N sum x[n]e^{-i2πfn/N}|',
+        formulaTex: '|C(f)|=\\left|\\frac{1}{N}\\sum_{n=0}^{N-1}x[n]e^{-i2\\pi fn/N}\\right|',
+        watch: 'For this signal, look for strong responses near 1 and 3. Because we observe one finite slice, peaks can spread around those values instead of appearing as only one bar.',
       },
       reconstruction: {
         title: 'Signal Reconstruction',
-        what: 'The reconstructed signal is built by adding rotating frequency components back together.',
-        why: 'Fourier analysis is reversible when enough coefficients are kept.',
+        what: 'Reconstruction adds selected frequency components back together. Each coefficient behaves like a small wave with strength and phase.',
+        why: 'In this sampled experiment, a complete set of frequency coefficients can recover the original samples. Keeping only some coefficients gives an approximation.',
         formula: 'x̂(t)=Σ C(f)e^{i2πft}',
         formulaTex: '\\hat{x}(t)=\\sum_f C(f)e^{i2\\pi ft}',
         watch: 'Smooth signals usually need fewer frequencies. Sharp corners or jumps need many more.',
       },
       filtering: {
         title: 'Frequency Filtering',
-        what: 'The filter keeps some frequency components and removes or reduces others.',
-        why: 'Changing the spectrum changes the signal. Smooth filtering usually removes high-frequency detail; high-pass filtering removes slow trends.',
+        what: 'Filtering first keeps or weakens chosen parts of the spectrum, then rebuilds the signal from what remains.',
+        why: 'Low-pass keeps slow changes and reduces fast detail, which often smooths noise. High-pass keeps fast detail and weakens slow trends.',
         formula: 'filtered x̂(t)=Σ H(f)C(f)e^{i2πft}',
         formulaTex: '\\hat{x}_{filtered}(t)=\\sum_f H(f)C(f)e^{i2\\pi ft}',
-        watch: 'Low-pass filtering a square wave smooths the corners.',
+        watch: 'Move the cutoff and compare which frequencies remain in the lower spectrum.',
       },
     },
   },
@@ -213,6 +217,7 @@ const fourierCopy: Record<FourierLocale, {
       values: '当前数值',
       watch: '注意观察',
       beginnerHelp: '新手解释',
+      controlHelp: '控件说明',
       graphHelp: '怎么看图',
       closeHelp: '关闭解释',
       display: '显示',
@@ -227,6 +232,7 @@ const fourierCopy: Record<FourierLocale, {
         frequencyMax: '最大频率',
         frequencyStep: '频率步长',
         maxHarmonic: '最大谐波',
+        frequencyBlocks: '频率块数量',
         coefficientCount: '系数数量',
         mode: '模式',
         filterType: '滤波类型',
@@ -253,27 +259,27 @@ const fourierCopy: Record<FourierLocale, {
     lessons: {
       spectrum: {
         title: '频率频谱',
-        what: '频谱来自不断尝试不同缠绕频率，并记录平均点的大小。',
-        why: '峰值越大，说明信号在该频率上的成分越强。',
-        formula: '|C(f)| = |average of x(t)e^{-i2πft}|',
-        formulaTex: '|C(f)|=\\left|\\operatorname{avg}\\left(x(t)e^{-i2\\pi ft}\\right)\\right|',
-        watch: '由 sin(2πt) 和 sin(6πt) 组成的信号，应该在 1 和 3 附近出现峰值。',
+        what: '频谱是很多次“频率测试”的结果：每个频率都会产生一个平均点，柱子的高度表示平均点离中心有多远。',
+        why: '柱子越高，说明这个频率在原信号里越明显。对真实信号，常常会同时看到 +f 和 -f 两个镜像峰，它们表示两个相反方向的旋转。',
+        formula: '|C(f)| = |1/N Σ x[n]e^{-i2πfn/N}|',
+        formulaTex: '|C(f)|=\\left|\\frac{1}{N}\\sum_{n=0}^{N-1}x[n]e^{-i2\\pi fn/N}\\right|',
+        watch: '对这个信号，你会在 1 和 3 附近看到强响应。因为我们只观察有限长度的一段曲线，峰可能会在附近扩散，而不是只出现在一个柱子上。',
       },
       reconstruction: {
         title: '信号重建',
-        what: '重建信号是把旋转的频率成分重新相加得到的。',
-        why: '保留足够多的系数时，Fourier 分析可以反向合成原信号。',
+        what: '重建就是把选中的频率成分重新叠回去。每个傅里叶系数都像一个小波：大小决定它有多强，角度决定它从哪里开始。',
+        why: '在这个离散采样的实验里，如果保留完整的一组频率系数，就可以恢复原来的样本。只保留一部分系数时，得到的是近似重建。',
         formula: 'x̂(t)=Σ C(f)e^{i2πft}',
         formulaTex: '\\hat{x}(t)=\\sum_f C(f)e^{i2\\pi ft}',
         watch: '平滑信号通常需要较少频率；尖角或跳跃需要更多频率。',
       },
       filtering: {
         title: '频率滤波',
-        what: '滤波器会保留某些频率成分，并移除或削弱其它成分。',
-        why: '改变频谱就会改变信号；低通通常移除高频细节，高通会移除缓慢趋势。',
-        formula: 'filtered x̂(t)=Σ H(f)C(f)e^{i2πft}',
-        formulaTex: '\\hat{x}_{filtered}(t)=\\sum_f H(f)C(f)e^{i2\\pi ft}',
-        watch: '对方波做低通滤波时，尖角会变得更圆滑。',
+        what: '滤波不是直接在时间曲线上擦掉东西，而是先在频谱里保留或削弱某些频率，再把剩下的频率叠回去。',
+        why: '低通保留慢变化，削弱快变化，所以常用来平滑噪声。高通保留快变化，削弱慢趋势，所以常用来突出边缘或细节。',
+        formula: '滤波后 x̂(t)=Σ H(f)C(f)e^{i2πft}',
+        formulaTex: '\\hat{x}_{\\text{滤波}}(t)=\\sum_f H(f)C(f)e^{i2\\pi ft}',
+        watch: '移动截止频率，观察下方频谱里哪些频率被保留，再看上方信号怎样变化。',
       },
     },
   },
@@ -286,6 +292,8 @@ export function FourierLesson({ lessonId }: Props) {
   const ui = fourierCopy[locale].ui
   const [presetId, setPresetId] = useState(() => readInitialPresetParam(defaultPresetForLesson(lessonKey)))
   const selectedPreset = getFourierPreset(presetId === 'custom' ? defaultPresetForLesson(lessonKey) : presetId)
+  const selectedPresetLabel = getFourierPresetLabel(selectedPreset, locale)
+  const selectedPresetDescription = getFourierPresetDescription(selectedPreset, locale)
   const [expression, setExpression] = useState(() => readParam('f') ?? selectedPreset.expression ?? 'sin(2*pi*t)')
   const [sampleCount, setSampleCount] = useState(() => readNumberParam('samples', 512))
   const [selectedFrequency, setSelectedFrequency] = useState(() => readNumberParam('freq', selectedPreset.defaultFrequency))
@@ -295,7 +303,7 @@ export function FourierLesson({ lessonId }: Props) {
   const [frequencyStep, setFrequencyStep] = useState(() => readNumberParam('fstep', 0.1))
   const [maxHarmonic, setMaxHarmonic] = useState(() => readNumberParam('harmonic', lessonKey === 'filtering' ? 40 : 20))
   const [coefficientCount, setCoefficientCount] = useState(() => readNumberParam('count', 5))
-  const [reconstructionMode, setReconstructionMode] = useState<ReconstructionMode>(() => (readParam('mode') as ReconstructionMode) ?? 'top-magnitudes')
+  const [reconstructionMode, setReconstructionMode] = useState<ReconstructionMode>(() => readReconstructionModeParam('paired-frequency-blocks'))
   const [filterType, setFilterType] = useState<FilterType>(() => (readParam('filter') as FilterType) ?? 'low-pass')
   const [cutoff, setCutoff] = useState(() => readNumberParam('cutoff', 5))
   const [lowCutoff, setLowCutoff] = useState(() => readNumberParam('low', 2))
@@ -341,8 +349,9 @@ export function FourierLesson({ lessonId }: Props) {
       }
       if (lessonKey === 'reconstruction') {
         setCoefficientCount((value) => {
+          const limit = reconstructionMode === 'paired-frequency-blocks' ? maxHarmonic + 1 : maxHarmonic * 2 + 1
           const next = value + delta * 0.012 * playbackSpeed
-          return next > maxHarmonic * 2 + 1 ? 1 : next
+          return next > limit ? 1 : next
         })
       }
       if (lessonKey === 'filtering') {
@@ -351,13 +360,18 @@ export function FourierLesson({ lessonId }: Props) {
           return next > maxHarmonic ? 0 : next
         })
       }
+      setPlayhead((value) => (value + delta * 0.0002 * playbackSpeed) % 1)
       frame = requestAnimationFrame(tick)
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [frequencyMax, frequencyMin, lessonKey, maxHarmonic, playbackSpeed, playing])
+  }, [frequencyMax, frequencyMin, lessonKey, maxHarmonic, playbackSpeed, playing, reconstructionMode])
 
   const roundedSampleCount = clampInteger(sampleCount, 64, 1024)
+  const roundedMaxHarmonic = clampInteger(maxHarmonic, 1, 80)
+  const reconstructionCountMax = reconstructionMode === 'paired-frequency-blocks' ? roundedMaxHarmonic + 1 : roundedMaxHarmonic * 2 + 1
+  const reconstructionCount = clampInteger(coefficientCount, 1, reconstructionCountMax)
+  const reconstructionCountLabel = reconstructionMode === 'paired-frequency-blocks' ? ui.controls.frequencyBlocks : ui.controls.coefficientCount
   const samplesResult = useMemo<SamplesResult>(() => {
     if (presetId !== 'custom') {
       return { samples: sampleFourierPreset(presetId, roundedSampleCount), error: null }
@@ -375,12 +389,12 @@ export function FourierLesson({ lessonId }: Props) {
 
   const safeFrequencyStep = clampSpectrumStep(frequencyMin, frequencyMax, frequencyStep)
   const spectrum = useMemo(() => computeSpectrum(samplesResult.samples, frequencyMin, frequencyMax, safeFrequencyStep), [frequencyMax, frequencyMin, safeFrequencyStep, samplesResult.samples])
-  const integerSpectrum = useMemo(() => computeIntegerSpectrum(samplesResult.samples, clampInteger(maxHarmonic, 1, 80)), [maxHarmonic, samplesResult.samples])
+  const integerSpectrum = useMemo(() => computeIntegerSpectrum(samplesResult.samples, roundedMaxHarmonic), [roundedMaxHarmonic, samplesResult.samples])
   const selectedCoefficient = useMemo(() => computeCoefficientAtFrequency(samplesResult.samples, selectedFrequency), [samplesResult.samples, selectedFrequency])
   const windingPoints = useMemo(() => computeWindingPoints(samplesResult.samples, selectedFrequency), [samplesResult.samples, selectedFrequency])
   const includedCoefficients = useMemo(
-    () => selectReconstructionCoefficients(integerSpectrum.coefficients, reconstructionMode, Math.round(coefficientCount)),
-    [coefficientCount, integerSpectrum.coefficients, reconstructionMode],
+    () => selectReconstructionCoefficients(integerSpectrum.coefficients, reconstructionMode, reconstructionCount),
+    [integerSpectrum.coefficients, reconstructionCount, reconstructionMode],
   )
   const reconstructedSamples = useMemo(() => reconstructSamples(includedCoefficients, roundedSampleCount), [includedCoefficients, roundedSampleCount])
   const filterConfig = useMemo<FilterConfig>(
@@ -389,7 +403,11 @@ export function FourierLesson({ lessonId }: Props) {
   )
   const filteredSpectrum = useMemo(() => applyFilter(integerSpectrum, filterConfig), [filterConfig, integerSpectrum])
   const filteredSamples = useMemo(() => reconstructSamples(filteredSpectrum.coefficients, roundedSampleCount), [filteredSpectrum.coefficients, roundedSampleCount])
-  const expressionTex = useMemo(() => expressionToTex(expression), [expression])
+  const displayedExpression = presetId !== 'custom' && !selectedPreset.expression ? selectedPresetLabel : expression
+  const expressionTex = useMemo(
+    () => (presetId !== 'custom' && !selectedPreset.expression ? selectedPreset.tex : expressionToTex(expression)),
+    [expression, presetId, selectedPreset.expression, selectedPreset.tex],
+  )
   const values = getValueRows({
     locale,
     lessonKey,
@@ -401,7 +419,8 @@ export function FourierLesson({ lessonId }: Props) {
     reconstructedSamples,
     filteredSamples,
     includedCoefficients,
-    coefficientCount: Math.round(coefficientCount),
+    coefficientCount: reconstructionCount,
+    reconstructionMode,
     filterType,
     cutoff,
     lowCutoff,
@@ -497,6 +516,7 @@ export function FourierLesson({ lessonId }: Props) {
     anchor.download = `fourier-${lessonKey}.png`
     anchor.click()
   }
+  const playback = getPlaybackLabels(lessonKey, playing, locale)
 
   return (
     <>
@@ -518,8 +538,8 @@ export function FourierLesson({ lessonId }: Props) {
               { value: 'custom', textValue: ui.customSignal, label: <Formula tex="x(t)" label={ui.customSignal} /> },
               ...fourierPresets.map((preset) => ({
                 value: preset.id,
-                textValue: preset.label,
-                label: <Formula tex={preset.tex} label={preset.label} />,
+                textValue: getFourierPresetLabel(preset, locale),
+                label: <Formula tex={preset.tex} label={getFourierPresetLabel(preset, locale)} />,
               })),
             ]}
             onChange={setPresetId}
@@ -529,7 +549,7 @@ export function FourierLesson({ lessonId }: Props) {
         <label>
           <Formula tex="x(t)" />
           <input
-            value={expression}
+            value={displayedExpression}
             placeholder="sin(2*pi*t) + 0.5*sin(2*pi*3*t)"
             onBlur={() => setExpression((current) => normalizeMathInput(current))}
             onChange={(event) => {
@@ -540,7 +560,7 @@ export function FourierLesson({ lessonId }: Props) {
         </label>
         <div className="math-formula-preview" aria-label={ui.formulaPreview}>
           <span>{ui.formulaPreview}</span>
-          <Formula tex={`x(t)=${expressionTex}`} label={`${ui.formulaPreview}: x(t)=${expression}`} />
+          <Formula tex={`x(t)=${expressionTex}`} label={`${ui.formulaPreview}: x(t)=${displayedExpression}`} />
         </div>
         <div className="math-input-toolbar" aria-label={ui.commonFunctions}>
           {calculusFunctionNames.map((name) => (
@@ -557,12 +577,21 @@ export function FourierLesson({ lessonId }: Props) {
           ))}
         </div>
         <p className="input-help">{ui.inputHelp}</p>
-        {selectedPreset.description && presetId !== 'custom' && <p className="input-help">{selectedPreset.description}</p>}
+        {selectedPresetDescription && presetId !== 'custom' && <p className="input-help">{selectedPresetDescription}</p>}
         {samplesResult.error && <p className="warning-text">{samplesResult.error}</p>}
-        <Range label={ui.controls.sampleCount} value={roundedSampleCount} min={64} max={1024} step={64} onChange={setSampleCount} />
+        <Range
+          label={ui.controls.sampleCount}
+          value={roundedSampleCount}
+          min={64}
+          max={1024}
+          step={64}
+          onChange={setSampleCount}
+          onHelp={() => setHelpMode({ kind: 'control', group: 'samples' })}
+          helpAriaLabel={controlHelpAria(ui.controlHelp, ui.controls.sampleCount)}
+        />
 
         {lessonKey === 'spectrum' && (
-          <>
+          <ControlGroup title={ui.spectrum} onHelp={() => setHelpMode({ kind: 'control', group: 'spectrum' })} helpAriaLabel={controlHelpAria(ui.controlHelp, ui.spectrum)}>
             <Range
               label={ui.controls.frequency}
               value={selectedFrequency}
@@ -572,11 +601,6 @@ export function FourierLesson({ lessonId }: Props) {
               onChange={(value) => setSelectedFrequency(frequencySnap ? Math.round(value) : value)}
             />
             <Toggle label={ui.toggles.snap} checked={frequencySnap} onChange={setFrequencySnap} />
-          </>
-        )}
-
-        {lessonKey === 'spectrum' && (
-          <ControlGroup title={ui.spectrum}>
             <Range label={ui.controls.frequencyMin} value={frequencyMin} min={-30} max={0} step={1} onChange={setFrequencyMin} />
             <Range label={ui.controls.frequencyMax} value={frequencyMax} min={1} max={30} step={1} onChange={setFrequencyMax} />
             <Range label={ui.controls.frequencyStep} value={frequencyStep} min={0.05} max={1} step={0.05} onChange={setFrequencyStep} />
@@ -588,37 +612,38 @@ export function FourierLesson({ lessonId }: Props) {
         )}
 
         {lessonKey === 'reconstruction' && (
-          <ControlGroup title={ui.reconstruction}>
+          <ControlGroup title={ui.reconstruction} onHelp={() => setHelpMode({ kind: 'control', group: 'reconstruction' })} helpAriaLabel={controlHelpAria(ui.controlHelp, ui.reconstruction)}>
             <Range label={ui.controls.maxHarmonic} value={maxHarmonic} min={4} max={50} step={1} onChange={setMaxHarmonic} />
             <label>
               {ui.controls.mode}
               <SelectMenu<ReconstructionMode>
                 value={reconstructionMode}
                 options={[
-                  { value: 'top-magnitudes', textValue: locale === 'zh' ? '最大幅值' : 'top magnitudes', label: locale === 'zh' ? '最大幅值' : 'top magnitudes' },
+                  { value: 'paired-frequency-blocks', textValue: locale === 'zh' ? '成对频率块' : 'paired frequency blocks', label: locale === 'zh' ? '成对频率块' : 'paired frequency blocks' },
+                  { value: 'top-magnitudes', textValue: locale === 'zh' ? '单个最大幅值' : 'single top magnitudes', label: locale === 'zh' ? '单个最大幅值' : 'single top magnitudes' },
                   { value: 'first-harmonics', textValue: locale === 'zh' ? '前 N 个谐波' : 'first N harmonics', label: locale === 'zh' ? '前 N 个谐波' : 'first N harmonics' },
                 ]}
                 onChange={setReconstructionMode}
                 ariaLabel={ui.controls.mode}
               />
             </label>
-            <Range label={ui.controls.coefficientCount} value={coefficientCount} min={1} max={maxHarmonic * 2 + 1} step={1} onChange={setCoefficientCount} />
+            <Range label={reconstructionCountLabel} value={reconstructionCount} min={1} max={reconstructionCountMax} step={1} onChange={setCoefficientCount} />
           </ControlGroup>
         )}
 
         {lessonKey === 'filtering' && (
-          <ControlGroup title={ui.filtering}>
+          <ControlGroup title={ui.filtering} onHelp={() => setHelpMode({ kind: 'control', group: 'filtering' })} helpAriaLabel={controlHelpAria(ui.controlHelp, ui.filtering)}>
             <Range label={ui.controls.maxHarmonic} value={maxHarmonic} min={8} max={80} step={1} onChange={setMaxHarmonic} />
             <label>
               {ui.controls.filterType}
               <SelectMenu<FilterType>
                 value={filterType}
                 options={[
-                  { value: 'low-pass', textValue: 'low-pass', label: locale === 'zh' ? '低通' : 'low-pass' },
-                  { value: 'high-pass', textValue: 'high-pass', label: locale === 'zh' ? '高通' : 'high-pass' },
-                  { value: 'band-pass', textValue: 'band-pass', label: locale === 'zh' ? '带通' : 'band-pass' },
-                  { value: 'band-stop', textValue: 'band-stop', label: locale === 'zh' ? '带阻' : 'band-stop' },
-                  { value: 'magnitude-threshold', textValue: 'magnitude threshold', label: locale === 'zh' ? '幅值阈值' : 'magnitude threshold' },
+                  { value: 'low-pass', textValue: locale === 'zh' ? '低通' : 'low-pass', label: locale === 'zh' ? '低通' : 'low-pass' },
+                  { value: 'high-pass', textValue: locale === 'zh' ? '高通' : 'high-pass', label: locale === 'zh' ? '高通' : 'high-pass' },
+                  { value: 'band-pass', textValue: locale === 'zh' ? '带通' : 'band-pass', label: locale === 'zh' ? '带通' : 'band-pass' },
+                  { value: 'band-stop', textValue: locale === 'zh' ? '带阻' : 'band-stop', label: locale === 'zh' ? '带阻' : 'band-stop' },
+                  { value: 'magnitude-threshold', textValue: locale === 'zh' ? '幅值阈值' : 'magnitude threshold', label: locale === 'zh' ? '幅值阈值' : 'magnitude threshold' },
                 ]}
                 onChange={setFilterType}
                 ariaLabel={ui.controls.filterType}
@@ -635,7 +660,7 @@ export function FourierLesson({ lessonId }: Props) {
           </ControlGroup>
         )}
 
-        <ControlGroup title={ui.display}>
+        <ControlGroup title={ui.display} onHelp={() => setHelpMode({ kind: 'control', group: 'display' })} helpAriaLabel={controlHelpAria(ui.controlHelp, ui.display)}>
           <Toggle label={ui.toggles.original} checked={showOriginalSignal} onChange={setShowOriginalSignal} />
           <Toggle label={ui.toggles.windingPath} checked={showWindingPath} onChange={setShowWindingPath} />
           <Toggle label={ui.toggles.vectors} checked={showWindingVectors} onChange={setShowWindingVectors} />
@@ -675,9 +700,9 @@ export function FourierLesson({ lessonId }: Props) {
         </div>
         <div className="fourier-playback platform-card">
           <div className="transport-buttons">
-            <button type="button" className="primary-button" aria-label={playing ? ui.pause : ui.play} onClick={() => setPlaying((current) => !current)}>
+            <button type="button" className="primary-button" aria-label={playback.ariaLabel} onClick={() => setPlaying((current) => !current)}>
               {playing ? <Pause size={16} /> : <Play size={16} />}
-              {playing ? ui.pause : ui.play}
+              {playback.label}
             </button>
             <button type="button" onClick={() => {
               setPlaying(false)
@@ -703,8 +728,8 @@ export function FourierLesson({ lessonId }: Props) {
         </p>
         <p className="input-help">
           {locale === 'zh'
-            ? '约定：t 在 [0,1]，f=1 表示整个区间绕一圈；负号只是 Fourier 变换的常用约定。'
-            : 'Convention: t is in [0,1], f=1 means one turn across the domain, and the minus sign is a standard transform convention.'}
+            ? '约定：t 在 [0,1]，N 是采样数，n 是采样点编号。f=1 表示整段信号绕一圈，f=3 表示绕三圈，f=-3 表示反方向绕三圈。公式里的负号规定分析时的旋转方向；重建时用相反方向加回来。'
+            : 'Convention: t is in [0,1], N is the sample count, and n is the sample index. f=1 means one turn, f=3 means three turns, and f=-3 turns the opposite way. The minus sign sets the analysis rotation direction; reconstruction adds components back with the opposite sign.'}
         </p>
         <h2>{ui.values}</h2>
         <dl>
@@ -716,7 +741,7 @@ export function FourierLesson({ lessonId }: Props) {
           ))}
         </dl>
         <h2>{ui.watch}</h2>
-        <p>{copy.watch}</p>
+        <p>{getWatchCopy(lessonKey, locale, copy.watch, presetId, filterType)}</p>
       </aside>
     </section>
       )}
@@ -726,7 +751,41 @@ export function FourierLesson({ lessonId }: Props) {
   )
 }
 
-function Range({ label, value, min, max, step, valueSuffix, onChange }: { label: string; value: number; min: number; max: number; step: number; valueSuffix?: string; onChange: (value: number) => void }) {
+function Range({
+  label,
+  value,
+  min,
+  max,
+  step,
+  valueSuffix,
+  onChange,
+  onHelp,
+  helpAriaLabel,
+}: {
+  label: string
+  value: number
+  min: number
+  max: number
+  step: number
+  valueSuffix?: string
+  onChange: (value: number) => void
+  onHelp?: () => void
+  helpAriaLabel?: string
+}) {
+  if (onHelp) {
+    return (
+      <div className="fourier-range-control">
+        <div className="fourier-range-heading">
+          <span className="range-label">
+            {label}: <strong>{round(value)}</strong>
+          </span>
+          <ControlHelpButton ariaLabel={helpAriaLabel ?? label} onClick={onHelp} />
+        </div>
+        <input aria-label={label} type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
+      </div>
+    )
+  }
+
   if (valueSuffix) {
     return (
       <label className="speed-control">
@@ -804,13 +863,28 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
   )
 }
 
-function ControlGroup({ title, children }: { title: string; children: ReactNode }) {
+function ControlGroup({ title, children, onHelp, helpAriaLabel }: { title: string; children: ReactNode; onHelp?: () => void; helpAriaLabel?: string }) {
   return (
     <div className="fourier-control-group">
-      <h3>{title}</h3>
+      <div className="fourier-control-heading">
+        <h3>{title}</h3>
+        {onHelp && <ControlHelpButton ariaLabel={helpAriaLabel ?? title} onClick={onHelp} />}
+      </div>
       {children}
     </div>
   )
+}
+
+function ControlHelpButton({ ariaLabel, onClick }: { ariaLabel: string; onClick: () => void }) {
+  return (
+    <button className="fourier-control-help-button" type="button" aria-label={ariaLabel} title={ariaLabel} onClick={onClick}>
+      <CircleHelp size={15} />
+    </button>
+  )
+}
+
+function controlHelpAria(prefix: string, title: string): string {
+  return `${prefix}: ${title}`
 }
 
 function renderFourierWhat(lessonId: string, locale: FourierLocale, fallback: string, onTerm: (term: FourierTermId) => void): ReactNode {
@@ -820,26 +894,14 @@ function renderFourierWhat(lessonId: string, locale: FourierLocale, fallback: st
     </TermButton>
   )
 
-  if (lessonId === 'winding') {
-    return locale === 'zh' ? (
-      <>
-        这里把信号高度拿去做 {term('winding', '缠绕')}：测试某个 {term('frequency', '频率')} 时，信号会绕着原点旋转，{term('center-of-mass', '平均点')} 会告诉你这个频率有多明显。
-      </>
-    ) : (
-      <>
-        This view {term('winding', 'winds')} the signal: for a test {term('frequency', 'frequency')}, the signal rotates around the origin and the {term('center-of-mass', 'average point')} reveals how strongly that frequency appears.
-      </>
-    )
-  }
-
   if (lessonId === 'spectrum') {
     return locale === 'zh' ? (
       <>
-        {term('spectrum', '频谱')} 是通过尝试很多个缠绕频率得到的；每个频率都会产生一个 {term('coefficient', '系数')}，柱子越高代表这个频率越强。
+        {term('spectrum', '频谱')} 是很多次“频率测试”的结果；每个测试 {term('frequency', '频率')} 都会产生一个 {term('coefficient', '系数')}，柱子越高代表平均点越偏离中心。
       </>
     ) : (
       <>
-        The {term('spectrum', 'spectrum')} comes from trying many winding frequencies. Each frequency creates a {term('coefficient', 'coefficient')}, and taller bars mean stronger frequency content.
+        The {term('spectrum', 'spectrum')} comes from many frequency tests. Each test {term('frequency', 'frequency')} creates a {term('coefficient', 'coefficient')}, and taller bars mean the average point moved farther from the center.
       </>
     )
   }
@@ -847,11 +909,11 @@ function renderFourierWhat(lessonId: string, locale: FourierLocale, fallback: st
   if (lessonId === 'reconstruction') {
     return locale === 'zh' ? (
       <>
-        {term('reconstruction', '重建')} 会把选中的 Fourier 系数重新相加，观察只保留少数 {term('frequency', '频率')} 时还能多像原信号。
+        {term('reconstruction', '重建')} 会把选中的傅里叶系数重新相加。默认模式会尽量成对保留 +f 和 -f，让真实信号的重建更自然。
       </>
     ) : (
       <>
-        {term('reconstruction', 'Reconstruction')} adds selected Fourier coefficients back together, showing how much of the original signal remains when you keep only some {term('frequency', 'frequencies')}.
+        {term('reconstruction', 'Reconstruction')} adds selected Fourier coefficients back together. The default mode keeps +f and -f pairs together so real-signal reconstruction stays natural.
       </>
     )
   }
@@ -873,6 +935,7 @@ function renderFourierWhat(lessonId: string, locale: FourierLocale, fallback: st
 
 function getFourierHelpTopic(mode: FourierHelpMode, lessonId: string, locale: FourierLocale): HelpTopic {
   if (mode.kind === 'term') return fourierTermTopic(mode.term, locale)
+  if (mode.kind === 'control') return fourierControlTopic(mode.group, locale)
   if (mode.kind === 'graph') return fourierGraphTopic(lessonId, locale)
   return fourierBeginnerTopic(locale)
 }
@@ -881,32 +944,28 @@ function fourierBeginnerTopic(locale: FourierLocale): HelpTopic {
   if (locale === 'zh') {
     return {
       eyebrow: '从零开始',
-      title: 'Fourier 为什么要把信号缠绕起来',
-      summary: 'Fourier 变换想回答：一个信号里藏着哪些频率？缠绕是一种把“频率是否匹配”变成几何偏移的方法。',
+      title: '傅里叶想回答什么',
+      summary: '傅里叶变换想回答：这条曲线可以看成哪些“节奏”叠出来？',
       sections: [
         {
-          title: '先把信号当作一串高度',
+          title: '测试一个频率',
+          body: '先选一个测试频率 f，把每个时间点的信号高度当作从中心伸出的长度，再让这根长度按 f 的速度旋转。旋转后，所有点会形成一团点云。',
+        },
+        {
+          title: '看平均点',
+          body: '如果测试频率和信号里的某个节奏对得上，点云通常不会平均抵消，平均位置会离开中心。平均位置离中心越远，说明这个频率越明显。',
+        },
+        {
+          title: '得到频谱',
+          body: '对很多个 f 重复这个测试，就得到频谱。频谱上的峰值告诉你哪些频率最能解释这条曲线。',
+        },
+        {
+          title: '负频率不是错误',
           body: (
             <>
-              在时间轴上，信号是 {formula('x(t)')} 的高度变化。单看波形时，多个频率混在一起，不一定容易分辨。
+              正频率和负频率可以理解成两个旋转方向。对真实信号，很多峰会成对出现在 {formula('+f')} 和 {formula('-f')}。
             </>
           ),
-        },
-        {
-          title: '为什么要缠绕',
-          body: '选择一个测试频率 f，把信号绕着圆旋转。如果这个 f 和信号里的某个节奏对得上，绕出来的点会偏向某个方向；如果对不上，点通常会分散并互相抵消。',
-        },
-        {
-          title: '平均点就是线索',
-          body: (
-            <>
-              平均点对应 Fourier 系数 {formula('C(f)')}。它离原点越远，说明频率 f 越强；它的角度对应相位，也就是这个频率成分的时间偏移。
-            </>
-          ),
-        },
-        {
-          title: '从缠绕到频谱',
-          body: '对很多个 f 重复这个过程，就得到频谱。频谱上的峰值告诉你信号主要由哪些频率组成。',
         },
       ],
     }
@@ -914,35 +973,307 @@ function fourierBeginnerTopic(locale: FourierLocale): HelpTopic {
 
   return {
     eyebrow: 'Start from zero',
-    title: 'Why Fourier winds a signal',
-    summary: 'Fourier analysis asks which frequencies are hidden in a signal. Winding turns frequency matching into a visible geometric offset.',
+    title: 'What Fourier is asking',
+    summary: 'Fourier analysis asks which rhythms can be added together to make this curve.',
     sections: [
       {
-        title: 'Start with signal heights',
+        title: 'Test one frequency',
+        body: 'Pick a test frequency f. Treat each signal height as a length from the center, then rotate that length at speed f. The rotated points form a point cloud.',
+      },
+      {
+        title: 'Watch the average point',
+        body: 'If the test frequency matches a rhythm in the signal, the point cloud usually does not cancel evenly, so its average moves away from the center. Farther from the center means a clearer frequency.',
+      },
+      {
+        title: 'Build the spectrum',
+        body: 'Repeat the test for many values of f and you get a spectrum. Peaks show which frequencies explain the curve best.',
+      },
+      {
+        title: 'Negative frequency is not an error',
         body: (
           <>
-            On the time axis, the signal is the changing height {formula('x(t)')}. When several frequencies are mixed, the waveform alone can be hard to read.
+            Positive and negative frequencies are two rotation directions. For real signals, many peaks appear as mirror pairs at {formula('+f')} and {formula('-f')}.
           </>
         ),
-      },
-      {
-        title: 'Why wind it',
-        body: 'Pick a test frequency f and rotate the signal around a circle. If f matches a rhythm inside the signal, the wound points lean toward one side. If it does not match, the points tend to spread out and cancel.',
-      },
-      {
-        title: 'The average point is the clue',
-        body: (
-          <>
-            The average point is the Fourier coefficient {formula('C(f)')}. Its distance from the origin is strength; its angle is phase, or timing offset.
-          </>
-        ),
-      },
-      {
-        title: 'From winding to spectrum',
-        body: 'Repeat this for many values of f and you get a spectrum. Peaks show the frequencies that dominate the signal.',
       },
     ],
   }
+}
+
+function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale): HelpTopic {
+  if (locale === 'zh') {
+    const topics: Record<FourierControlGroupId, HelpTopic> = {
+      samples: {
+        eyebrow: '控件说明',
+        title: '采样数',
+        summary: '采样数决定用多少个时间点代表这条连续曲线。',
+        sections: [
+          {
+            title: '它改变什么',
+            items: [
+              '采样数越高，我们用来做频率测试的点越多，平均点、频谱和重建结果通常更稳定。',
+              '采样数越低，计算更轻，但细节可能变粗，尤其是高频、尖角和噪声附近。',
+            ],
+          },
+          {
+            title: '不要误会',
+            items: [
+              '采样数不是信号里的频率数量，也不是重建时保留的系数数量。',
+              '它只是把这条曲线离散成多少个点；频率成分要看频谱和系数。',
+            ],
+          },
+        ],
+      },
+      spectrum: {
+        eyebrow: '控件说明',
+        title: '频谱扫描',
+        summary: '这里改变的是“怎么测试频率”和“怎么显示频谱”，不会改变原信号本身。',
+        sections: [
+          {
+            title: '测试频率',
+            items: [
+              '频率是当前测试频率。它不会改变原信号，只改变我们用什么速度把信号绕起来。',
+              '吸附整数打开后只测试整数频率。对刚好在 [0,1] 内完成整圈的信号，整数频率最容易看清。',
+            ],
+          },
+          {
+            title: '扫描范围',
+            items: [
+              '最小频率 / 最大频率决定频谱横轴的扫描范围。范围越宽，能看到的候选频率越多。',
+              '频率步长表示扫描频谱时每隔多少测一次。步长越小，频谱越细；步长越大，计算更快但可能错过细节。',
+            ],
+          },
+          {
+            title: '显示方式',
+            items: [
+              '对数幅值只是把很高的柱子压低，让小柱子也看得见。它不会改变真正的傅里叶系数。',
+              '只看正频率会只显示正频率。真实信号的频谱常常左右对称，+f 和 -f 都会出现；这个选项会隐藏一半镜像信息。',
+              '相位显示傅里叶系数的角度，也就是这个频率成分在时间上错开了多少。柱子很矮时，相位通常没有太大意义。',
+            ],
+          },
+        ],
+      },
+      reconstruction: {
+        eyebrow: '控件说明',
+        title: '重建参数',
+        summary: '这里决定保留哪些傅里叶系数，再把它们叠回时间信号。',
+        sections: [
+          {
+            title: '频率候选',
+            items: [
+              '最大谐波表示最多考虑到第几个整数频率。数值越大，能使用的高频越多。',
+              '高频越多，尖角和细节越容易被重建出来，但图也更复杂。',
+            ],
+          },
+          {
+            title: '挑选模式',
+            items: [
+              '模式决定怎么挑选频率。默认的成对频率块会尽量同时保留 +f 和 -f，让真实信号的重建更自然。',
+              '频率块数量表示参与重建的频率组数。1 个块通常会保留一对 +f / -f；直流项 f=0 单独算一块。',
+              '单个最大幅值模式会直接按系数大小挑单个系数，适合已经学过复系数的人观察细节。',
+            ],
+          },
+          {
+            title: '误差读法',
+            items: [
+              '均方误差 MSE 是“平均误差平方”，用一个数字概括两条曲线差多大，越小表示越接近。',
+              '残差是原信号减去重建结果。残差越小，说明保留下来的频率越能解释原信号。',
+            ],
+          },
+        ],
+      },
+      filtering: {
+        eyebrow: '控件说明',
+        title: '滤波参数',
+        summary: '这里决定在频谱里保留或削弱哪些频率，再把剩下的频率叠回去。',
+        sections: [
+          {
+            title: '可用频率',
+            items: [
+              '最大谐波表示滤波前最多保留到第几个整数频率。数值越大，参与滤波的高频越多。',
+              '如果最大谐波太低，高频噪声或尖角一开始就不会进入滤波计算。',
+            ],
+          },
+          {
+            title: '滤波类型',
+            items: [
+              '低通保留慢变化，高通保留快变化。',
+              '带通只保留中间一段频率，带阻会移除中间一段频率。',
+              '幅值阈值按傅里叶系数大小保留频率，低于阈值的频率会被削弱。',
+            ],
+          },
+          {
+            title: '边界值',
+            items: [
+              '截止频率是保留和移除频率的分界线。低通保留低于截止频率的频率；高通保留高于截止频率的频率。',
+              '低截止 / 高截止是带通或带阻的频率范围边界。',
+              '均方误差 MSE 和残差用来观察滤波后信号和原信号差多少。滤掉噪声时，误差不一定为零，但形状可能更清楚。',
+            ],
+          },
+        ],
+      },
+      display: {
+        eyebrow: '控件说明',
+        title: '显示开关',
+        summary: '这些开关只改变画面显示，不改变 Fourier 计算结果。',
+        sections: [
+          {
+            title: '曲线和频谱',
+            items: [
+              '原始信号控制是否显示输入曲线。关闭它可以更专注地看重建或滤波结果。',
+              '频谱、重建和残差开关控制下方频谱、重建曲线和误差曲线是否显示。',
+              '残差是原信号减去重建或滤波后的结果，用来看还有哪些部分没有被当前频率解释。',
+            ],
+          },
+          {
+            title: '缠绕视图',
+            items: [
+              '缠绕路径显示信号绕起来后的点云路径；旋转向量显示当前时间点对应的旋转长度。',
+              '平均点显示当前测试频率的傅里叶系数。它离中心越远，说明当前测试频率越明显。',
+              '这些缠绕开关主要在频谱页最有用；在重建和滤波页里，有些开关只是保留同一套显示偏好。',
+            ],
+          },
+        ],
+      },
+    }
+    return topics[group]
+  }
+
+  const topics: Record<FourierControlGroupId, HelpTopic> = {
+    samples: {
+      eyebrow: 'Control help',
+      title: 'Samples',
+      summary: 'Samples controls how many time points represent the curve.',
+      sections: [
+        {
+          title: 'What it changes',
+          items: [
+            'Higher sample counts give the frequency test more points, so the average point, spectrum, and reconstruction are usually more stable.',
+            'Lower sample counts are lighter to compute, but details can get rougher, especially near high frequencies, corners, and noise.',
+          ],
+        },
+        {
+          title: 'Do not confuse it with',
+          items: [
+            'Samples are not the number of frequencies in the signal and not the number of coefficients kept for reconstruction.',
+            'They only say how many discrete points represent the curve; frequency content is read from the spectrum and coefficients.',
+          ],
+        },
+      ],
+    },
+    spectrum: {
+      eyebrow: 'Control help',
+      title: 'Spectrum scan',
+      summary: 'This group changes how frequencies are tested and displayed; it does not change the original signal.',
+      sections: [
+        {
+          title: 'Test frequency',
+          items: [
+            'Frequency is the current test frequency. It does not change the original signal; it changes how fast we wind the signal.',
+            'Snap to integer tests only integer frequencies. For signals that complete whole cycles on [0,1], integer frequencies are usually easiest to read.',
+          ],
+        },
+        {
+          title: 'Scan range',
+          items: [
+            'Frequency min / max set the horizontal scan range. A wider range shows more candidate frequencies.',
+            'Frequency step is how far the scan jumps between tests. Smaller steps show finer detail; larger steps are faster but can miss detail.',
+          ],
+        },
+        {
+          title: 'Display options',
+          items: [
+            'Log magnitude compresses tall bars so small bars are visible. It changes only the display, not the Fourier coefficients.',
+            'Positive only shows only positive frequencies. Real signals often have mirrored +f and -f peaks, so this hides half of that mirror structure.',
+            'Phase is the coefficient angle, or timing offset. If a frequency bar is tiny, its phase usually is not meaningful.',
+          ],
+        },
+      ],
+    },
+    reconstruction: {
+      eyebrow: 'Control help',
+      title: 'Reconstruction parameters',
+      summary: 'This group decides which Fourier coefficients are kept and added back into the time signal.',
+      sections: [
+        {
+          title: 'Frequency candidates',
+          items: [
+            'Max harmonic is the highest integer frequency considered. Higher values allow more high-frequency detail.',
+            'More high frequencies can rebuild corners and fine details, but they also make the view more complex.',
+          ],
+        },
+        {
+          title: 'Selection mode',
+          items: [
+            'Mode controls how frequencies are chosen. The default paired frequency blocks mode keeps +f and -f together so real-signal reconstruction stays natural.',
+            'Frequency blocks is how many frequency groups are used. One block usually keeps a +f / -f pair; DC at f=0 is one block by itself.',
+            'Single top magnitudes picks individual coefficients by size, which is useful after you already understand complex coefficients.',
+          ],
+        },
+        {
+          title: 'Error readout',
+          items: [
+            'MSE means mean squared error. It summarizes how far two curves are from each other; smaller is closer.',
+            'Residual is original minus reconstruction. A smaller residual means the kept frequencies explain more of the signal.',
+          ],
+        },
+      ],
+    },
+    filtering: {
+      eyebrow: 'Control help',
+      title: 'Filtering parameters',
+      summary: 'This group decides which frequencies are kept or weakened before the signal is rebuilt.',
+      sections: [
+        {
+          title: 'Available frequencies',
+          items: [
+            'Max harmonic is the highest integer frequency included before filtering.',
+            'If max harmonic is too low, high-frequency noise or sharp corners never enter the filtering step.',
+          ],
+        },
+        {
+          title: 'Filter type',
+          items: [
+            'Low-pass keeps slow changes; high-pass keeps fast changes.',
+            'Band-pass keeps a middle range, and band-stop removes a middle range.',
+            'Magnitude threshold keeps frequencies by coefficient size. Frequencies below the threshold are weakened.',
+          ],
+        },
+        {
+          title: 'Boundaries',
+          items: [
+            'Cutoff is the boundary between kept and removed frequencies. Low-pass keeps below cutoff; high-pass keeps above cutoff.',
+            'Low cutoff / high cutoff are the range edges for band-pass and band-stop filters.',
+            'MSE and residual show how far the filtered signal is from the original. Removing noise may still leave nonzero error while making the shape easier to read.',
+          ],
+        },
+      ],
+    },
+    display: {
+      eyebrow: 'Control help',
+      title: 'Display toggles',
+      summary: 'These toggles change only what is drawn; they do not change the Fourier calculation.',
+      sections: [
+        {
+          title: 'Curves and spectrum',
+          items: [
+            'Original signal controls whether the input curve is visible. Turning it off can help you focus on reconstruction or filtering.',
+            'Spectrum, reconstruction, and residual control whether the lower spectrum, reconstructed curve, and error curve are visible.',
+            'Residual is original minus the reconstructed or filtered result, showing what the current frequencies do not explain.',
+          ],
+        },
+        {
+          title: 'Winding view',
+          items: [
+            'Winding path shows the wound point cloud; rotating vector shows the current time point as a rotating length.',
+            'Center of mass shows the average point, which is the Fourier coefficient for the current test frequency.',
+            'These winding toggles matter most on the spectrum page; on reconstruction and filtering pages, some toggles simply preserve the same display preferences.',
+          ],
+        },
+      ],
+    },
+  }
+  return topics[group]
 }
 
 function fourierGraphTopic(lessonId: string, locale: FourierLocale): HelpTopic {
@@ -993,21 +1324,21 @@ function fourierGraphTopic(lessonId: string, locale: FourierLocale): HelpTopic {
   return locale === 'zh'
     ? {
         eyebrow: '怎么看图',
-        title: lessonId === 'winding' ? '缠绕图像读法' : '频谱图像读法',
+        title: '频谱图像读法',
         summary: '先看原始信号，再看缠绕平面，最后看平均点或频谱峰值。',
         sections: [
           { title: '时间信号', body: '上方曲线是原始信号。频率滑块改变的是测试频率，不是原始信号本身。' },
-          { title: '缠绕平面', body: '信号被绕到圆周附近。点云如果明显偏向一边，说明当前测试频率和信号里的某个节奏对上了。' },
+          { title: '缠绕平面', body: '每个信号高度会变成一根从中心伸出的长度，再按测试频率旋转。高度会变，所以点不一定落在同一个圆上。点云如果明显偏向一边，说明当前测试频率和信号里的某个节奏对上了。' },
           { title: '平均点 / 频谱', body: '平均点离中心越远，当前频率越强。频谱把很多测试频率的结果排成柱状图，峰值就是主要频率。' },
         ],
       }
     : {
         eyebrow: 'Read the graph',
-        title: lessonId === 'winding' ? 'How to read winding' : 'How to read the spectrum',
+        title: 'How to read the spectrum',
         summary: 'Read the original signal first, then the winding plane, then the average point or spectrum peaks.',
         sections: [
           { title: 'Time signal', body: 'The top curve is the original signal. The frequency slider changes the test frequency, not the signal itself.' },
-          { title: 'Winding plane', body: 'The signal is wrapped around the origin. If the point cloud leans strongly to one side, the test frequency matches a rhythm in the signal.' },
+          { title: 'Winding plane', body: 'Each signal height becomes a length from the center and rotates at the test frequency. Because the height changes, the points do not have to sit on one circle. If the point cloud leans strongly to one side, the test frequency matches a rhythm in the signal.' },
           { title: 'Average point / spectrum', body: 'The farther the average point is from the center, the stronger that frequency is. A spectrum repeats this test for many frequencies and plots the results as bars.' },
         ],
       }
@@ -1018,20 +1349,20 @@ function fourierTermTopic(term: FourierTermId, locale: FourierLocale): HelpTopic
     winding: {
       eyebrow: '术语',
       title: '缠绕',
-      summary: '缠绕就是把时间轴上的信号按某个测试频率绕到圆上。',
-      sections: [{ title: '为什么有用', body: '匹配的频率会让点云偏向一边，不匹配的频率通常会互相抵消。这让“有没有这个频率”变得可视化。' }],
+      summary: '缠绕就是：把每个时间点的信号高度当作从中心伸出的长度，再让这根长度按测试频率旋转。',
+      sections: [{ title: '为什么不总在圆上', body: '如果 x(t) 不恒定，半径会跟着高度变化；如果 x(t) 是负数，长度会指向相反方向。所以缠绕后的图不一定落在同一个圆上。匹配的频率会让点云偏向一边，不匹配的频率通常会互相抵消。' }],
     },
     frequency: {
       eyebrow: '术语',
       title: '频率',
-      summary: '频率表示单位时间里重复多少次。',
-      sections: [{ title: '在这个实验里', body: 't 在 [0,1] 时，f=1 表示整段信号绕一圈，f=3 表示绕三圈。' }],
+      summary: '频率表示单位时间里重复多少次；在这个实验里，它也是缠绕的旋转速度。',
+      sections: [{ title: '正负号', body: 't 在 [0,1] 时，f=1 表示整段信号绕一圈，f=3 表示绕三圈，f=-3 表示反方向绕三圈。正频率和负频率可以理解成顺时针和逆时针两个旋转方向。' }],
     },
     coefficient: {
       eyebrow: '术语',
-      title: 'Fourier 系数',
-      summary: 'Fourier 系数 C(f) 是某个频率 f 的平均点。',
-      sections: [{ title: '读法', body: '系数的大小表示这个频率有多强；系数的角度表示相位。' }],
+      title: '傅里叶系数',
+      summary: '傅里叶系数 C(f) 是某个频率 f 的平均点。',
+      sections: [{ title: '读法', body: '系数的大小表示这个频率有多强；系数的角度表示相位。注意：这里画的是复数傅里叶系数的大小，不一定等于原波形上的峰值高度。对真实信号，一个频率常常分成 +f 和 -f 两个镜像部分；振幅为 1 的正弦波，在双边频谱里可能显示成两个高度约为 0.5 的峰。' }],
     },
     'center-of-mass': {
       eyebrow: '术语',
@@ -1043,19 +1374,19 @@ function fourierTermTopic(term: FourierTermId, locale: FourierLocale): HelpTopic
       eyebrow: '术语',
       title: '频谱',
       summary: '频谱是把很多频率的系数大小排在一起的图。',
-      sections: [{ title: '怎么看', body: '峰值表示强频率。多个峰值说明信号由多个主要频率混合而成。' }],
+      sections: [{ title: '怎么看', body: '峰值表示强频率。多个峰值说明信号由多个主要频率混合而成。对真实信号，+f 和 -f 经常成对出现；只看正频率会让图更简单，但也隐藏一半镜像信息。' }],
     },
     phase: {
       eyebrow: '术语',
       title: '相位',
       summary: '相位描述一个频率成分在时间上错开了多少。',
-      sections: [{ title: '直觉', body: '两个波频率相同但峰值出现得早晚不同，它们的相位就不同。' }],
+      sections: [{ title: '直觉', body: '两个波频率相同但峰值出现得早晚不同，它们的相位就不同。注意：如果某个频率的柱子很矮，它的相位通常没有太大意义。' }],
     },
     reconstruction: {
       eyebrow: '术语',
       title: '重建',
       summary: '重建是把选中的频率成分加回去，合成一个近似原信号。',
-      sections: [{ title: '为什么重要', body: '如果只用少数频率就能重建得很好，说明原信号的主要结构可以被这些频率解释。' }],
+      sections: [{ title: '为什么重要', body: '在这个离散采样实验里，如果保留完整的一组频率系数，就能恢复原来的样本；只保留一部分时，得到的是近似。如果只用少数频率就能重建得很好，说明原信号的主要结构可以被这些频率解释。' }],
     },
     filtering: {
       eyebrow: '术语',
@@ -1069,20 +1400,20 @@ function fourierTermTopic(term: FourierTermId, locale: FourierLocale): HelpTopic
     winding: {
       eyebrow: 'Term',
       title: 'Winding',
-      summary: 'Winding wraps the signal around a circle at a test frequency.',
-      sections: [{ title: 'Why it helps', body: 'A matching frequency pulls the point cloud to one side. A non-matching frequency tends to cancel out around the center.' }],
+      summary: 'Winding treats each signal height as a length from the center, then rotates that length at the test frequency.',
+      sections: [{ title: 'Why it is not always one circle', body: 'If x(t) changes, the radius changes with it. If x(t) is negative, the length points the opposite way. A matching frequency pulls the point cloud to one side; a non-matching frequency tends to cancel around the center.' }],
     },
     frequency: {
       eyebrow: 'Term',
       title: 'Frequency',
-      summary: 'Frequency means how many times something repeats per unit of time.',
-      sections: [{ title: 'In this lab', body: 'When t is in [0,1], f=1 means one turn across the signal and f=3 means three turns.' }],
+      summary: 'Frequency means how many times something repeats per unit of time; here it is also the winding speed.',
+      sections: [{ title: 'Positive and negative', body: 'When t is in [0,1], f=1 means one turn, f=3 means three turns, and f=-3 means three turns in the opposite direction. Positive and negative frequencies are two rotation directions.' }],
     },
     coefficient: {
       eyebrow: 'Term',
       title: 'Fourier coefficient',
       summary: 'The Fourier coefficient C(f) is the average point for frequency f.',
-      sections: [{ title: 'How to read it', body: 'Its magnitude is frequency strength. Its angle is phase.' }],
+      sections: [{ title: 'How to read it', body: 'Its magnitude is frequency strength. Its angle is phase. This magnitude is not always the same as the peak height in the original waveform. For a real sine wave, the strength is often split between +f and -f; amplitude 1 can appear as two mirror peaks of about 0.5 each.' }],
     },
     'center-of-mass': {
       eyebrow: 'Term',
@@ -1094,19 +1425,19 @@ function fourierTermTopic(term: FourierTermId, locale: FourierLocale): HelpTopic
       eyebrow: 'Term',
       title: 'Spectrum',
       summary: 'A spectrum lines up the coefficient magnitudes for many frequencies.',
-      sections: [{ title: 'How to read it', body: 'Peaks are strong frequencies. Multiple peaks mean the signal mixes multiple main frequencies.' }],
+      sections: [{ title: 'How to read it', body: 'Peaks are strong frequencies. Multiple peaks mean the signal mixes multiple main frequencies. For real signals, +f and -f often appear as mirror peaks; positive-only view simplifies the graph but hides half of that mirror.' }],
     },
     phase: {
       eyebrow: 'Term',
       title: 'Phase',
       summary: 'Phase describes the timing offset of a frequency component.',
-      sections: [{ title: 'Intuition', body: 'Two waves can have the same frequency but reach their peaks at different times. That difference is phase.' }],
+      sections: [{ title: 'Intuition', body: 'Two waves can have the same frequency but reach their peaks at different times. That difference is phase. If a frequency bar is tiny, its phase usually is not meaningful.' }],
     },
     reconstruction: {
       eyebrow: 'Term',
       title: 'Reconstruction',
       summary: 'Reconstruction adds selected frequency components back together to approximate the original signal.',
-      sections: [{ title: 'Why it matters', body: 'If a few frequencies reconstruct the signal well, those frequencies explain most of its structure.' }],
+      sections: [{ title: 'Why it matters', body: 'In this sampled experiment, keeping the complete set of frequency coefficients can recover the original samples. Keeping only part of the set gives an approximation. If a few frequencies reconstruct the signal well, those frequencies explain most of its structure.' }],
     },
     filtering: {
       eyebrow: 'Term',
@@ -1392,6 +1723,7 @@ function complexToScreen(center: { x: number; y: number }, scale: number, point:
 }
 
 function selectReconstructionCoefficients(coefficients: FourierCoefficient[], mode: ReconstructionMode, count: number): FourierCoefficient[] {
+  if (mode === 'paired-frequency-blocks') return selectPairedFrequencyBlocks(coefficients, count)
   if (mode === 'first-harmonics') {
     const harmonic = Math.max(0, Math.floor(count / 2))
     return coefficients.filter((coefficient) => Math.abs(coefficient.frequency) <= harmonic)
@@ -1411,23 +1743,25 @@ function getValueRows(state: {
   filteredSamples: number[]
   includedCoefficients: FourierCoefficient[]
   coefficientCount: number
+  reconstructionMode: ReconstructionMode
   filterType: FilterType
   cutoff: number
   lowCutoff: number
   highCutoff: number
   threshold: number
 }): ValueRow[] {
-  const dominant = findDominantFrequencies(state.spectrum, 4).map((coefficient) => formatFrequency(coefficient.frequency)).join(', ')
+  const dominant = findDominantPeaks(state.spectrum, 4).map((coefficient) => formatPeakFrequency(coefficient.frequency, state.locale)).join(', ')
+  const noValue = state.locale === 'zh' ? '无' : 'none'
   if (state.lessonKey === 'spectrum') {
     return [
-      { label: state.locale === 'zh' ? '频率范围' : 'frequency range', value: `${formatFrequency(state.spectrum.frequencyMin)} to ${formatFrequency(state.spectrum.frequencyMax)}` },
+      { label: state.locale === 'zh' ? '频率范围' : 'frequency range', value: formatFrequencyRange(state.spectrum.frequencyMin, state.spectrum.frequencyMax, state.locale) },
       { label: state.locale === 'zh' ? '频率步长' : 'frequency step', value: formatNumber(state.spectrum.frequencyStep) },
       { label: state.locale === 'zh' ? '选中频率' : 'selected frequency', value: formatFrequency(state.selectedFrequency) },
-      { label: 'Re C(f)', value: formatNumber(state.selectedCoefficient.value.re) },
-      { label: 'Im C(f)', value: formatNumber(state.selectedCoefficient.value.im) },
+      { label: state.locale === 'zh' ? 'C(f) 实部' : 'Re C(f)', value: formatNumber(state.selectedCoefficient.value.re) },
+      { label: state.locale === 'zh' ? 'C(f) 虚部' : 'Im C(f)', value: formatNumber(state.selectedCoefficient.value.im) },
       { label: '|C(f)|', value: formatNumber(state.selectedCoefficient.magnitude) },
-      { label: state.locale === 'zh' ? '相位' : 'phase', value: `${formatNumber(state.selectedCoefficient.phase)} rad` },
-      { label: state.locale === 'zh' ? '主频率' : 'dominant frequencies', value: dominant || 'none' },
+      { label: state.locale === 'zh' ? '相位' : 'phase', value: state.locale === 'zh' ? `${formatNumber(state.selectedCoefficient.phase)} 弧度` : `${formatNumber(state.selectedCoefficient.phase)} rad` },
+      { label: state.locale === 'zh' ? '主频率' : 'dominant frequencies', value: dominant || noValue },
     ]
   }
   if (state.lessonKey === 'reconstruction') {
@@ -1436,23 +1770,23 @@ function getValueRows(state: {
       coefficients: state.integerSpectrum.coefficients.filter((coefficient) => !state.includedCoefficients.some((included) => included.frequency === coefficient.frequency)),
     }, 1)[0]
     return [
-      { label: state.locale === 'zh' ? '系数数量' : 'coefficient count', value: String(state.coefficientCount) },
-      { label: 'MSE', value: formatNumber(meanSquaredError(state.samples, state.reconstructedSamples)) },
+      { label: state.reconstructionMode === 'paired-frequency-blocks' ? (state.locale === 'zh' ? '频率块数量' : 'frequency blocks') : (state.locale === 'zh' ? '系数数量' : 'coefficient count'), value: String(state.coefficientCount) },
+      { label: state.locale === 'zh' ? '均方误差 MSE' : 'MSE', value: formatNumber(meanSquaredError(state.samples, state.reconstructedSamples)) },
       { label: state.locale === 'zh' ? '最大误差' : 'max error', value: formatNumber(maxAbsError(state.samples, state.reconstructedSamples)) },
-      { label: state.locale === 'zh' ? '保留频率' : 'included frequencies', value: state.includedCoefficients.slice(0, 8).map((coefficient) => formatFrequency(coefficient.frequency)).join(', ') },
-      { label: state.locale === 'zh' ? '最大遗漏频率' : 'dominant omitted', value: omitted ? formatFrequency(omitted.frequency) : 'none' },
+      { label: state.locale === 'zh' ? '保留频率' : 'included frequencies', value: state.includedCoefficients.slice(0, 8).map((coefficient) => formatFrequency(coefficient.frequency)).join(', ') || noValue },
+      { label: state.locale === 'zh' ? '最大遗漏频率' : 'dominant omitted', value: omitted ? formatFrequency(omitted.frequency) : noValue },
     ]
   }
   return [
     { label: state.locale === 'zh' ? '滤波类型' : 'filter type', value: filterLabel(state.filterType, state.locale) },
-    { label: state.locale === 'zh' ? '截止 / 范围' : 'cutoff / range', value: filterValue(state) },
-    { label: 'MSE', value: formatNumber(meanSquaredError(state.samples, state.filteredSamples)) },
+    { label: state.locale === 'zh' ? '截止 / 范围' : 'cutoff / range', value: filterValue(state, state.locale) },
+    { label: state.locale === 'zh' ? '均方误差 MSE' : 'MSE', value: formatNumber(meanSquaredError(state.samples, state.filteredSamples)) },
     { label: state.locale === 'zh' ? '最大残差' : 'max residual', value: formatNumber(maxAbsError(state.samples, state.filteredSamples)) },
   ]
 }
 
-function filterValue(state: { filterType: FilterType; cutoff: number; lowCutoff: number; highCutoff: number; threshold: number }): string {
-  if (state.filterType === 'band-pass' || state.filterType === 'band-stop') return `${formatFrequency(state.lowCutoff)} to ${formatFrequency(state.highCutoff)}`
+function filterValue(state: { filterType: FilterType; cutoff: number; lowCutoff: number; highCutoff: number; threshold: number }, locale: FourierLocale): string {
+  if (state.filterType === 'band-pass' || state.filterType === 'band-stop') return formatFrequencyRange(state.lowCutoff, state.highCutoff, locale)
   if (state.filterType === 'magnitude-threshold') return formatNumber(state.threshold)
   return formatFrequency(state.cutoff)
 }
@@ -1464,6 +1798,16 @@ function filterLabel(filterType: FilterType, locale: FourierLocale): string {
   if (filterType === 'band-pass') return '带通'
   if (filterType === 'band-stop') return '带阻'
   return '幅值阈值'
+}
+
+function findDominantPeaks(spectrum: Spectrum, count: number): FourierCoefficient[] {
+  const coefficients = spectrum.coefficients.filter((coefficient) => Math.abs(coefficient.frequency) > 1e-9)
+  const peaks = coefficients.filter((coefficient, index) => {
+    const previous = coefficients[index - 1]?.magnitude ?? -Infinity
+    const next = coefficients[index + 1]?.magnitude ?? -Infinity
+    return coefficient.magnitude >= previous && coefficient.magnitude >= next
+  })
+  return [...peaks].sort((a, b) => b.magnitude - a.magnitude).slice(0, Math.max(0, count))
 }
 
 function clampSpectrumStep(frequencyMin: number, frequencyMax: number, frequencyStep: number): number {
@@ -1480,6 +1824,51 @@ function displayMagnitude(magnitude: number, logMagnitude: boolean): number {
 function mapRange(value: number, fromMin: number, fromMax: number, toMin: number, toMax: number): number {
   const ratio = (value - fromMin) / Math.max(1e-9, fromMax - fromMin)
   return toMin + ratio * (toMax - toMin)
+}
+
+function getFourierPresetLabel(preset: SignalPreset, locale: FourierLocale): string {
+  return locale === 'zh' ? preset.labelZh ?? preset.label : preset.label
+}
+
+function getFourierPresetDescription(preset: SignalPreset, locale: FourierLocale): string {
+  return locale === 'zh' ? preset.descriptionZh ?? preset.description : preset.description
+}
+
+function getPlaybackLabels(lessonKey: string, playing: boolean, locale: FourierLocale): { label: string; ariaLabel: string } {
+  if (playing) {
+    const labelText = locale === 'zh' ? '暂停' : 'Pause'
+    return { label: labelText, ariaLabel: labelText }
+  }
+  if (lessonKey === 'reconstruction') {
+    const labelText = locale === 'zh' ? '增加系数' : 'Add coefficients'
+    return { label: labelText, ariaLabel: labelText }
+  }
+  if (lessonKey === 'filtering') {
+    const labelText = locale === 'zh' ? '扫过截止频率' : 'Sweep cutoff'
+    return { label: labelText, ariaLabel: labelText }
+  }
+  const labelText = locale === 'zh' ? '扫描频率' : 'Scan frequencies'
+  return { label: labelText, ariaLabel: labelText }
+}
+
+function getWatchCopy(lessonKey: string, locale: FourierLocale, fallback: string, presetId: string, filterType: FilterType): string {
+  if (lessonKey !== 'filtering') return fallback
+  if (filterType === 'high-pass') {
+    return locale === 'zh'
+      ? '高通会削弱慢变化的主体，留下更快的细节和噪声。'
+      : 'High-pass filtering weakens slow trends and leaves faster details and noise.'
+  }
+  if (presetId === 'square-wave') {
+    return locale === 'zh'
+      ? '低通会让方波的尖角变圆滑，但也可能产生一些波纹。'
+      : 'Low-pass filtering rounds the square wave corners, but it can also create ripples.'
+  }
+  if (presetId === 'noisy-sine') {
+    return locale === 'zh'
+      ? '试着调低截止频率：细小抖动会被削弱，主波形会留下来。'
+      : 'Try lowering the cutoff: small jitter weakens while the main wave remains.'
+  }
+  return fallback
 }
 
 function resetLesson(lessonKey: string, defaultFrequency: number, setSelectedFrequency: (value: number) => void, setCoefficientCount: (value: number) => void, setCutoff: (value: number) => void, setPlayhead: (value: number) => void) {
@@ -1511,6 +1900,15 @@ function readPresetParam(fallback: string): string {
   const raw = readParam('preset')
   if (raw && (raw === 'custom' || fourierPresets.some((preset) => preset.id === raw))) return raw
   return fallback
+}
+
+function readReconstructionModeParam(fallback: ReconstructionMode): ReconstructionMode {
+  const raw = readParam('mode')
+  return isReconstructionMode(raw) ? raw : fallback
+}
+
+function isReconstructionMode(value: string | null): value is ReconstructionMode {
+  return value === 'paired-frequency-blocks' || value === 'first-harmonics' || value === 'top-magnitudes'
 }
 
 function readParam(name: string): string | null {
@@ -1546,6 +1944,18 @@ function formatNumber(value: number): string {
 
 function formatFrequency(value: number): string {
   return String(round(value))
+}
+
+function formatFrequencyRange(start: number, end: number, locale: FourierLocale): string {
+  return locale === 'zh' ? `${formatFrequency(start)} 到 ${formatFrequency(end)}` : `${formatFrequency(start)} to ${formatFrequency(end)}`
+}
+
+function formatPeakFrequency(value: number, locale: FourierLocale): string {
+  const nearestInteger = Math.round(value)
+  if (nearestInteger !== 0 && Math.abs(value - nearestInteger) <= 0.25) {
+    return locale === 'zh' ? `约 ${nearestInteger}` : `near ${nearestInteger}`
+  }
+  return formatFrequency(value)
 }
 
 function label(locale: FourierLocale, en: string, zh: string): string {

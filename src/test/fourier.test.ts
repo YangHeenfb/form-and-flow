@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { compileFourierExpression, sampleFourierPreset } from '../modules/fourier/fourierPresets.ts'
 import { complex, div, expi, formatComplex, magnitude, mul, nearlyEqualComplex } from '../modules/fourier/math/complex.ts'
 import { applyHighPass, applyLowPass } from '../modules/fourier/math/filters.ts'
-import { computeCoefficientAtFrequency, computeIntegerSpectrum, findDominantFrequencies } from '../modules/fourier/math/fourier.ts'
+import { computeCoefficientAtFrequency, computeIntegerSpectrum, findDominantFrequencies, selectPairedFrequencyBlocks } from '../modules/fourier/math/fourier.ts'
 import { maxAbsError, reconstructSamples } from '../modules/fourier/math/reconstruction.ts'
 
 describe('fourier complex math', () => {
@@ -49,6 +49,13 @@ describe('fourier transform math', () => {
     const spectrum = computeIntegerSpectrum(samples, 8)
     const reconstructed = reconstructSamples(spectrum.coefficients, samples.length)
     expect(maxAbsError(samples, reconstructed)).toBeLessThan(0.02)
+  })
+
+  it('selects real-signal reconstruction frequencies as mirrored blocks', () => {
+    const samples = sampleFourierPreset('sum-of-sines', 256, false)
+    const spectrum = computeIntegerSpectrum(samples, 8)
+    const selected = selectPairedFrequencyBlocks(spectrum.coefficients, 2).map((coefficient) => coefficient.frequency)
+    expect(selected).toEqual([-3, -1, 1, 3])
   })
 
   it('filters high and low components', () => {

@@ -43,7 +43,7 @@ export type WindingPoint = {
   point: Complex
 }
 
-export type ReconstructionMode = 'first-harmonics' | 'top-magnitudes'
+export type ReconstructionMode = 'paired-frequency-blocks' | 'first-harmonics' | 'top-magnitudes'
 
 export type FilterType = 'low-pass' | 'high-pass' | 'band-pass' | 'band-stop' | 'magnitude-threshold'
 
