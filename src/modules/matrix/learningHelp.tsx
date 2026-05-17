@@ -28,7 +28,7 @@ export const matrixLearningCopy: Record<Locale, LearningCopy> = {
     entryTitle: 'Need the basics?',
     entryHint: 'Open a short explanation when a symbol or picture is unfamiliar.',
     openOverview: 'Beginner Guide',
-    openGraph: 'Read the picture',
+    openGraph: 'Read the graph',
     close: 'Close explanation',
   },
   zh: {

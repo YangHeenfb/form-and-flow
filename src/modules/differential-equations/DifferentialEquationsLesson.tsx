@@ -4,6 +4,7 @@ import { GraphCanvas, drawGrid, line, worldToScreen } from '../../core/graph2d/G
 import type { GraphTheme, GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton, type HelpTopic } from '../../core/ui/LearningHelp.tsx'
+import { LessonScaffold } from '../../core/ui/LessonScaffold.tsx'
 import { expressionToTex } from '../../core/ui/mathNotation.ts'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../i18n.ts'
@@ -147,7 +148,7 @@ const differentialCopy: Record<DifferentialLocale, {
       formula: 'Current model',
       values: 'Current values',
       watch: 'Watch for',
-      beginnerHelp: 'Beginner explanation',
+      beginnerHelp: 'Beginner Guide',
       graphHelp: 'Read the graph',
       closeHelp: 'Close explanation',
       graphInstructions: 'Drag to pan, scroll to zoom.',
@@ -526,9 +527,14 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
     <>
     <ModuleFocusFrame>
       {({ focusButton }) => (
-    <section className="calculus-lesson diffeq-lesson">
-      <aside className="calculus-controls diffeq-controls platform-card">
-        <div className="calculus-learning-entry learning-help-entry">
+    <LessonScaffold
+      className="calculus-lesson diffeq-lesson"
+      controlsClassName="calculus-controls diffeq-controls"
+      mainClassName="calculus-main diffeq-main"
+      explanationClassName="calculus-explanation diffeq-explanation"
+      controls={
+        <>
+        <div className="lesson-learning-entry learning-help-entry">
           <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={ui.beginnerHelp}>
             {ui.beginnerHelp}
           </HelpTrigger>
@@ -651,10 +657,12 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
             <Range label={ui.ranges.heatTime} labelTex="t" value={heatTime} min={0} max={1.2} step={0.01} onChange={setHeatTime} />
           </>
         )}
-      </aside>
+        </>
+      }
 
-      <main className="calculus-main diffeq-main">
-        <div className="calculus-title-row">
+      main={
+        <>
+        <div className="calculus-title-row diffeq-title-row">
           <div>
             <p className="eyebrow">{ui.lesson}</p>
             <h1>{copy.title}</h1>
@@ -698,9 +706,11 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
           <PlaybackProgress label={ui.playbackProgress} value={playbackProgress} onChange={seekPlaybackProgress} />
           <Range label={ui.ranges.speed} labelTex={locale === 'zh' ? '\\text{速度}' : '\\text{speed}'} value={speed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setSpeed} />
         </div>
-      </main>
+        </>
+      }
 
-      <aside className="calculus-explanation diffeq-explanation platform-card">
+      explanation={
+        <>
         <h2>{ui.seeing}</h2>
         <p>{renderDifferentialWhat(lessonId, locale, copy.what, (term) => setHelpMode({ kind: 'term', term }))}</p>
         <h2>{ui.why}</h2>
@@ -725,8 +735,9 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
         </dl>
         <h2>{ui.watch}</h2>
         <p>{renderWatchText(lessonId, locale, scalarPresetId, copy.watch)}</p>
-      </aside>
-    </section>
+        </>
+      }
+    />
       )}
     </ModuleFocusFrame>
     <LearningDrawer topic={activeHelpTopic} closeLabel={ui.closeHelp} onClose={() => setHelpMode(null)} />

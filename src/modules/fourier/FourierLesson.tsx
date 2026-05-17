@@ -5,6 +5,7 @@ import { GraphCanvas } from '../../core/graph2d/GraphCanvas.tsx'
 import type { GraphTheme, GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton, type HelpTopic } from '../../core/ui/LearningHelp.tsx'
+import { LessonScaffold } from '../../core/ui/LessonScaffold.tsx'
 import { expressionToTex } from '../../core/ui/mathNotation.ts'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../i18n.ts'
@@ -128,7 +129,7 @@ const fourierCopy: Record<FourierLocale, {
       formula: 'Current formula',
       values: 'Current values',
       watch: 'Watch for',
-      beginnerHelp: 'Beginner explanation',
+      beginnerHelp: 'Beginner Guide',
       controlHelp: 'Control help',
       graphHelp: 'Read the graph',
       closeHelp: 'Close explanation',
@@ -522,9 +523,14 @@ export function FourierLesson({ lessonId }: Props) {
     <>
     <ModuleFocusFrame>
       {({ focusButton }) => (
-    <section className="fourier-lesson">
-      <aside className="fourier-controls platform-card">
-        <div className="calculus-learning-entry learning-help-entry">
+    <LessonScaffold
+      className="fourier-lesson"
+      controlsClassName="fourier-controls"
+      mainClassName="fourier-main"
+      explanationClassName="fourier-explanation"
+      controls={
+        <>
+        <div className="lesson-learning-entry learning-help-entry">
           <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={ui.beginnerHelp}>
             {ui.beginnerHelp}
           </HelpTrigger>
@@ -670,9 +676,11 @@ export function FourierLesson({ lessonId }: Props) {
           <Toggle label={ui.toggles.residual} checked={showResidual} onChange={setShowResidual} />
           <Toggle label={ui.toggles.labels} checked={showLabels} onChange={setShowLabels} />
         </ControlGroup>
-      </aside>
+        </>
+      }
 
-      <main className="fourier-main">
+      main={
+        <>
         <div className="fourier-title-row">
           <div>
             <p className="eyebrow">{ui.lesson}</p>
@@ -715,9 +723,11 @@ export function FourierLesson({ lessonId }: Props) {
           <PlaybackProgress label={ui.playbackProgress} value={playbackProgress} onChange={seekPlaybackProgress} />
           <Range label={ui.controls.speed} value={playbackSpeed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setPlaybackSpeed} />
         </div>
-      </main>
+        </>
+      }
 
-      <aside className="fourier-explanation platform-card">
+      explanation={
+        <>
         <h2>{ui.seeing}</h2>
         <p>{renderFourierWhat(lessonKey, locale, copy.what, (term) => setHelpMode({ kind: 'term', term }))}</p>
         <h2>{ui.why}</h2>
@@ -742,8 +752,9 @@ export function FourierLesson({ lessonId }: Props) {
         </dl>
         <h2>{ui.watch}</h2>
         <p>{getWatchCopy(lessonKey, locale, copy.watch, presetId, filterType)}</p>
-      </aside>
-    </section>
+        </>
+      }
+    />
       )}
     </ModuleFocusFrame>
     <LearningDrawer topic={activeHelpTopic} closeLabel={ui.closeHelp} onClose={() => setHelpMode(null)} />

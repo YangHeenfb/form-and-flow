@@ -3,6 +3,7 @@ import { CircleHelp, Download, Pause, Play, RotateCcw } from 'lucide-react'
 import { drawGrid, GraphCanvas, worldToScreen, type GraphTheme, type GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton, type HelpTopic } from '../../core/ui/LearningHelp.tsx'
+import { LessonScaffold } from '../../core/ui/LessonScaffold.tsx'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../i18n.ts'
 import { LessonStageActions } from '../../platform/LessonStageActions.tsx'
@@ -729,18 +730,25 @@ function LessonFrame({
     <>
     <ModuleFocusFrame>
       {({ focusButton }) => (
-    <section className="convolution-lesson">
-      <aside className="convolution-controls platform-card">
-        <div className="calculus-learning-entry learning-help-entry">
+    <LessonScaffold
+      className="convolution-lesson"
+      controlsClassName="convolution-controls"
+      mainClassName="convolution-main"
+      explanationClassName="convolution-explanation"
+      controls={
+        <>
+        <div className="lesson-learning-entry learning-help-entry">
           <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={helpLabels.beginner}>
             {helpLabels.beginner}
           </HelpTrigger>
         </div>
         <h2>{ui.controls}</h2>
         {typeof controls === 'function' ? controls({ openTerm }) : controls}
-      </aside>
+        </>
+      }
 
-      <main className="convolution-main">
+      main={
+        <>
         <div className="convolution-title-row">
           <div>
             <p className="eyebrow">{ui.moduleEyebrow}</p>
@@ -759,9 +767,11 @@ function LessonFrame({
           />
         </div>
         <div className="convolution-playback platform-card">{playback}</div>
-      </main>
+        </>
+      }
 
-      <aside className="convolution-explanation platform-card">
+      explanation={
+        <>
         <h2>{ui.seeing}</h2>
         <p>{renderConvolutionWhat(lessonId, locale, copy.what, openTerm, operation)}</p>
         <h2>{ui.why}</h2>
@@ -782,8 +792,9 @@ function LessonFrame({
         </dl>
         <h2>{ui.watch}</h2>
         <p>{copy.watch}</p>
-      </aside>
-    </section>
+        </>
+      }
+    />
       )}
     </ModuleFocusFrame>
     <LearningDrawer topic={activeHelpTopic} closeLabel={helpLabels.close} onClose={() => setHelpMode(null)} />
@@ -909,7 +920,7 @@ function renderConvolutionWhat(lessonId: ConvolutionLessonId, locale: Locale, fa
 function getConvolutionHelpLabels(locale: Locale): { beginner: string; graph: string; close: string } {
   return locale === 'zh'
     ? { beginner: '新手解释', graph: '怎么看图', close: '关闭解释' }
-    : { beginner: 'Beginner explanation', graph: 'Read the graph', close: 'Close explanation' }
+    : { beginner: 'Beginner Guide', graph: 'Read the graph', close: 'Close explanation' }
 }
 
 function getConvolutionHelpTopic(mode: ConvolutionHelpMode, lessonId: ConvolutionLessonId, locale: Locale): HelpTopic {
@@ -1780,7 +1791,7 @@ function ControlLabel({ label, helpTerm, onHelp }: { label: string; helpTerm?: C
 
 function ControlHelpButton({ label, term, onHelp }: { label: string; term: ConvolutionTermId; onHelp: (term: ConvolutionTermId) => void }) {
   return (
-    <button type="button" className="mini-help-button" aria-label={`Explain ${label}`} title={`Explain ${label}`} onClick={() => onHelp(term)}>
+    <button type="button" className="mini-help-button" aria-label={label} title={label} onClick={() => onHelp(term)}>
       <CircleHelp size={14} />
     </button>
   )

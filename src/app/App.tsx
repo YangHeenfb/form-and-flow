@@ -67,10 +67,14 @@ function LazyModule({ loadComponent, lessonId }: { loadComponent: ModuleComponen
 }
 
 function ModuleLoading() {
+  const { locale } = usePlatformLocale()
+  const copy = locale === 'zh' ? '正在载入模块...' : 'Loading module...'
+
   return (
     <section className="platform-page">
       <div className="platform-card module-loading" role="status" aria-live="polite">
-        Loading module...
+        <span aria-hidden="true" />
+        {copy}
       </div>
     </section>
   )

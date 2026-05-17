@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { Pause, Play, RotateCcw, Shuffle } from 'lucide-react'
 import { Formula, renderMathText } from '../../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton } from '../../../core/ui/LearningHelp.tsx'
+import { LessonScaffold } from '../../../core/ui/LessonScaffold.tsx'
 import { SelectMenu } from '../../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../../i18n.ts'
 import { LessonStageActions } from '../../../platform/LessonStageActions.tsx'
@@ -979,19 +980,26 @@ export function ProbabilityLesson({ lessonId }: Props) {
     <>
     <ModuleFocusFrame>
       {({ focusButton }) => (
-    <section className="probability-lesson">
-      <aside className="probability-controls platform-card">
-        <div className="probability-learning-entry learning-help-entry">
+    <LessonScaffold
+      className="probability-lesson"
+      controlsClassName="probability-controls"
+      mainClassName="probability-main"
+      explanationClassName="probability-explanation"
+      controls={
+        <>
+        <div className="lesson-learning-entry learning-help-entry">
           <HelpTrigger ariaLabel={learningCopy.openOverview} onClick={() => openHelpTopic('overview')}>
             {learningCopy.openOverview}
           </HelpTrigger>
         </div>
         <h2>{ui.controls.parameters}</h2>
         {renderControls()}
-      </aside>
+        </>
+      }
 
-      <main className="probability-main">
-        <div className="calculus-title-row">
+      main={
+        <>
+        <div className="calculus-title-row probability-title-row">
           <div>
             <p className="eyebrow">{ui.controls.lesson}</p>
             <h1>{currentCopy.title}</h1>
@@ -1022,9 +1030,11 @@ export function ProbabilityLesson({ lessonId }: Props) {
           {lessonId === 'random-variable-sum' && <PlaybackProgress label={ui.controls.playbackProgress} value={sumPlaybackProgress} onChange={seekSumPlaybackProgress} />}
           <Range label={ui.controls.speed} value={speed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setSpeed} />
         </div>
-      </main>
+        </>
+      }
 
-      <aside className="probability-explanation platform-card">
+      explanation={
+        <>
         <h2>
           <HelpLabel topic="graph" onOpenHelpTopic={openHelpTopic}>
             {ui.sections.what}
@@ -1070,8 +1080,9 @@ export function ProbabilityLesson({ lessonId }: Props) {
           </HelpLabel>
         </h2>
         <p>{currentCopy.watch}</p>
-      </aside>
-    </section>
+        </>
+      }
+    />
       )}
     </ModuleFocusFrame>
     <LearningDrawer topic={activeHelpTopic} closeLabel={learningCopy.close} onClose={() => setActiveHelpTopicId(null)} />

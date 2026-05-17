@@ -4,6 +4,7 @@ import { GraphCanvas, drawGrid, line, worldToScreen } from '../../core/graph2d/G
 import type { GraphTheme, GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton } from '../../core/ui/LearningHelp.tsx'
+import { LessonScaffold } from '../../core/ui/LessonScaffold.tsx'
 import { expressionToTex } from '../../core/ui/mathNotation.ts'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../i18n.ts'
@@ -338,9 +339,14 @@ export function CalculusLesson({ lessonId }: Props) {
     <>
     <ModuleFocusFrame>
       {({ focusButton }) => (
-    <section className="calculus-lesson">
-      <aside className="calculus-controls platform-card">
-        <div className="calculus-learning-entry learning-help-entry">
+    <LessonScaffold
+      className="calculus-lesson"
+      controlsClassName="calculus-controls"
+      mainClassName="calculus-main"
+      explanationClassName="calculus-explanation"
+      controls={
+        <>
+        <div className="lesson-learning-entry learning-help-entry">
           <HelpTrigger ariaLabel={learningCopy.openOverview} onClick={() => openHelpTopic('overview')}>
             {learningCopy.openOverview}
           </HelpTrigger>
@@ -434,9 +440,11 @@ export function CalculusLesson({ lessonId }: Props) {
             <Range label={ui.ranges.degree} labelTex={locale === 'zh' ? '\\text{阶数}' : '\\text{degree}'} value={degree} min={0} max={10} step={1} helpTopic="taylor" onOpenHelpTopic={openHelpTopic} onChange={setDegree} />
           </>
         )}
-      </aside>
+        </>
+      }
 
-      <main className="calculus-main">
+      main={
+        <>
         <div className="calculus-title-row">
           <div>
             <p className="eyebrow">{ui.lesson}</p>
@@ -484,9 +492,11 @@ export function CalculusLesson({ lessonId }: Props) {
           <PlaybackProgress label={ui.playbackProgress} value={playbackProgress} onChange={seekPlaybackProgress} />
           <Range label={ui.ranges.speed} labelTex={locale === 'zh' ? '\\text{速度}' : '\\text{speed}'} value={speed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setSpeed} />
         </div>
-      </main>
+        </>
+      }
 
-      <aside className="calculus-explanation platform-card">
+      explanation={
+        <>
         <h2>{ui.seeing}</h2>
         <p>{copy.what}</p>
         <h2>{ui.why}</h2>
@@ -518,8 +528,9 @@ export function CalculusLesson({ lessonId }: Props) {
           </HelpLabel>
         </h2>
         <p>{copy.watch}</p>
-      </aside>
-    </section>
+        </>
+      }
+    />
       )}
     </ModuleFocusFrame>
     <LearningDrawer topic={activeHelpTopic} closeLabel={learningCopy.close} onClose={() => setActiveHelpTopicId(null)} />
