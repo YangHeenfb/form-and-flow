@@ -197,7 +197,7 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
       title: '矩阵序列和合成矩阵',
       summary: (
         <>
-          用户顺序 <Formula tex="[A,B,C]" /> 表示先做 <Formula tex="A" />，再做 <Formula tex="B" />，最后做 <Formula tex="C" />；合成矩阵写成 <Formula tex="CBA" />。
+          用户顺序 <Formula tex="[A_1,A_2,A_3]" /> 表示先做 <Formula tex="A_1" />，再做 <Formula tex="A_2" />，最后做 <Formula tex="A_3" />；合成矩阵写成 <Formula tex="A_3A_2A_1" />。
         </>
       ),
       sections: [
@@ -205,7 +205,7 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           title: '为什么顺序看起来反过来',
           body: (
             <>
-              写成乘法时，向量站在最右边，所以它会先遇到最右边的矩阵：<Formula tex="v" /> → <Formula tex="Av" /> → <Formula tex="B(Av)" /> → <Formula tex="C(BAv)" />。界面按你的顺序播放，公式按乘法规则写。
+              写成乘法时，向量站在最右边，所以它会先遇到最右边的矩阵：<Formula tex="v" /> → <Formula tex="A_1v" /> → <Formula tex="A_2(A_1v)" /> → <Formula tex="A_3(A_2(A_1v))" />。界面按你的顺序播放，公式按乘法规则写。
             </>
           ),
         },
@@ -501,7 +501,7 @@ function enTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
       title: 'Matrix sequence and composition',
       summary: (
         <>
-          User order <Formula tex="[A,B,C]" /> means apply <Formula tex="A" /> first, then <Formula tex="B" />, then <Formula tex="C" />. The composed matrix is written <Formula tex="CBA" />.
+          User order <Formula tex="[A_1,A_2,A_3]" /> means apply <Formula tex="A_1" /> first, then <Formula tex="A_2" />, then <Formula tex="A_3" />. The composed matrix is written <Formula tex="A_3A_2A_1" />.
         </>
       ),
       sections: [
@@ -509,7 +509,7 @@ function enTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           title: 'Why the written order is reversed',
           body: (
             <>
-              In multiplication, the vector sits on the right, so it meets the rightmost matrix first: <Formula tex="v" /> → <Formula tex="Av" /> → <Formula tex="B(Av)" /> → <Formula tex="C(BAv)" />. The panel plays your order; the formula follows multiplication order.
+              In multiplication, the vector sits on the right, so it meets the rightmost matrix first: <Formula tex="v" /> → <Formula tex="A_1v" /> → <Formula tex="A_2(A_1v)" /> → <Formula tex="A_3(A_2(A_1v))" />. The panel plays your order; the formula follows multiplication order.
             </>
           ),
         },

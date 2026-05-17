@@ -51,8 +51,8 @@ export function ExplanationPanel({ locale = 'en', maps, composedMap, stepMaps, v
         {validation.valid && composedMap ? (
           <p>
             {copy.sequence(
-              maps.map((map) => map.name).join(', '),
-              maps.map((map) => map.name).reverse().join(''),
+              maps.map((map) => displayMapName(map.name)).join(', '),
+              maps.map((map) => displayMapName(map.name)).reverse().join(''),
               composedMap.inputDim,
               composedMap.outputDim,
             )}
@@ -335,6 +335,23 @@ function HelpLabel({
   }
 
   return <TermButton onClick={() => onOpenHelpTopic(topic)}>{children}</TermButton>
+}
+
+const subscriptDigits: Record<string, string> = {
+  '0': '₀',
+  '1': '₁',
+  '2': '₂',
+  '3': '₃',
+  '4': '₄',
+  '5': '₅',
+  '6': '₆',
+  '7': '₇',
+  '8': '₈',
+  '9': '₉',
+}
+
+function displayMapName(name: string): string {
+  return name.replace(/\d/g, (digit) => subscriptDigits[digit] ?? digit)
 }
 
 function matrixToTex(matrix: number[][]): string {
