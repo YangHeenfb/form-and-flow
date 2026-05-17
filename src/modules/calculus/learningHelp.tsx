@@ -184,7 +184,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
           title: '导数实验为什么让 h 变小',
           body: (
             <>
-              两点之间的平均斜率是 <Formula tex="\\frac{f(x_0+h)-f(x_0)}{h}" />。当 <Formula tex="h" /> 越来越小，第二个点靠近第一个点，割线就越来越像切线。
+              两点之间的平均斜率是 <Formula tex="\frac{f(x_0+h)-f(x_0)}{h}" />。当 <Formula tex="h" /> 越来越小，第二个点靠近第一个点，割线就越来越像切线。
             </>
           ),
         },
@@ -224,7 +224,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
       title: '积分是什么？',
       summary: (
         <>
-          定积分 <Formula tex="\\int_a^b f(x)\\,dx" /> 可以先理解成从 <Formula tex="a" /> 到 <Formula tex="b" /> 这段区间里，曲线下方累积的有符号面积。
+          定积分 <Formula tex="\int_a^b f(x)\,dx" /> 可以先理解成从 <Formula tex="a" /> 到 <Formula tex="b" /> 这段区间里，曲线下方累积的有符号面积。
         </>
       ),
       sections: [
@@ -271,7 +271,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
       title: '微积分基本定理在说什么？',
       summary: (
         <>
-          它把积分和导数连起来：如果 <Formula tex="A(x)=\\int_a^x f(t)\\,dt" /> 表示从起点累积到 <Formula tex="x" /> 的面积，那么 <Formula tex="A'(x)=f(x)" />。
+          它把积分和导数连起来：如果 <Formula tex="A(x)=\int_a^x f(t)\,dt" /> 表示从起点累积到 <Formula tex="x" /> 的面积，那么 <Formula tex="A'(x)=f(x)" />。
         </>
       ),
       sections: [
@@ -354,7 +354,7 @@ function zhFormulaTopic(lessonId: string): HelpTopic {
       title: '积分公式怎么对应图像？',
       summary: (
         <>
-          <Formula tex="\\int_a^b f(x)\\,dx" /> 表示从 <Formula tex="a" /> 到 <Formula tex="b" /> 把每个位置的小贡献累积起来。
+          <Formula tex="\int_a^b f(x)\,dx" /> 表示从 <Formula tex="a" /> 到 <Formula tex="b" /> 把每个位置的小贡献累积起来。
         </>
       ),
       sections: [
@@ -383,7 +383,7 @@ function zhFormulaTopic(lessonId: string): HelpTopic {
       title: 'A(x) 公式怎么读？',
       summary: (
         <>
-          <Formula tex="A(x)=\\int_a^x f(t)\\,dt" /> 表示“从起点 <Formula tex="a" /> 累积到当前 <Formula tex="x" /> 的面积”。
+          <Formula tex="A(x)=\int_a^x f(t)\,dt" /> 表示“从起点 <Formula tex="a" /> 累积到当前 <Formula tex="x" /> 的面积”。
         </>
       ),
       sections: [
@@ -436,7 +436,7 @@ function zhFormulaTopic(lessonId: string): HelpTopic {
     title: '导数公式怎么对应图像？',
     summary: (
       <>
-        <Formula tex="\\frac{f(x_0+h)-f(x_0)}{h}" /> 是两个点之间的平均斜率。让 <Formula tex="h" /> 变小，是在看这个平均斜率能不能稳定成当前点的瞬时斜率。
+        <Formula tex="\frac{f(x_0+h)-f(x_0)}{h}" /> 是两个点之间的平均斜率。让 <Formula tex="h" /> 变小，是在看这个平均斜率能不能稳定成当前点的瞬时斜率。
       </>
     ),
     sections: [
@@ -661,7 +661,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
           title: 'Why the derivative lab shrinks h',
           body: (
             <>
-              The average slope between two points is <Formula tex="\\frac{f(x_0+h)-f(x_0)}{h}" />. As <Formula tex="h" /> gets smaller, the second point moves toward the first and the secant becomes more tangent-like.
+              The average slope between two points is <Formula tex="\frac{f(x_0+h)-f(x_0)}{h}" />. As <Formula tex="h" /> gets smaller, the second point moves toward the first and the secant becomes more tangent-like.
             </>
           ),
         },
@@ -701,7 +701,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
       title: 'What is an integral?',
       summary: (
         <>
-          A definite integral <Formula tex="\\int_a^b f(x)\\,dx" /> can be read as signed area accumulated under the curve from <Formula tex="a" /> to <Formula tex="b" />.
+          A definite integral <Formula tex="\int_a^b f(x)\,dx" /> can be read as signed area accumulated under the curve from <Formula tex="a" /> to <Formula tex="b" />.
         </>
       ),
       sections: [
@@ -748,7 +748,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
       title: 'What does the fundamental theorem say?',
       summary: (
         <>
-          It connects integrals and derivatives: if <Formula tex="A(x)=\\int_a^x f(t)\\,dt" /> is accumulated area up to <Formula tex="x" />, then <Formula tex="A'(x)=f(x)" />.
+          It connects integrals and derivatives: if <Formula tex="A(x)=\int_a^x f(t)\,dt" /> is accumulated area up to <Formula tex="x" />, then <Formula tex="A'(x)=f(x)" />.
         </>
       ),
       sections: [
@@ -831,7 +831,7 @@ function enFormulaTopic(lessonId: string): HelpTopic {
       title: 'How does the integral formula match the graph?',
       summary: (
         <>
-          <Formula tex="\\int_a^b f(x)\\,dx" /> means accumulate small contributions from <Formula tex="a" /> to <Formula tex="b" />.
+          <Formula tex="\int_a^b f(x)\,dx" /> means accumulate small contributions from <Formula tex="a" /> to <Formula tex="b" />.
         </>
       ),
       sections: [
@@ -860,7 +860,7 @@ function enFormulaTopic(lessonId: string): HelpTopic {
       title: 'How should I read A(x)?',
       summary: (
         <>
-          <Formula tex="A(x)=\\int_a^x f(t)\\,dt" /> means “accumulated signed area from the start <Formula tex="a" /> up to the current <Formula tex="x" />.”
+          <Formula tex="A(x)=\int_a^x f(t)\,dt" /> means “accumulated signed area from the start <Formula tex="a" /> up to the current <Formula tex="x" />.”
         </>
       ),
       sections: [
@@ -913,7 +913,7 @@ function enFormulaTopic(lessonId: string): HelpTopic {
     title: 'How does the derivative formula match the graph?',
     summary: (
       <>
-        <Formula tex="\\frac{f(x_0+h)-f(x_0)}{h}" /> is the average slope between two points. Shrinking <Formula tex="h" /> checks whether that average slope settles into an instantaneous slope.
+        <Formula tex="\frac{f(x_0+h)-f(x_0)}{h}" /> is the average slope between two points. Shrinking <Formula tex="h" /> checks whether that average slope settles into an instantaneous slope.
       </>
     ),
     sections: [

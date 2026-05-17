@@ -11,7 +11,7 @@ import { ModuleFocusFrame } from '../../platform/ModuleFocusFrame.tsx'
 import { LessonStageActions } from '../../platform/LessonStageActions.tsx'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
 import { compileCalculusExpression, calculusPresets, presetFunction } from './calculusPresets.ts'
-import { calculusLearningCopy, conceptTopicForLesson, getCalculusHelpTopics } from './learningHelp.tsx'
+import { calculusLearningCopy, getCalculusHelpTopics } from './learningHelp.tsx'
 import type { CalculusHelpTopicId } from './learningHelp.tsx'
 import { calculusFunctionNames, completeBareFunctionInput, normalizeMathInput } from './shared/mathInput.ts'
 import {
@@ -487,17 +487,9 @@ export function CalculusLesson({ lessonId }: Props) {
       </main>
 
       <aside className="calculus-explanation platform-card">
-        <h2>
-          <HelpLabel topic="graph" onOpenHelpTopic={openHelpTopic}>
-            {ui.seeing}
-          </HelpLabel>
-        </h2>
+        <h2>{ui.seeing}</h2>
         <p>{copy.what}</p>
-        <h2>
-          <HelpLabel topic={conceptTopicForLesson(lessonId)} onOpenHelpTopic={openHelpTopic}>
-            {ui.why}
-          </HelpLabel>
-        </h2>
+        <h2>{ui.why}</h2>
         <p>{copy.why}</p>
         <h2>
           <HelpLabel topic="formula" onOpenHelpTopic={openHelpTopic}>
