@@ -19,7 +19,7 @@ export function bayesPosterior(priorInput: number, likelihoodInput: number, fals
   const posterior = safeDivide(likelihood * prior, evidence, null)
   const priorOdds = oddsFromProbability(prior)
   const ratio = likelihoodRatio(likelihood, falseAlarm)
-  const posteriorOdds = priorOdds === null || ratio === null ? null : priorOdds * ratio
+  const posteriorOdds = priorOdds === null || ratio === null || (priorOdds === 0 && ratio === Number.POSITIVE_INFINITY) ? null : priorOdds * ratio
   return { prior, likelihood, falseAlarm, evidence, posterior, priorOdds, likelihoodRatio: ratio, posteriorOdds }
 }
 
@@ -35,7 +35,10 @@ export function probabilityFromOdds(odds: number): number | null {
 }
 
 export function likelihoodRatio(likelihoodInput: number, falseAlarmInput: number): number | null {
-  return safeDivide(clampProbability(likelihoodInput), clampProbability(falseAlarmInput), null)
+  const likelihood = clampProbability(likelihoodInput)
+  const falseAlarm = clampProbability(falseAlarmInput)
+  if (falseAlarm === 0) return likelihood > 0 ? Number.POSITIVE_INFINITY : null
+  return safeDivide(likelihood, falseAlarm, null)
 }
 
 export function conditionalProbability(intersection: number, condition: number): number | null {

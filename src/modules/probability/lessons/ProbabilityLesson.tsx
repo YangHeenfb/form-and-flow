@@ -96,9 +96,9 @@ const lessonCopy: Record<Locale, Record<ProbabilityLessonId, LessonCopy>> = {
     },
     bayes: {
       title: 'Bayes Rule',
-      what: 'Among all cases where the evidence appears, the highlighted part is the portion where the hypothesis is actually true.',
+      what: 'H is the hypothesis you are judging, and E is the evidence you just saw. Among all E cases, the highlighted part is where H is actually true.',
       why: 'Bayes rule compares evidence from the hypothesis with all possible sources of the same evidence.',
-      formulaTex: 'P(H\\mid E)=\\frac{P(E\\mid H)P(H)}{P(E)}',
+      formulaTex: '\\begin{aligned}P(H\\mid E)&=\\frac{P(E\\mid H)P(H)}{P(E)}\\\\P(E)&=P(E\\mid H)P(H)\\\\&\\quad+P(E\\mid \\neg H)P(\\neg H)\\end{aligned}',
       formulaLabel: 'Bayes rule',
       watch: 'A rare hypothesis can remain unlikely even after evidence if false alarms are common.',
     },
@@ -116,7 +116,7 @@ const lessonCopy: Record<Locale, Record<ProbabilityLessonId, LessonCopy>> = {
       why: 'The binomial distribution comes from counting repeated yes/no outcomes with the same success probability.',
       formulaTex: 'P(X=k)=\\binom{n}{k}p^k(1-p)^{n-k}',
       formulaLabel: 'Binomial probability mass',
-      watch: 'The distribution shifts as p changes; simulation approaches theory as runs increase.',
+      watch: 'The distribution shifts as p changes; with more runs, simulation usually moves closer to theory but still fluctuates.',
     },
     'continuous-density': {
       title: 'Continuous Probability Density',
@@ -129,8 +129,8 @@ const lessonCopy: Record<Locale, Record<ProbabilityLessonId, LessonCopy>> = {
     'central-limit-theorem': {
       title: 'Central Limit Theorem',
       what: 'The lower histogram shows sample means collected from many repeated samples.',
-      why: 'Many source distributions produce a sample-mean distribution that becomes narrower and more bell-shaped as sample size grows.',
-      formulaTex: '\\bar X\\approx N\\left(\\mu,\\frac{\\sigma}{\\sqrt n}\\right)',
+      why: 'The sample-mean distribution keeps center near μ while its spread is about σ / √n.',
+      formulaTex: '\\bar X\\approx \\mathcal N\\left(\\mu,\\frac{\\sigma^2}{n}\\right)',
       formulaLabel: 'Normal approximation for sample means',
       watch: 'The original data does not become normal; the distribution of averages is what changes.',
     },
@@ -140,7 +140,7 @@ const lessonCopy: Record<Locale, Record<ProbabilityLessonId, LessonCopy>> = {
       why: 'For independent variables, pair probability is P(X=x)P(Y=y), and matching sums are added.',
       formulaTex: 'P(S=k)=\\sum_{x+y=k}P(X=x)P(Y=y)',
       formulaLabel: 'Discrete convolution for a sum',
-      watch: 'Different pairs can produce the same sum, which is why dice sums form a triangle.',
+      watch: 'This lesson assumes X and Y are independent. Different pairs can produce the same sum, which is why dice sums form a triangle.',
     },
   },
   zh: {
@@ -154,9 +154,9 @@ const lessonCopy: Record<Locale, Record<ProbabilityLessonId, LessonCopy>> = {
     },
     bayes: {
       title: '贝叶斯规则',
-      what: '在所有出现证据的情形中，高亮部分是其中假设真实成立的比例。',
+      what: 'H 是你正在判断的假设，E 是你刚看到的证据。在所有出现证据 E 的情形中，高亮部分是假设 H 真实成立的比例。',
       why: '贝叶斯规则比较“来自假设的证据”和“所有可能来源的证据”。',
-      formulaTex: 'P(H\\mid E)=\\frac{P(E\\mid H)P(H)}{P(E)}',
+      formulaTex: '\\begin{aligned}P(H\\mid E)&=\\frac{P(E\\mid H)P(H)}{P(E)}\\\\P(E)&=P(E\\mid H)P(H)\\\\&\\quad+P(E\\mid \\neg H)P(\\neg H)\\end{aligned}',
       formulaLabel: '贝叶斯规则',
       watch: '当假设很少见且误报常见时，证据出现后假设仍可能不高。',
     },
@@ -174,7 +174,7 @@ const lessonCopy: Record<Locale, Record<ProbabilityLessonId, LessonCopy>> = {
       why: '二项分布来自重复的、成功概率相同的是/否试验。',
       formulaTex: 'P(X=k)=\\binom{n}{k}p^k(1-p)^{n-k}',
       formulaLabel: '二项概率质量',
-      watch: 'p 改变时分布会移动；模拟次数增加时会逼近理论值。',
+      watch: 'p 改变时分布会移动；模拟次数增加时，模拟结果通常更接近理论值，但每次仍会有随机波动。',
     },
     'continuous-density': {
       title: '连续概率密度',
@@ -187,8 +187,8 @@ const lessonCopy: Record<Locale, Record<ProbabilityLessonId, LessonCopy>> = {
     'central-limit-theorem': {
       title: '中心极限定理',
       what: '下方直方图显示从许多重复样本中收集到的样本均值。',
-      why: '很多不同原始分布都会产生越来越窄、越来越接近钟形的样本均值分布。',
-      formulaTex: '\\bar X\\approx N\\left(\\mu,\\frac{\\sigma}{\\sqrt n}\\right)',
+      why: '样本均值的中心仍在 μ 附近，宽度大约缩小为 σ / √n。',
+      formulaTex: '\\bar X\\approx \\mathcal N\\left(\\mu,\\frac{\\sigma^2}{n}\\right)',
       formulaLabel: '样本均值的正态近似',
       watch: '不是原始数据变成正态，而是平均数的分布在变化。',
     },
@@ -198,7 +198,7 @@ const lessonCopy: Record<Locale, Record<ProbabilityLessonId, LessonCopy>> = {
       why: '独立变量的配对概率是 P(X=x)P(Y=y)，同一个和对应的概率要相加。',
       formulaTex: 'P(S=k)=\\sum_{x+y=k}P(X=x)P(Y=y)',
       formulaLabel: '和的离散卷积',
-      watch: '不同配对可能得到同一个和，所以两个骰子的和会形成三角形。',
+      watch: '这一节默认 X 和 Y 独立。不同配对可能得到同一个和，所以两个骰子的和会形成三角形。',
     },
   },
 }
@@ -287,11 +287,14 @@ type ProbabilityUiCopy = {
   values: {
     selectedConditional: string
     likelihoodRatio: string
+    priorOdds: string
+    posteriorOdds: string
     hAndECount: string
     hAndEProbability: string
     tp: string
     fp: string
     fn: string
+    tn: string
     ppv: string
     npv: string
     selectedProbability: string
@@ -354,27 +357,27 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
       reset: 'Reset parameters',
       playbackProgress: 'Playback progress',
       speed: 'speed',
-      mode: 'mode',
-      target: 'target',
-      population: 'population',
+      mode: 'Input method',
+      target: 'Question to answer',
+      population: 'Population size',
       populationAria: 'population size',
-      prior: 'Prior P(H)',
-      likelihood: 'Likelihood P(E|H)',
-      falseAlarm: 'False alarm P(E|not H)',
-      showOdds: 'show odds',
-      naturalFrequencies: 'natural frequencies',
-      prevalence: 'Prevalence',
-      sensitivity: 'Sensitivity',
-      specificity: 'Specificity',
+      prior: 'How common H was before evidence: P(H)',
+      likelihood: 'If H is true, chance E appears: P(E|H)',
+      falseAlarm: 'If H is not true, chance E still appears',
+      showOdds: 'Show odds: target / other',
+      naturalFrequencies: 'Show as people counts',
+      prevalence: 'How many people have the disease before testing',
+      sensitivity: 'Among diseased people, share testing positive',
+      specificity: 'Among non-diseased people, share testing negative',
       testResult: 'test result',
       readout: 'readout',
       positive: 'positive',
       negative: 'negative',
       peopleCount: 'people count',
       probability: 'probability',
-      nTrials: 'n trials',
-      pSuccess: 'p success',
-      range: 'range',
+      nTrials: 'Number of trials n',
+      pSuccess: 'Chance of success each trial p',
+      range: 'Event to highlight',
       exactlyK: 'exactly k',
       atMostK: 'at most k',
       atLeastK: 'at least k',
@@ -385,37 +388,37 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
       uniform: 'Uniform',
       exponential: 'Exponential',
       triangular: 'Triangular',
-      min: 'min',
-      max: 'max',
-      mu: 'mu',
-      sigma: 'sigma',
-      lambda: 'lambda',
-      modeValue: 'mode',
+      min: 'Left edge',
+      max: 'Right edge',
+      mu: 'Center μ',
+      sigma: 'Spread σ',
+      lambda: 'Rate λ',
+      modeValue: 'Peak location',
       intervalA: 'interval a',
       intervalB: 'interval b',
       sampleCount: 'sample count',
       showHistogram: 'show histogram',
-      showCdf: 'show CDF',
-      pointMode: 'point mode',
+      showCdf: 'Show cumulative area curve CDF',
+      pointMode: 'Inspect density height at one point',
       source: 'source',
       sampleSize: 'sample size n',
       numberOfSamples: 'number of samples',
       normalOverlay: 'normal overlay',
-      standardizedZ: 'standardized z',
+      standardizedZ: 'Standardize z: center 0, spread 1',
       xDistribution: 'X distribution',
       yDistribution: 'Y distribution',
       fairDie: 'fair die',
       coin: 'coin',
       biasedCoin: 'biased coin',
-      smallCustom: 'small custom',
-      xWeightAt: (value) => `X weight at ${value}`,
-      yWeightAt: (value) => `Y weight at ${value}`,
-      normalizeX: 'normalize X',
-      normalizeY: 'normalize Y',
+      smallCustom: 'custom 0, 2, 5 tendencies',
+      xWeightAt: (value) => `X tendency toward ${value}`,
+      yWeightAt: (value) => `Y tendency toward ${value}`,
+      normalizeX: 'turn X tendencies into probabilities',
+      normalizeY: 'turn Y tendencies into probabilities',
       selectedSum: 'selected sum',
       showPairGrid: 'show pair grid',
-      twoDiceSum7: 'two dice sum 7',
-      seed: 'seed',
+      twoDiceSum7: 'classic: two dice sum to 7',
+      seed: 'Random seed: repeat the same simulation',
       randomizeSeed: 'randomize seed',
     },
     sections: {
@@ -427,24 +430,27 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
     },
     values: {
       selectedConditional: 'selected conditional',
-      likelihoodRatio: 'likelihood ratio',
+      likelihoodRatio: 'evidence tilt (likelihood ratio)',
+      priorOdds: 'prior odds H : not H',
+      posteriorOdds: 'posterior odds H : not H',
       hAndECount: 'H and E count',
       hAndEProbability: 'H and E probability',
       tp: 'TP',
       fp: 'FP',
       fn: 'FN',
+      tn: 'TN',
       ppv: 'PPV',
       npv: 'NPV',
       selectedProbability: 'selected probability',
       mean: 'mean',
       variance: 'variance',
-      pmfSum: 'PMF sum',
+      pmfSum: 'sum of all bar probabilities',
       intervalProbability: 'P(a ≤ X ≤ b)',
-      pdfMidpoint: 'pdf(midpoint)',
+      pdfMidpoint: 'density height at midpoint, not probability',
       sourceMean: 'source mean',
       sourceVariance: 'source variance',
-      standardError: 'standard error',
-      empiricalZSd: 'empirical z sd',
+      standardError: 'typical distance of sample mean from true mean',
+      empiricalZSd: 'empirical z standard deviation',
       empiricalSd: 'empirical sd',
       empiricalMean: 'empirical mean',
       totalProbability: 'total probability',
@@ -466,6 +472,7 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
       probability: 'probability',
       density: 'density',
       pairsWithSum: (sum) => `pairs with x + y = ${sum}`,
+      tinyRegionNote: 'Tiny regions enlarged; use readout.',
     },
     categoryLabels: {
       aAndB: 'A and B',
@@ -516,27 +523,27 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
       reset: '重置参数',
       playbackProgress: '播放进度',
       speed: '速度',
-      mode: '模式',
-      target: '目标',
-      population: '总体数量',
+      mode: '输入方式',
+      target: '要回答的问题',
+      population: '总体人数',
       populationAria: '总体数量',
-      prior: '先验 P(H)',
-      likelihood: '似然 P(E|H)',
-      falseAlarm: '误报 P(E|非 H)',
-      showOdds: '显示赔率',
-      naturalFrequencies: '自然频数',
-      prevalence: '患病率',
-      sensitivity: '敏感度',
-      specificity: '特异度',
+      prior: 'H 原本有多常见：P(H)',
+      likelihood: '如果 H 为真，证据 E 出现的概率：P(E|H)',
+      falseAlarm: '如果 H 不为真，也出现证据 E 的概率',
+      showOdds: '显示 odds：目标 / 非目标',
+      naturalFrequencies: '用“多少人”来显示概率',
+      prevalence: '人群里本来患病的人占多少',
+      sensitivity: '患病者中测出阳性的比例',
+      specificity: '未患病者中测出阴性的比例',
       testResult: '测试结果',
       readout: '读数方式',
       positive: '阳性',
       negative: '阴性',
       peopleCount: '人数',
       probability: '概率',
-      nTrials: '试验次数 n',
-      pSuccess: '成功概率 p',
-      range: '范围',
+      nTrials: '重复试验次数 n',
+      pSuccess: '每次试验成功的概率 p',
+      range: '要高亮的事件',
       exactlyK: '恰好 k 次',
       atMostK: '至多 k 次',
       atLeastK: '至少 k 次',
@@ -547,37 +554,37 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
       uniform: '均匀',
       exponential: '指数',
       triangular: '三角',
-      min: '最小值',
-      max: '最大值',
-      mu: '均值 μ',
-      sigma: '标准差 σ',
+      min: '左边界',
+      max: '右边界',
+      mu: '中心位置 μ',
+      sigma: '宽度/标准差 σ',
       lambda: '率 λ',
-      modeValue: '众数',
+      modeValue: '最高点位置',
       intervalA: '区间 a',
       intervalB: '区间 b',
       sampleCount: '样本数',
       showHistogram: '显示直方图',
-      showCdf: '显示 CDF',
-      pointMode: '单点模式',
+      showCdf: '显示累计面积曲线 CDF',
+      pointMode: '查看某一点的密度，不是概率',
       source: '来源分布',
       sampleSize: '样本大小 n',
       numberOfSamples: '样本组数',
       normalOverlay: '正态叠加',
-      standardizedZ: '标准化 z',
+      standardizedZ: '标准化 z：中心移到 0，宽度缩成 1',
       xDistribution: 'X 分布',
       yDistribution: 'Y 分布',
       fairDie: '公平骰子',
       coin: '硬币',
       biasedCoin: '偏置硬币',
-      smallCustom: '小型自定义',
-      xWeightAt: (value) => `X 在 ${value} 的权重`,
-      yWeightAt: (value) => `Y 在 ${value} 的权重`,
-      normalizeX: '归一化 X',
-      normalizeY: '归一化 Y',
+      smallCustom: '自定义 0、2、5 的出现倾向',
+      xWeightAt: (value) => `X 更偏向取 ${value} 的程度`,
+      yWeightAt: (value) => `Y 更偏向取 ${value} 的程度`,
+      normalizeX: '把 X 的倾向换成总和为 1 的概率',
+      normalizeY: '把 Y 的倾向换成总和为 1 的概率',
       selectedSum: '选中的和',
       showPairGrid: '显示配对网格',
-      twoDiceSum7: '两个骰子和为 7',
-      seed: '随机种子',
+      twoDiceSum7: '回到经典例子：两个骰子和为 7',
+      seed: '随机种子：固定同一次模拟',
       randomizeSeed: '随机生成种子',
     },
     sections: {
@@ -589,23 +596,26 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
     },
     values: {
       selectedConditional: '选中的条件概率',
-      likelihoodRatio: '似然比',
+      likelihoodRatio: '证据偏向程度（似然比）',
+      priorOdds: '证据前赔率 H : 非 H',
+      posteriorOdds: '证据后赔率 H : 非 H',
       hAndECount: 'H 且 E 的人数',
       hAndEProbability: 'H 且 E 的概率',
       tp: '真阳性',
       fp: '假阳性',
       fn: '假阴性',
+      tn: '真阴性',
       ppv: '阳性预测值',
       npv: '阴性预测值',
       selectedProbability: '选中概率',
       mean: '均值',
       variance: '方差',
-      pmfSum: 'PMF 总和',
+      pmfSum: '所有柱子的概率总和',
       intervalProbability: 'P(a ≤ X ≤ b)',
-      pdfMidpoint: '中点密度',
+      pdfMidpoint: '中点的密度高度，不是概率',
       sourceMean: '来源均值',
       sourceVariance: '来源方差',
-      standardError: '标准误',
+      standardError: '样本平均数通常会离真实平均数多远',
       empiricalZSd: '经验 z 标准差',
       empiricalSd: '经验标准差',
       empiricalMean: '经验均值',
@@ -628,6 +638,7 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
       probability: '概率',
       density: '密度',
       pairsWithSum: (sum) => `x + y = ${sum} 的配对`,
+      tinyRegionNote: '小区域会放大；精确看读数。',
     },
     categoryLabels: {
       aAndB: 'A 且 B',
@@ -808,6 +819,10 @@ export function ProbabilityLesson({ lessonId }: Props) {
     if (lessonId !== 'random-variable-sum' || !playing || sumDistribution.values.length === 0) return selectedSum
     return sumDistribution.values[Math.floor(animationPhase) % sumDistribution.values.length] ?? selectedSum
   }, [animationPhase, lessonId, playing, selectedSum, sumDistribution.values])
+  const currentCopy = useMemo(
+    () => currentLessonCopy(copy, locale, lessonId, target, selectedTestResult, rangeMode),
+    [copy, lessonId, locale, rangeMode, selectedTestResult, target],
+  )
   const sumPlaybackProgress = useMemo(() => {
     if (sumDistribution.values.length <= 1) return 0
     const index = Math.max(0, sumDistribution.values.indexOf(animatedSelectedSum))
@@ -860,6 +875,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
     selectedSum: animatedSelectedSum,
     sumStats,
     showFrequencies,
+    showOdds,
     labels: ui.values,
   })
 
@@ -867,7 +883,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
     (ctx: CanvasRenderingContext2D, size: Parameters<NonNullable<Parameters<typeof ProbabilityCanvas>[0]['draw']>>[1], theme: Parameters<NonNullable<Parameters<typeof ProbabilityCanvas>[0]['draw']>>[2]) => {
       if (lessonId === 'conditional-probability') {
         drawConditionalScene(ctx, size, theme, {
-          title: copy.title,
+          title: currentCopy.title,
           population,
           categories: conditionalCategories(conditional, target, theme, ui.categoryLabels),
           table: conditionalTable(conditional, ui.categoryLabels),
@@ -876,7 +892,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
         })
       } else if (lessonId === 'bayes') {
         drawBayesScene(ctx, size, theme, {
-          title: copy.title,
+          title: currentCopy.title,
           population,
           categories: bayesCategories(bayes, theme, ui.categoryLabels),
           posterior: bayes.posterior,
@@ -885,7 +901,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
         })
       } else if (lessonId === 'medical-test') {
         drawMedicalScene(ctx, size, theme, {
-          title: copy.title,
+          title: currentCopy.title,
           population,
           categories: medicalCategories(medical, selectedTestResult, theme, ui.categoryLabels),
           selected: selectedTestResult,
@@ -894,7 +910,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
           labels: ui.drawing,
         })
       } else if (lessonId === 'binomial') {
-        drawBinomialScene(ctx, size, theme, { distribution: binomial, simulation: binomialSimulation, selectedRange, title: copy.title, labels: ui.drawing })
+        drawBinomialScene(ctx, size, theme, { distribution: binomial, simulation: binomialSimulation, selectedRange, title: currentCopy.title, labels: ui.drawing })
       } else if (lessonId === 'continuous-density') {
         drawContinuousScene(ctx, size, theme, {
           distribution: continuousDistribution,
@@ -907,7 +923,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
           labels: ui.drawing,
         })
       } else if (lessonId === 'central-limit-theorem') {
-        drawCltScene(ctx, size, theme, { source, meansHistogram: cltHistogram, meanDomain: cltDomain, standardized, showNormal, sampleSize, title: copy.title, sourceLabel: ui.sourceLabels[sourceId], labels: ui.drawing })
+        drawCltScene(ctx, size, theme, { source, meansHistogram: cltHistogram, meanDomain: cltDomain, standardized, showNormal, sampleSize, title: currentCopy.title, sourceLabel: ui.sourceLabels[sourceId], labels: ui.drawing })
       } else {
         drawRandomVariableSumScene(ctx, size, theme, {
           x: xDistribution,
@@ -916,7 +932,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
           grid: pairGrid,
           selectedSum: animatedSelectedSum,
           showPairGrid,
-          title: copy.title,
+          title: currentCopy.title,
           labels: ui.drawing,
         })
       }
@@ -931,7 +947,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
       conditional,
       continuousDistribution,
       continuousHistogram,
-      copy.title,
+      currentCopy.title,
       intervalA,
       intervalB,
       lessonId,
@@ -978,11 +994,11 @@ export function ProbabilityLesson({ lessonId }: Props) {
         <div className="calculus-title-row">
           <div>
             <p className="eyebrow">{ui.controls.lesson}</p>
-            <h1>{copy.title}</h1>
+            <h1>{currentCopy.title}</h1>
           </div>
         </div>
         <div className="graph-help-stage probability-graph-stage">
-          <ProbabilityCanvas ariaLabel={`${copy.title} ${ui.canvasAriaSuffix}`} draw={draw} />
+          <ProbabilityCanvas ariaLabel={`${currentCopy.title} ${ui.canvasAriaSuffix}`} draw={draw} />
           <LessonStageActions
             graphLabel={learningCopy.openGraph}
             graphAriaLabel={learningCopy.openGraph}
@@ -1014,20 +1030,20 @@ export function ProbabilityLesson({ lessonId }: Props) {
             {ui.sections.what}
           </HelpLabel>
         </h2>
-        <p>{copy.what}</p>
+        <p>{currentCopy.what}</p>
         <h2>
           <HelpLabel topic={conceptTopicForLesson(lessonId)} onOpenHelpTopic={openHelpTopic}>
             {ui.sections.why}
           </HelpLabel>
         </h2>
-        <p>{copy.why}</p>
+        <p>{currentCopy.why}</p>
         <h2>
           <HelpLabel topic="formula" onOpenHelpTopic={openHelpTopic}>
             {ui.sections.formula}
           </HelpLabel>
         </h2>
         <p className="formula-text formula-card">
-          <Formula tex={copy.formulaTex} block label={copy.formulaLabel} />
+          <Formula tex={currentCopy.formulaTex} block label={currentCopy.formulaLabel} />
         </p>
         <h2>
           <HelpLabel topic="values" onOpenHelpTopic={openHelpTopic}>
@@ -1053,7 +1069,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
             {ui.sections.watch}
           </HelpLabel>
         </h2>
-        <p>{copy.watch}</p>
+        <p>{currentCopy.watch}</p>
       </aside>
     </section>
       )}
@@ -1064,21 +1080,35 @@ export function ProbabilityLesson({ lessonId }: Props) {
 
   function renderControls() {
     if (lessonId === 'conditional-probability') {
+      const intersectionMin = Math.max(0, pA + pB - 1)
+      const intersectionMax = Math.min(pA, pB)
+      const intersectionHint =
+        locale === 'zh'
+          ? '交集不能超过 A 或 B，也不能小于由 A、B 大小决定的最低值。当前滑杆会自动限制到可行范围。'
+          : 'The intersection cannot exceed A or B, and it has a minimum set by the current sizes of A and B.'
       return (
         <>
-          <SelectField label={ui.controls.mode} value={conditionMode} options={[['intersection', 'P(A), P(B), P(A∩B)'], ['conditional', locale === 'zh' ? 'P(A), P(B|A), P(B|非 A)' : 'P(A), P(B|A), P(B|not A)']]} onChange={setConditionMode} />
+          <SelectField
+            label={ui.controls.mode}
+            value={conditionMode}
+            options={[
+              ['intersection', locale === 'zh' ? '直接输入 A、B、交集' : 'Enter A, B, and their overlap'],
+              ['conditional', locale === 'zh' ? '用 A 和条件概率生成 B' : 'Build B from A and conditional probabilities'],
+            ]}
+            onChange={setConditionMode}
+          />
           <SelectField label={ui.controls.target} value={target} options={conditionalTargetOptions(locale)} onChange={setTarget} />
           <PopulationSelect value={population} onChange={setPopulation} labels={ui.controls} />
-          <Range label="P(A)" value={pA} min={0} max={1} step={0.01} onChange={setPA} />
+          <Range label={locale === 'zh' ? '事件 A 占总体的比例 P(A)' : 'Share of the population in event A: P(A)'} value={pA} min={0} max={1} step={0.01} onChange={setPA} />
           {conditionMode === 'intersection' ? (
             <>
-              <Range label="P(B)" value={pB} min={0} max={1} step={0.01} onChange={setPB} />
-              <Range label="P(A∩B)" value={pAB} min={0} max={1} step={0.01} onChange={setPAB} />
+              <Range label={locale === 'zh' ? '事件 B 占总体的比例 P(B)' : 'Share of the population in event B: P(B)'} value={pB} min={0} max={1} step={0.01} onChange={setPB} />
+              <Range label={locale === 'zh' ? 'A 和 B 同时发生的比例 P(A∩B)' : 'Share where A and B both happen: P(A∩B)'} value={pAB} min={intersectionMin} max={intersectionMax} step={0.01} hint={intersectionHint} onChange={setPAB} />
             </>
           ) : (
             <>
-              <Range label="P(B|A)" value={bGivenA} min={0} max={1} step={0.01} onChange={setBGivenA} />
-              <Range label={`P(B|${ui.categoryLabels.notA})`} value={bGivenNotA} min={0} max={1} step={0.01} onChange={setBGivenNotA} />
+              <Range label={locale === 'zh' ? '在 A 里面，B 也发生的比例 P(B|A)' : 'Inside A, share that also has B: P(B|A)'} value={bGivenA} min={0} max={1} step={0.01} onChange={setBGivenA} />
+              <Range label={locale === 'zh' ? '不在 A 里面，B 发生的比例 P(B|非 A)' : 'Outside A, share that has B: P(B|not A)'} value={bGivenNotA} min={0} max={1} step={0.01} onChange={setBGivenNotA} />
             </>
           )}
         </>
@@ -1183,7 +1213,14 @@ export function ProbabilityLesson({ lessonId }: Props) {
         )}
         <Range label={ui.controls.selectedSum} value={selectedSum} min={Math.min(...sumDistribution.values)} max={Math.max(...sumDistribution.values)} step={1} onChange={setSelectedSum} />
         <Toggle label={ui.controls.showPairGrid} checked={showPairGrid} onChange={setShowPairGrid} />
-        <button type="button" onClick={() => setSelectedSum(7)}>
+        <button
+          type="button"
+          onClick={() => {
+            setXPreset('die')
+            setYPreset('die')
+            setSelectedSum(7)
+          }}
+        >
           <RotateCcw size={15} />
           {ui.controls.twoDiceSum7}
         </button>
@@ -1268,6 +1305,85 @@ function HelpLabel({
   return <TermButton onClick={() => onOpenHelpTopic(topic)}>{children}</TermButton>
 }
 
+function currentLessonCopy(base: LessonCopy, locale: Locale, lessonId: ProbabilityLessonId, target: ConditionalTarget, selectedTestResult: MedicalSelection, rangeMode: BinomialRangeMode): LessonCopy {
+  if (lessonId === 'conditional-probability') {
+    const formulas: Record<ConditionalTarget, Pick<LessonCopy, 'formulaTex' | 'formulaLabel'>> = {
+      'a-given-b': {
+        formulaTex: 'P(A\\mid B)=\\frac{P(A\\cap B)}{P(B)}',
+        formulaLabel: 'P(A given B)',
+      },
+      'b-given-a': {
+        formulaTex: 'P(B\\mid A)=\\frac{P(A\\cap B)}{P(A)}',
+        formulaLabel: 'P(B given A)',
+      },
+      'a-given-not-b': {
+        formulaTex: 'P(A\\mid \\neg B)=\\frac{P(A\\cap \\neg B)}{P(\\neg B)}',
+        formulaLabel: 'P(A given not B)',
+      },
+      'b-given-not-a': {
+        formulaTex: 'P(B\\mid \\neg A)=\\frac{P(B\\cap \\neg A)}{P(\\neg A)}',
+        formulaLabel: 'P(B given not A)',
+      },
+    }
+    return { ...base, ...formulas[target] }
+  }
+
+  if (lessonId === 'medical-test') {
+    if (selectedTestResult === 'negative') {
+      return {
+        ...base,
+        what:
+          locale === 'zh'
+            ? '阴性结果中同时包含真阴性和假阴性；两者的可见比例决定了阴性结果的含义。'
+            : 'The negative result group contains true negatives and false negatives; the visible mix determines what a negative result means.',
+        why:
+          locale === 'zh'
+            ? '测试“准不准”和结果“意味着什么”不是同一个问题。阴性预测值只在所有阴性结果里重新计算。'
+            : 'Test accuracy and result meaning are not the same question. Negative predictive value recalculates inside all negative results.',
+        formulaTex: 'NPV=\\frac{TN}{TN+FN}',
+        formulaLabel: locale === 'zh' ? '阴性预测值' : 'Negative predictive value',
+      }
+    }
+    return {
+      ...base,
+      what:
+        locale === 'zh'
+          ? '阳性结果中同时包含真阳性和假阳性；两者的可见比例决定了阳性结果的含义。'
+          : 'The positive result group contains true positives and false positives; the visible mix determines what a positive result means.',
+      why:
+        locale === 'zh'
+          ? '测试“准不准”和结果“意味着什么”不是同一个问题。阳性预测值只在所有阳性结果里重新计算。'
+          : 'Test accuracy and result meaning are not the same question. Positive predictive value recalculates inside all positive results.',
+      formulaTex: 'PPV=\\frac{TP}{TP+FP}',
+      formulaLabel: locale === 'zh' ? '阳性预测值' : 'Positive predictive value',
+    }
+  }
+
+  if (lessonId === 'binomial') {
+    const formulas: Record<BinomialRangeMode, Pick<LessonCopy, 'formulaTex' | 'formulaLabel'>> = {
+      exact: {
+        formulaTex: 'P(X=k)=\\binom{n}{k}p^k(1-p)^{n-k}',
+        formulaLabel: locale === 'zh' ? '恰好 k 次成功' : 'Exactly k successes',
+      },
+      'at-most': {
+        formulaTex: '\\begin{aligned}P(X\\le k)&=\\sum_{i=0}^{k}P(X=i)\\\\P(X=i)&=\\binom{n}{i}p^i(1-p)^{n-i}\\end{aligned}',
+        formulaLabel: locale === 'zh' ? '至多 k 次成功' : 'At most k successes',
+      },
+      'at-least': {
+        formulaTex: '\\begin{aligned}P(X\\ge k)&=\\sum_{i=k}^{n}P(X=i)\\\\P(X=i)&=\\binom{n}{i}p^i(1-p)^{n-i}\\end{aligned}',
+        formulaLabel: locale === 'zh' ? '至少 k 次成功' : 'At least k successes',
+      },
+      between: {
+        formulaTex: '\\begin{aligned}P(k_1\\le X\\le k_2)&=\\sum_{i=k_1}^{k_2}P(X=i)\\\\P(X=i)&=\\binom{n}{i}p^i(1-p)^{n-i}\\end{aligned}',
+        formulaLabel: locale === 'zh' ? '介于 k1 与 k2 次成功' : 'Between k1 and k2 successes',
+      },
+    }
+    return { ...base, ...formulas[rangeMode] }
+  }
+
+  return base
+}
+
 function makeDiscretePreset(preset: DiscretePresetId, customWeights: number[]) {
   if (preset !== 'small-custom') return distributionById(preset)
   return normalizeDistribution({ values: [0, 2, 5], probabilities: customWeights })
@@ -1280,7 +1396,25 @@ function normalizeCustom(setA: (value: number) => void, setB: (value: number) =>
   setC(normalized[2] ?? 0)
 }
 
-function Range({ label, value, min, max, step, valueSuffix, onChange }: { label: string; value: number; min: number; max: number; step: number; valueSuffix?: string; onChange: (value: number) => void }) {
+function Range({
+  label,
+  value,
+  min,
+  max,
+  step,
+  valueSuffix,
+  hint,
+  onChange,
+}: {
+  label: string
+  value: number
+  min: number
+  max: number
+  step: number
+  valueSuffix?: string
+  hint?: string
+  onChange: (value: number) => void
+}) {
   const constrainedValue = Math.min(max, Math.max(min, value))
   if (valueSuffix) {
     return (
@@ -1296,9 +1430,10 @@ function Range({ label, value, min, max, step, valueSuffix, onChange }: { label:
     <label className="probability-range">
       <span>
         <span className="probability-range-label">{renderMathText(label)}:</span>
-        <strong>{formatNumber(value)}</strong>
+        <strong>{formatNumber(constrainedValue)}</strong>
       </span>
       <input type="range" min={min} max={max} step={step} value={constrainedValue} onChange={(event) => onChange(Number(event.target.value))} />
+      {hint && <small className="probability-range-hint">{hint}</small>}
     </label>
   )
 }
@@ -1444,6 +1579,7 @@ function getValues(state: {
   selectedSum: number
   sumStats: ReturnType<typeof sumDistributionStats>
   showFrequencies: boolean
+  showOdds: boolean
   labels: ProbabilityUiCopy['values']
 }): ValueRow[] {
   if (state.lessonId === 'conditional-probability') {
@@ -1457,12 +1593,16 @@ function getValues(state: {
   }
   if (state.lessonId === 'bayes') {
     const hAndE = state.bayes.prior * state.bayes.likelihood
-    return [
+    const rows: ValueRow[] = [
       { label: 'P(E)', value: formatLocalizedPercent(state.bayes.evidence, state.labels.notDefined) },
       { label: 'P(H|E)', value: formatLocalizedPercent(state.bayes.posterior, state.labels.notDefined) },
       { label: state.labels.likelihoodRatio, value: formatLocalizedNumber(state.bayes.likelihoodRatio, state.labels.notDefined) },
       { label: state.showFrequencies ? state.labels.hAndECount : state.labels.hAndEProbability, value: state.showFrequencies ? formatCount(hAndE * state.population) : formatLocalizedProbability(hAndE, state.labels.notDefined) },
     ]
+    if (state.showOdds) {
+      rows.splice(3, 0, { label: state.labels.priorOdds, value: formatLocalizedNumber(state.bayes.priorOdds, state.labels.notDefined) }, { label: state.labels.posteriorOdds, value: formatLocalizedNumber(state.bayes.posteriorOdds, state.labels.notDefined) })
+    }
+    return rows
   }
   if (state.lessonId === 'medical-test') {
     const value = state.selectedTestResult === 'positive' ? state.medical.positivePredictiveValue : state.medical.negativePredictiveValue
@@ -1471,6 +1611,7 @@ function getValues(state: {
       { label: state.labels.tp, value: state.frequencyMode === 'count' ? formatCount(state.medical.truePositive * scale) : formatLocalizedPercent(state.medical.truePositive, state.labels.notDefined) },
       { label: state.labels.fp, value: state.frequencyMode === 'count' ? formatCount(state.medical.falsePositive * scale) : formatLocalizedPercent(state.medical.falsePositive, state.labels.notDefined) },
       { label: state.labels.fn, value: state.frequencyMode === 'count' ? formatCount(state.medical.falseNegative * scale) : formatLocalizedPercent(state.medical.falseNegative, state.labels.notDefined) },
+      { label: state.labels.tn, value: state.frequencyMode === 'count' ? formatCount(state.medical.trueNegative * scale) : formatLocalizedPercent(state.medical.trueNegative, state.labels.notDefined) },
       { label: state.selectedTestResult === 'positive' ? state.labels.ppv : state.labels.npv, value: formatLocalizedPercent(value, state.labels.notDefined) },
     ]
   }
@@ -1511,6 +1652,8 @@ function getValues(state: {
 }
 
 function formatLocalizedNumber(value: number | null | undefined, notDefined: string, digits?: number): string {
+  if (value === Number.POSITIVE_INFINITY) return '∞'
+  if (value === Number.NEGATIVE_INFINITY) return '-∞'
   if (value === null || value === undefined || !Number.isFinite(value)) return notDefined
   return formatNumber(value, digits)
 }
