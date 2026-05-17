@@ -143,7 +143,7 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
       title: '矩阵序列和合成矩阵',
       summary: (
         <>
-          用户顺序 <Formula tex="[A,B,C]" /> 表示先做 <Formula tex="A" />，再做 <Formula tex="B" />，最后做 <Formula tex="C" />；合成矩阵写成 <Formula tex="CBA" />。
+          用户顺序 <Formula tex="[A_1,A_2,A_3]" /> 表示先做 <Formula tex="A_1" />，再做 <Formula tex="A_2" />，最后做 <Formula tex="A_3" />；合成矩阵写成 <Formula tex="A_3A_2A_1" />。
         </>
       ),
       sections: [
@@ -151,7 +151,7 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           title: '为什么顺序看起来反过来',
           body: (
             <>
-              向量从右边开始被作用：<Formula tex="v" /> ↦ <Formula tex="Av" /> ↦ <Formula tex="B(Av)" /> ↦ <Formula tex="C(BAv)" />。所以最后写出来是 <Formula tex="CBA" />，但实验面板仍按你选择的先后顺序播放。
+              向量从右边开始被作用：<Formula tex="v" /> ↦ <Formula tex="A_1v" /> ↦ <Formula tex="A_2(A_1v)" /> ↦ <Formula tex="A_3(A_2(A_1v))" />。所以最后写出来是 <Formula tex="A_3A_2A_1" />，但实验面板仍按你选择的先后顺序播放。
             </>
           ),
         },
@@ -351,7 +351,7 @@ function enTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
       title: 'Matrix sequence and composition',
       summary: (
         <>
-          User order <Formula tex="[A,B,C]" /> means apply <Formula tex="A" /> first, then <Formula tex="B" />, then <Formula tex="C" />. The composed matrix is written <Formula tex="CBA" />.
+          User order <Formula tex="[A_1,A_2,A_3]" /> means apply <Formula tex="A_1" /> first, then <Formula tex="A_2" />, then <Formula tex="A_3" />. The composed matrix is written <Formula tex="A_3A_2A_1" />.
         </>
       ),
       sections: [
@@ -359,7 +359,7 @@ function enTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           title: 'Why the written order is reversed',
           body: (
             <>
-              The vector is acted on from the right: <Formula tex="v\\mapsto Av\\mapsto B(Av)\\mapsto C(BAv)" />. The panel still plays the steps in the order you chose.
+              The vector is acted on from the right: <Formula tex="v\\mapsto A_1v\\mapsto A_2(A_1v)\\mapsto A_3(A_2(A_1v))" />. The panel still plays the steps in the order you chose.
             </>
           ),
         },
