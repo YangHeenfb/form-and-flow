@@ -207,7 +207,7 @@ export const appCopy: Record<Locale, AppCopy> = {
     matrixSequence: {
       title: 'Matrix Sequence',
       add: 'Add',
-      help: 'User order [A, B, C] means first A, then B, then C. The composed matrix is CBA.',
+      help: 'User order [A₁, A₂, A₃] means first A₁, then A₂, then A₃. The composed matrix is A₃A₂A₁.',
       presetTitle: 'Preset Library',
       presetSummary: 'Expand to apply common maps',
       presetNames: identityPresetNames,
@@ -366,7 +366,7 @@ export const appCopy: Record<Locale, AppCopy> = {
     matrixSequence: {
       title: '矩阵序列',
       add: '添加',
-      help: '用户顺序 [A, B, C] 表示先作用 A，再作用 B，再作用 C；合成矩阵是 CBA。',
+      help: '用户顺序 [A₁, A₂, A₃] 表示先作用 A₁，再作用 A₂，再作用 A₃；合成矩阵是 A₃A₂A₁。',
       presetTitle: '预设库',
       presetSummary: '展开后应用常见映射',
       presetNames: presetNameZh,
