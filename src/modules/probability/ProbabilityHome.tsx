@@ -19,19 +19,20 @@ export function ProbabilityHome() {
       </div>
 
       <div className="lesson-card-grid probability-lesson-grid">
-        {module.lessons.map((lesson) => (
-          <a className="lesson-card probability-lesson-card" href={lesson.route} key={lesson.id}>
+        {module.explorers.map((explorer) => (
+          <a className="lesson-card probability-lesson-card" href={explorer.route} key={explorer.id}>
             <div>
-              <h2>{lesson.title}</h2>
-              <p>{lesson.description}</p>
+              <h2>{explorer.title}</h2>
+              <p>{explorer.description}</p>
             </div>
-            <strong>{copy.learningGoals}</strong>
+            <strong>{copy.thingsToTry}</strong>
             <ul>
-              {lesson.learningGoals.map((goal) => (
-                <li key={goal}>{goal}</li>
+              {explorer.thingsToTry.slice(0, 2).map((item) => (
+                <li key={item}>{item}</li>
               ))}
             </ul>
-            {lesson.id === 'random-variable-sum' && (
+            <span className="open-explorer-link">{copy.openExplorer}</span>
+            {explorer.id === 'random-variable-sum' && (
               <p className="probability-card-link">{locale === 'zh' ? '若想深入了解，可打开卷积模块。' : 'For a deeper version, open the Convolution module.'}</p>
             )}
           </a>

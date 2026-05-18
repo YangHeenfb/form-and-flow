@@ -12,23 +12,21 @@ export const complexPlaneManifest: ModuleDefinition = {
   routeBase: base,
   order: 7,
   previewKind: 'complex-plane',
-  lessons: [
-    lesson('basics', 'Complex Numbers as Points'),
-    lesson('multiplication', 'Multiplication as Rotation and Scaling'),
-    lesson('maps', 'Complex Function Maps'),
-    lesson('image-loops', 'Image Loops'),
+  explorers: [
+    explorer('basics', 'Complex Numbers as Points'),
+    explorer('multiplication', 'Multiplication as Rotation and Scaling'),
+    explorer('maps', 'Complex Function Maps'),
+    explorer('image-loops', 'Image Loops'),
   ],
 }
 
-function lesson(id: string, title: string) {
+function explorer(id: string, title: string) {
   return {
     id,
     title,
     description: 'Watch complex arithmetic act on points, curves, and regions.',
     route: `${base}/${id}`,
     status: 'planned' as const,
-    difficulty: 'beginner' as const,
-    estimatedMinutes: 12,
-    learningGoals: ['Read complex numbers geometrically', 'Connect formulas to plane motion'],
+    thingsToTry: ['Read complex numbers geometrically', 'Connect formulas to plane motion'],
   }
 }

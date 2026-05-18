@@ -15,26 +15,24 @@ export const convolutionManifest: ModuleDefinition = {
   previewKind: 'convolution',
   loadComponent: loadConvolutionModule,
   relatedConcepts: ['fourier-transform', 'convolution-theorem', 'filtering'],
-  lessons: [
-    lesson('discrete', 'Discrete Convolution'),
-    lesson('probability', 'Probability Sum'),
-    lesson('signal', 'Signal Filtering'),
-    lesson('image-kernel', 'Image Kernel'),
-    lesson('polynomial', 'Polynomial Multiplication'),
-    lesson('continuous', 'Continuous Convolution'),
+  explorers: [
+    explorer('discrete', 'Discrete Convolution'),
+    explorer('probability', 'Probability Sum'),
+    explorer('signal', 'Signal Filtering'),
+    explorer('image-kernel', 'Image Kernel'),
+    explorer('polynomial', 'Polynomial Multiplication'),
+    explorer('continuous', 'Continuous Convolution'),
   ],
 }
 
-function lesson(id: string, title: string) {
+function explorer(id: string, title: string) {
   return {
     id,
     title,
     description: 'Slide, multiply, and sum to see convolution as a reusable pattern.',
     route: `${base}/${id}`,
     status: 'ready' as const,
-    difficulty: 'intermediate' as const,
-    estimatedMinutes: 12,
-    learningGoals: ['See flip, shift, overlap, multiply, sum', 'Connect convolution across contexts'],
+    thingsToTry: ['See flip, shift, overlap, multiply, sum', 'Connect convolution across contexts'],
     loadComponent: loadConvolutionModule,
     relatedConcepts: ['fourier-transform', 'convolution-theorem', 'filtering'],
   }

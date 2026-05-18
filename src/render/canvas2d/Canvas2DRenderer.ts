@@ -33,7 +33,7 @@ export class Canvas2DRenderer {
     const center: Point2 = [width / 2 + payload.viewPan.x, height / 2 + payload.viewPan.y]
 
     ctx.clearRect(0, 0, width, height)
-    ctx.fillStyle = payload.theme.surfaceMode === 'dark' ? '#0d141c' : '#f8fafc'
+    ctx.fillStyle = payload.theme.colors.background
     ctx.fillRect(0, 0, width, height)
 
     if (payload.inputDim === 2 && payload.outputDim === 2) {

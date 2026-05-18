@@ -165,6 +165,11 @@ export function ExplanationPanel({ locale = 'en', maps, composedMap, stepMaps, v
               ))}
             </div>
           </section>
+
+          <section className="info-card">
+            <h2>{copy.assumptionsCaveats}</h2>
+            <p>{copy.matrixCaveats}</p>
+          </section>
         </>
       )}
     </aside>

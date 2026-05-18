@@ -12,25 +12,23 @@ export const vectorFieldManifest: ModuleDefinition = {
   routeBase: base,
   order: 10,
   previewKind: 'vector-field',
-  lessons: [
-    lesson('basics', 'Vector Field Basics'),
-    lesson('flow', 'Flow & Streamlines'),
-    lesson('divergence', 'Divergence'),
-    lesson('curl', 'Curl'),
-    lesson('flux-circulation', 'Flux & Circulation'),
-    lesson('gradient-fields', 'Gradient Fields'),
+  explorers: [
+    explorer('basics', 'Vector Field Basics'),
+    explorer('flow', 'Flow & Streamlines'),
+    explorer('divergence', 'Divergence'),
+    explorer('curl', 'Curl'),
+    explorer('flux-circulation', 'Flux & Circulation'),
+    explorer('gradient-fields', 'Gradient Fields'),
   ],
 }
 
-function lesson(id: string, title: string) {
+function explorer(id: string, title: string) {
   return {
     id,
     title,
     description: 'Follow arrows, particles, and local probes in a 2D vector field.',
     route: `${base}/${id}`,
     status: 'planned' as const,
-    difficulty: 'intermediate' as const,
-    estimatedMinutes: 14,
-    learningGoals: ['Understand vectors at each point', 'Connect local arrows to global flow'],
+    thingsToTry: ['Understand vectors at each point', 'Connect local arrows to global flow'],
   }
 }

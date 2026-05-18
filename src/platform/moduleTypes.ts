@@ -21,18 +21,15 @@ export type ModuleCategory =
   | 'other'
 
 export type ModuleStatus = 'ready' | 'in-progress' | 'planned'
-export type LessonStatus = 'ready' | 'in-progress' | 'planned'
-export type LessonDifficulty = 'beginner' | 'intermediate' | 'advanced'
+export type ExplorerStatus = 'ready' | 'in-progress' | 'planned'
 
-export type LessonDefinition = {
+export type ExplorerDefinition = {
   id: string
   title: string
   description: string
   route: string
-  status: LessonStatus
-  difficulty: LessonDifficulty
-  estimatedMinutes?: number
-  learningGoals: string[]
+  status: ExplorerStatus
+  thingsToTry: string[]
   loadComponent?: ModuleComponentLoader
   relatedConcepts?: string[]
 }
@@ -48,7 +45,7 @@ export type ModuleDefinition = {
   order: number
   icon?: string
   accentColor?: string
-  lessons: LessonDefinition[]
+  explorers: ExplorerDefinition[]
   loadComponent?: ModuleComponentLoader
   previewKind?: string
   relatedConcepts?: string[]

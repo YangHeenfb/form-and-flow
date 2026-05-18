@@ -34,7 +34,7 @@ export class Three3DRenderer {
     this.applyCameraView(cameraView)
     this.applyViewZoom(payload.viewZoom)
     this.clearScene()
-    this.scene.background = new THREE.Color(payload.theme.surfaceMode === 'dark' ? '#0d141c' : '#f8fafc')
+    this.scene.background = new THREE.Color(payload.theme.colors.background)
 
     const light = new THREE.DirectionalLight(0xffffff, payload.theme.surfaceMode === 'dark' ? 1.2 : 1.5)
     light.position.set(5, 6, 7)

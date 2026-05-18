@@ -775,15 +775,6 @@ function LessonFrame({
 
       explanation={
         <>
-        <h2>{ui.seeing}</h2>
-        <p>{renderConvolutionWhat(lessonId, locale, copy.what, openTerm, operation)}</p>
-        <h2>{ui.why}</h2>
-        <p>{copy.why}</p>
-        <h2>{ui.formula}</h2>
-        <p className="formula-text formula-card">
-          <Formula tex={currentFormula.formulaTex} block label={currentFormula.formula} />
-        </p>
-        {currentFormula.note && <p className="formula-note">{currentFormula.note}</p>}
         <h2>{ui.values}</h2>
         <dl>
           {values.map((row) => (
@@ -793,6 +784,14 @@ function LessonFrame({
             </div>
           ))}
         </dl>
+        <h2>{ui.formula}</h2>
+        <p className="formula-text formula-card">
+          <Formula tex={currentFormula.formulaTex} block label={currentFormula.formula} />
+        </p>
+        {currentFormula.note && <p className="formula-note">{currentFormula.note}</p>}
+        <h2>{ui.seeing}</h2>
+        <p>{renderConvolutionWhat(lessonId, locale, copy.what, openTerm, operation)}</p>
+        <p>{copy.why}</p>
         <h2>{ui.watch}</h2>
         <p>{copy.watch}</p>
         </>
@@ -922,8 +921,8 @@ function renderConvolutionWhat(lessonId: ConvolutionLessonId, locale: Locale, fa
 
 function getConvolutionHelpLabels(locale: Locale): { beginner: string; graph: string; close: string } {
   return locale === 'zh'
-    ? { beginner: '新手解释', graph: '怎么看图', close: '关闭解释' }
-    : { beginner: 'Beginner Guide', graph: 'Read the graph', close: 'Close explanation' }
+    ? { beginner: '参考', graph: '图像说明', close: '关闭参考' }
+    : { beginner: 'Reference', graph: 'Graph notes', close: 'Close reference' }
 }
 
 function getConvolutionHelpTopic(mode: ConvolutionHelpMode, lessonId: ConvolutionLessonId, locale: Locale): HelpTopic {
@@ -1132,7 +1131,7 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
   if (lessonId === 'probability') {
     return locale === 'zh'
       ? {
-          eyebrow: '怎么看图',
+          eyebrow: '图像说明',
           title: '概率和图像读法',
           summary: '从上到下读：上方是 X 和 Y 的原始分布，中间是当前和的组合，下方是 X+Y 的分布。',
           sections: [
@@ -1142,7 +1141,7 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
           ],
         }
       : {
-          eyebrow: 'Read the graph',
+          eyebrow: 'Graph notes',
           title: 'How to read probability sums',
           summary: 'Read top to bottom: original distributions for X and Y, pairs for the current sum, then the distribution of X+Y.',
           sections: [
@@ -1156,7 +1155,7 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
   if (lessonId === 'polynomial') {
     return locale === 'zh'
       ? {
-          eyebrow: '怎么看图',
+          eyebrow: '图像说明',
           title: '多项式乘法图像读法',
           summary: '上方网格显示每一项乘每一项；下方柱状图显示乘积多项式的系数。',
           sections: [
@@ -1166,7 +1165,7 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
           ],
         }
       : {
-          eyebrow: 'Read the graph',
+          eyebrow: 'Graph notes',
           title: 'How to read polynomial multiplication',
           summary: 'The grid shows every term times every term; the lower bars show the coefficients of the product polynomial.',
           sections: [
@@ -1180,7 +1179,7 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
   if (lessonId === 'continuous') {
     return locale === 'zh'
       ? {
-          eyebrow: '怎么看图',
+          eyebrow: '图像说明',
           title: '连续卷积图像读法',
           summary: '青色曲线是 f(τ)，紫色曲线是翻转并平移后的 g(t−τ)，浅色阴影是两者相乘后的面积，上方曲线是输出。',
           sections: [
@@ -1190,7 +1189,7 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
           ],
         }
       : {
-          eyebrow: 'Read the graph',
+          eyebrow: 'Graph notes',
           title: 'How to read continuous convolution',
           summary: 'Teal is f(tau), purple is flipped-and-shifted g(t-tau), the pale fill is product area, and the upper curve is the output.',
           sections: [
@@ -1226,7 +1225,7 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
   if (lessonId === 'discrete') {
     return locale === 'zh'
       ? {
-          eyebrow: '怎么看图',
+          eyebrow: '图像说明',
           title: '离散卷积图像读法',
           summary: '从上到下读：上方看 a 和 b 的相对位置，中间看当前重叠项的乘积，下方看输出序列 y。',
           sections: [
@@ -1236,7 +1235,7 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
           ],
         }
       : {
-          eyebrow: 'Read the graph',
+          eyebrow: 'Graph notes',
           title: 'How to read discrete convolution',
           summary: 'Read top to bottom: relative positions of a and b, current overlap products, then output y.',
           sections: [
@@ -1250,7 +1249,7 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
   if (lessonId === 'image-kernel') {
     return locale === 'zh'
       ? {
-          eyebrow: '怎么看图',
+          eyebrow: '图像说明',
           title: '图像卷积核读法',
           summary: '左边是输入图，右边是应用卷积核后的输出图。点击像素可以看同一个位置如何被改写。',
           sections: [
@@ -1260,7 +1259,7 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
           ],
         }
       : {
-          eyebrow: 'Read the graph',
+          eyebrow: 'Graph notes',
           title: 'How to read the image kernel view',
           summary: 'The left image is input; the right image is the output after applying the kernel. Click a pixel to inspect the matching location.',
           sections: [
@@ -1274,7 +1273,7 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
   if (lessonId === 'signal') {
     return locale === 'zh'
       ? {
-          eyebrow: '怎么看图',
+          eyebrow: '图像说明',
           title: '信号滤波图像读法',
           summary: '上方是输入信号，中间是当前卷积核，下方是滤波后的输出。',
           sections: [
@@ -1283,7 +1282,7 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
           ],
         }
       : {
-          eyebrow: 'Read the graph',
+          eyebrow: 'Graph notes',
           title: 'How to read signal filtering',
           summary: 'The top is the input signal, the middle is the current kernel, and the bottom is the filtered output.',
           sections: [
@@ -1295,7 +1294,7 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
 
   return locale === 'zh'
     ? {
-        eyebrow: '怎么看图',
+        eyebrow: '图像说明',
         title: '卷积图像读法',
         summary: '先看输入对象，再看当前重叠或组合，最后看输出。',
         sections: [
@@ -1305,7 +1304,7 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
         ],
       }
     : {
-        eyebrow: 'Read the graph',
+        eyebrow: 'Graph notes',
         title: 'How to read convolution views',
         summary: 'Read the inputs first, then the current overlap or pairing, then the output.',
         sections: [
@@ -1358,7 +1357,7 @@ function convolutionTermTopic(term: ConvolutionTermId, locale: Locale): HelpTopi
       eyebrow: '术语',
       title: '重叠',
       summary: '重叠是两个对象在当前平移位置同时覆盖到的部分。',
-      sections: [{ title: '为什么重要', body: '只有重叠到的项会相乘并参与当前输出。没有重叠时，贡献就是 0。' }],
+      sections: [{ title: '说明', body: '只有重叠到的项会相乘并参与当前输出。没有重叠时，贡献就是 0。' }],
     },
     'multiply-sum': {
       eyebrow: '术语',
@@ -1505,7 +1504,7 @@ function convolutionTermTopic(term: ConvolutionTermId, locale: Locale): HelpTopi
       eyebrow: 'Term',
       title: 'Overlap',
       summary: 'Overlap is the part where two objects cover the same positions at the current shift.',
-      sections: [{ title: 'Why it matters', body: 'Only overlapping items multiply and contribute to the current output. No overlap means zero contribution.' }],
+      sections: [{ title: 'Notes', body: 'Only overlapping items multiply and contribute to the current output. No overlap means zero contribution.' }],
     },
     'multiply-sum': {
       eyebrow: 'Term',

@@ -28,18 +28,18 @@ type LearningCopy = {
 
 export const probabilityLearningCopy: Record<Locale, LearningCopy> = {
   en: {
-    entryTitle: 'Need the basics?',
-    entryHint: 'Open a short explanation when probability symbols, distributions, or simulations feel unfamiliar.',
-    openOverview: 'Beginner Guide',
-    openGraph: 'Read the graph',
-    close: 'Close explanation',
+    entryTitle: 'Reference notes',
+    entryHint: 'Use short notes when probability symbols, distributions, or simulations feel unfamiliar.',
+    openOverview: 'Reference',
+    openGraph: 'Graph notes',
+    close: 'Close reference',
   },
   zh: {
-    entryTitle: '新手解释',
+    entryTitle: '参考',
     entryHint: '遇到条件概率、贝叶斯、分布、密度或模拟这些概念时，可以随时打开解释。',
-    openOverview: '新手解释',
-    openGraph: '怎么看图',
-    close: '关闭解释',
+    openOverview: '参考',
+    openGraph: '图像说明',
+    close: '关闭参考',
   },
 }
 
@@ -500,7 +500,7 @@ function enTopics(lessonId: ProbabilityLessonId): Record<ProbabilityHelpTopicId,
             'A probability can be read as the share of a target case inside many cases.',
             'Conditional probability recalculates that share inside a smaller world.',
             'A distribution lists possible values and how common each one is.',
-            'Simulation does not prove the formula; it helps you see long-run frequency approach theory.',
+            'Simulation does not formally prove the formula; it helps you see long-run frequency approach theory.',
           ],
         },
         {
@@ -743,7 +743,7 @@ function enGraphTopic(lessonId: ProbabilityLessonId): HelpTopic {
       sections: [
         {
           title: 'Watch one sum',
-          items: ['This lesson assumes X and Y are independent, so cell probabilities can be multiplied.', 'Each cell is one x and y combination.', 'Highlighted cells create the selected sum.', 'Many different pairs can feed the same output bar.'],
+          items: ['This experiment assumes X and Y are independent, so cell probabilities can be multiplied.', 'Each cell is one x and y combination.', 'Highlighted cells create the selected sum.', 'Many different pairs can feed the same output bar.'],
         },
       ],
     }

@@ -74,6 +74,7 @@ export type AppCopy = {
     neutral: string
     highContrast: string
     lowContrastWarning: string
+    objectContrastWarning: string
     colorLabels: Record<ThemeColorKey, string>
   }
   controls: {
@@ -107,6 +108,8 @@ export type AppCopy = {
     sceneSummary: (inputDim: SpaceDim, outputDim: SpaceDim, mapCount: number, vectorCount: number) => string
     mappingHints: Record<'2-2' | '3-3' | '3-2' | '2-3', string>
     title: string
+    assumptionsCaveats: string
+    matrixCaveats: string
     sequence: (names: string, composedName: string, inputDim: SpaceDim, outputDim: SpaceDim) => string
     fixDimensions: string
     dimensionCheck: string
@@ -208,7 +211,7 @@ export const appCopy: Record<Locale, AppCopy> = {
       matrices: 'Matrices',
       vectors: 'Vectors',
       theme: 'Theme',
-      explanation: 'Explanation',
+      explanation: 'Readout',
       controls: 'Controls',
       exportPng: 'Export PNG',
       autoHideHud: 'Auto-hide UI',
@@ -250,8 +253,11 @@ export const appCopy: Record<Locale, AppCopy> = {
       title: 'Drawing Colors',
       neutral: 'Neutral',
       highContrast: 'High Contrast',
-      lowContrastWarning: 'Low contrast warning: some axes, grids, vectors, or labels may be hard to read.',
+      lowContrastWarning: 'Low contrast: text may be hard to read against the selected background.',
+      objectContrastWarning: 'Low contrast: some axes, grids, vectors, or curves may be hard to see.',
       colorLabels: {
+        background: 'Background',
+        text: 'Text',
         grid: 'Grid',
         transformedGrid: 'Transformed grid',
         axis: 'Axis',
@@ -290,10 +296,10 @@ export const appCopy: Record<Locale, AppCopy> = {
       x: 'X',
       y: 'Y',
       z: 'Z',
-      webglUnavailable: '3D rendering needs WebGL. The rest of the lesson and numeric explanation are still available.',
+      webglUnavailable: '3D rendering needs WebGL. The numeric readout remains available.',
     },
     explanation: {
-      mappingType: 'Mapping Type',
+      mappingType: 'Readout',
       mappingAria: 'Current mapping type',
       mappingSummary: 'Read-only summary of the current matrix sequence.',
       sceneSummary: (inputDim, outputDim, mapCount, vectorCount) =>
@@ -304,7 +310,9 @@ export const appCopy: Record<Locale, AppCopy> = {
         '3-2': '2x3 compression',
         '2-3': '3x2 map into 3D',
       },
-      title: 'Explanation',
+      title: 'Notes',
+      assumptionsCaveats: 'Assumptions / Caveats',
+      matrixCaveats: 'This is a finite-precision numerical visualization. Near-collapses, rank, and orientation readouts use thresholds, so tiny changes can alter the readout.',
       sequence: (names, composedName, inputDim, outputDim) =>
         `The sequence applies ${names} in user order. The final matrix is ${composedName}, mapping ${spacePlain(inputDim)} to ${spacePlain(outputDim)}.`,
       fixDimensions: 'Fix the sequence dimensions to preview the composed transformation.',
@@ -313,7 +321,7 @@ export const appCopy: Record<Locale, AppCopy> = {
       inputDimension: 'Input dimension',
       outputDimension: 'Output dimension',
       matrixShape: 'Matrix shape',
-      finalMatrix: 'Final Matrix',
+      finalMatrix: 'Formula used',
       areaScale: 'Determinant and Area',
       areaScaleFactor: 'Area scale',
       volumeScale: 'Determinant and Volume',
@@ -379,7 +387,7 @@ export const appCopy: Record<Locale, AppCopy> = {
       matrices: '矩阵',
       vectors: '向量',
       theme: '主题',
-      explanation: '解释',
+      explanation: '读数',
       controls: '控制',
       exportPng: '导出 PNG',
       autoHideHud: '自动隐藏界面控件',
@@ -421,8 +429,11 @@ export const appCopy: Record<Locale, AppCopy> = {
       title: '绘图颜色',
       neutral: '中性',
       highContrast: '高对比',
-      lowContrastWarning: '低对比提醒：部分坐标轴、网格、向量或标签可能不易辨认。',
+      lowContrastWarning: 'Low contrast：文字和所选背景之间可能不易阅读。',
+      objectContrastWarning: '低对比提醒：部分坐标轴、网格、向量或曲线可能不易辨认。',
       colorLabels: {
+        background: '背景',
+        text: '文字',
         grid: '网格',
         transformedGrid: '变换后网格',
         axis: '坐标轴',
@@ -461,10 +472,10 @@ export const appCopy: Record<Locale, AppCopy> = {
       x: 'X',
       y: 'Y',
       z: 'Z',
-      webglUnavailable: '3D 渲染需要 WebGL；章节内容和数值解释仍可继续使用。',
+      webglUnavailable: '3D 渲染需要 WebGL；数值读数仍可继续使用。',
     },
     explanation: {
-      mappingType: '映射类型',
+      mappingType: '读数',
       mappingAria: '当前映射类型',
       mappingSummary: '当前矩阵序列的只读摘要。',
       sceneSummary: (inputDim, outputDim, mapCount, vectorCount) =>
@@ -475,7 +486,9 @@ export const appCopy: Record<Locale, AppCopy> = {
         '3-2': '2x3 压缩映射',
         '2-3': '3x2：把 2D 输入放到 3D 输出中',
       },
-      title: '解释',
+      title: '说明',
+      assumptionsCaveats: '假设 / 限制',
+      matrixCaveats: '这是有限精度的数值可视化。接近压扁、秩和方向判断会使用阈值，因此很小的变化也可能改变读数。',
       sequence: (names, composedName, inputDim, outputDim) =>
         `序列会按用户顺序依次作用 ${names}。最终矩阵是 ${composedName}，表示从 ${spacePlain(inputDim)} 到 ${spacePlain(outputDim)} 的映射。`,
       fixDimensions: '请先修正序列维度，才能预览合成变换。',
@@ -484,7 +497,7 @@ export const appCopy: Record<Locale, AppCopy> = {
       inputDimension: '输入维度',
       outputDimension: '输出维度',
       matrixShape: '矩阵形状',
-      finalMatrix: '最终矩阵',
+      finalMatrix: '使用公式',
       areaScale: '行列式与面积',
       areaScaleFactor: '面积缩放',
       volumeScale: '行列式与体积',

@@ -18,16 +18,17 @@ export function CalculusHome() {
         </div>
       </div>
       <div className="lesson-card-grid">
-        {module.lessons.map((lesson) => (
-          <a className="lesson-card" href={lesson.route} key={lesson.id}>
-            <h2>{lesson.title}</h2>
-            <p>{lesson.description}</p>
-            <strong>{copy.learningGoals}</strong>
+        {module.explorers.map((explorer) => (
+          <a className="lesson-card" href={explorer.route} key={explorer.id}>
+            <h2>{explorer.title}</h2>
+            <p>{explorer.description}</p>
+            <strong>{copy.thingsToTry}</strong>
             <ul>
-              {lesson.learningGoals.map((goal) => (
-                <li key={goal}>{goal}</li>
+              {explorer.thingsToTry.slice(0, 2).map((item) => (
+                <li key={item}>{item}</li>
               ))}
             </ul>
+            <span className="open-explorer-link">{copy.openExplorer}</span>
           </a>
         ))}
       </div>

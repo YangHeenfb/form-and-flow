@@ -42,16 +42,17 @@ export function ConvolutionHome() {
       </div>
 
       <div className="lesson-card-grid">
-        {module.lessons.map((lesson) => (
-          <a className="lesson-card convolution-lesson-card" href={lesson.route} key={lesson.id}>
-            <h2>{lesson.title}</h2>
-            <p>{lesson.description}</p>
-            <strong>{moduleCopy.learningGoals}</strong>
+        {module.explorers.map((explorer) => (
+          <a className="lesson-card convolution-lesson-card" href={explorer.route} key={explorer.id}>
+            <h2>{explorer.title}</h2>
+            <p>{explorer.description}</p>
+            <strong>{moduleCopy.thingsToTry}</strong>
             <ul>
-              {lesson.learningGoals.map((goal) => (
-                <li key={goal}>{goal}</li>
+              {explorer.thingsToTry.slice(0, 2).map((item) => (
+                <li key={item}>{item}</li>
               ))}
             </ul>
+            <span className="open-explorer-link">{moduleCopy.openExplorer}</span>
           </a>
         ))}
       </div>

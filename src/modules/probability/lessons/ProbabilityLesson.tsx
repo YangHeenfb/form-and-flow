@@ -141,7 +141,7 @@ const lessonCopy: Record<Locale, Record<ProbabilityLessonId, LessonCopy>> = {
       why: 'For independent variables, pair probability is P(X=x)P(Y=y), and matching sums are added.',
       formulaTex: 'P(S=k)=\\sum_{x+y=k}P(X=x)P(Y=y)',
       formulaLabel: 'Discrete convolution for a sum',
-      watch: 'This lesson assumes X and Y are independent. Different pairs can produce the same sum, which is why dice sums form a triangle.',
+      watch: 'This experiment assumes X and Y are independent. Different pairs can produce the same sum, which is why dice sums form a triangle.',
     },
   },
   zh: {
@@ -167,7 +167,7 @@ const lessonCopy: Record<Locale, Record<ProbabilityLessonId, LessonCopy>> = {
       why: '敏感度和特异度描述测试本身，预测值描述测试结果对一个人的含义。',
       formulaTex: 'PPV=\\frac{TP}{TP+FP}',
       formulaLabel: '阳性预测值',
-      watch: '这是教学玩具模型，不是医疗建议。基础率很重要。',
+      watch: '这是简化演示模型，不是医疗建议。基础率很重要。',
     },
     binomial: {
       title: '二项分布',
@@ -351,7 +351,7 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
   en: {
     controls: {
       parameters: 'Parameters',
-      lesson: 'Lesson',
+      lesson: 'Explorer',
       exportPng: 'Export PNG',
       play: 'Play',
       pause: 'Pause',
@@ -423,11 +423,11 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
       randomizeSeed: 'randomize seed',
     },
     sections: {
-      what: 'What you are seeing',
-      why: 'Why it matters',
-      formula: 'Current formula',
-      values: 'Current values',
-      watch: 'Watch for',
+      what: 'Notes',
+      why: 'Notes',
+      formula: 'Formula used',
+      values: 'Readout',
+      watch: 'Assumptions / Caveats',
     },
     values: {
       selectedConditional: 'selected conditional',
@@ -517,7 +517,7 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
   zh: {
     controls: {
       parameters: '参数',
-      lesson: '章节',
+      lesson: '探索器',
       exportPng: '导出 PNG',
       play: '播放',
       pause: '暂停',
@@ -589,11 +589,11 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
       randomizeSeed: '随机生成种子',
     },
     sections: {
-      what: '你正在看到什么',
-      why: '为什么重要',
-      formula: '当前公式',
-      values: '当前数值',
-      watch: '注意观察',
+      what: '说明',
+      why: '说明',
+      formula: '使用公式',
+      values: '读数',
+      watch: '假设 / 限制',
     },
     values: {
       selectedConditional: '选中的条件概率',
@@ -677,7 +677,7 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
       'skewed-discrete': '偏斜离散分布',
     },
     canvasAriaSuffix: '概率可视化',
-    medicalWarning: '教学玩具模型，不是医疗建议。',
+    medicalWarning: '简化演示模型，不是医疗建议。',
     relatedConvolution: '打开完整卷积模块，查看连续与信号处理视角。',
   },
 }
@@ -1048,22 +1048,6 @@ export function ProbabilityLesson({ lessonId }: Props) {
 
       explanation={
         <>
-        <h2>{ui.sections.what}</h2>
-        <p>{currentCopy.what}</p>
-        <h2>
-          <HelpLabel topic={conceptTopicForLesson(lessonId)} onOpenHelpTopic={openHelpTopic}>
-            {ui.sections.why}
-          </HelpLabel>
-        </h2>
-        <p>{currentCopy.why}</p>
-        <h2>
-          <HelpLabel topic="formula" onOpenHelpTopic={openHelpTopic}>
-            {ui.sections.formula}
-          </HelpLabel>
-        </h2>
-        <p className="formula-text formula-card">
-          <Formula tex={currentCopy.formulaTex} block label={currentCopy.formulaLabel} />
-        </p>
         <h2>
           <HelpLabel topic="values" onOpenHelpTopic={openHelpTopic}>
             {ui.sections.values}
@@ -1077,18 +1061,33 @@ export function ProbabilityLesson({ lessonId }: Props) {
             </div>
           ))}
         </dl>
-        {lessonId === 'medical-test' && <p className="warning-box">{ui.medicalWarning}</p>}
-        {lessonId === 'random-variable-sum' && convolutionManifest.status === 'ready' && (
-          <a className="text-link probability-related-link" href="/modules/convolution">
-            {ui.relatedConvolution}
-          </a>
-        )}
+        <h2>
+          <HelpLabel topic="formula" onOpenHelpTopic={openHelpTopic}>
+            {ui.sections.formula}
+          </HelpLabel>
+        </h2>
+        <p className="formula-text formula-card">
+          <Formula tex={currentCopy.formulaTex} block label={currentCopy.formulaLabel} />
+        </p>
+        <h2>
+          <HelpLabel topic={conceptTopicForLesson(lessonId)} onOpenHelpTopic={openHelpTopic}>
+            {ui.sections.what}
+          </HelpLabel>
+        </h2>
+        <p>{currentCopy.what}</p>
+        <p>{currentCopy.why}</p>
         <h2>
           <HelpLabel topic="variation" onOpenHelpTopic={openHelpTopic}>
             {ui.sections.watch}
           </HelpLabel>
         </h2>
         <p>{currentCopy.watch}</p>
+        {lessonId === 'medical-test' && <p className="warning-box">{ui.medicalWarning}</p>}
+        {lessonId === 'random-variable-sum' && convolutionManifest.status === 'ready' && (
+          <a className="text-link probability-related-link" href="/modules/convolution">
+            {ui.relatedConvolution}
+          </a>
+        )}
         </>
       }
     />
@@ -1521,7 +1520,7 @@ function exportPng() {
   if (!canvas) return
   const anchor = document.createElement('a')
   anchor.href = canvas.toDataURL('image/png')
-  anchor.download = `probability-${window.location.pathname.split('/').at(-1) ?? 'lesson'}.png`
+  anchor.download = `probability-${window.location.pathname.split('/').at(-1) ?? 'explorer'}.png`
   anchor.click()
 }
 

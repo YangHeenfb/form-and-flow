@@ -107,14 +107,14 @@ describe('probability registry integration', () => {
     expect(moduleRegistry.filter((module) => module.id === 'probability')).toHaveLength(1)
     expect(probabilityManifest.status).toBe('ready')
     expect(resolveRoute('/modules/probability').kind).toBe('module')
-    for (const lesson of probabilityManifest.lessons) expect(resolveRoute(lesson.route).kind).toBe('lesson')
-    expect(new Set(probabilityManifest.lessons.map((lesson) => lesson.id)).size).toBe(probabilityManifest.lessons.length)
+    for (const explorer of probabilityManifest.explorers) expect(resolveRoute(explorer.route).kind).toBe('explorer')
+    expect(new Set(probabilityManifest.explorers.map((explorer) => explorer.id)).size).toBe(probabilityManifest.explorers.length)
   })
 
-  it('renders the probability home and lessons without crashing', () => {
+  it('renders the probability home and explorers without crashing', () => {
     expect(renderToStaticMarkup(createElement(ProbabilityModule))).toContain('Probability Intuition')
-    for (const lesson of probabilityManifest.lessons) {
-      const html = renderToStaticMarkup(createElement(ProbabilityModule, { lessonId: lesson.id }))
+    for (const explorer of probabilityManifest.explorers) {
+      const html = renderToStaticMarkup(createElement(ProbabilityModule, { lessonId: explorer.id }))
       expect(html).toContain('probability-main-canvas')
     }
   })

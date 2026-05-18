@@ -7,6 +7,8 @@ export const neutralDarkTheme: ThemeSettings = {
   surfaceMode: 'dark',
   colorPreset: 'neutral',
   colors: {
+    background: '#0d141c',
+    text: '#eef3f8',
     grid: '#3f4a55',
     transformedGrid: '#55b9aa',
     axis: '#d7dde5',
@@ -22,6 +24,8 @@ export const neutralLightTheme: ThemeSettings = {
   ...neutralDarkTheme,
   surfaceMode: 'light',
   colors: {
+    background: '#f8fafc',
+    text: '#15202b',
     grid: '#c7d0da',
     transformedGrid: '#2f8d82',
     axis: '#22303d',
@@ -34,6 +38,8 @@ export const neutralLightTheme: ThemeSettings = {
 }
 
 const highContrastColors: ThemeSettings['colors'] = {
+  background: '#000000',
+  text: '#ffffff',
   grid: '#7f8ea3',
   transformedGrid: '#00d4ff',
   axis: '#ffffff',
@@ -49,7 +55,7 @@ export function applyColorPreset(settings: ThemeSettings, preset: ColorPreset): 
     return {
       ...settings,
       colorPreset: preset,
-      colors: settings.surfaceMode === 'dark' ? highContrastColors : { ...highContrastColors, axis: '#000000' },
+      colors: settings.surfaceMode === 'dark' ? highContrastColors : { ...highContrastColors, background: '#ffffff', text: '#000000', axis: '#000000' },
     }
   }
   return settings.surfaceMode === 'dark'
@@ -72,7 +78,7 @@ export function loadThemeSettings(storage: Storage = localStorage): ThemeSetting
       if (isLegacyNeutralTheme(parsed)) {
         return parsed.surfaceMode === 'dark' ? neutralDarkTheme : neutralLightTheme
       }
-      return parsed
+      return completeThemeSettings(parsed)
     }
   } catch {
     return neutralDarkTheme
@@ -88,6 +94,18 @@ function isLegacyNeutralTheme(settings: ThemeSettings): boolean {
   )
 }
 
+function completeThemeSettings(settings: ThemeSettings): ThemeSettings {
+  const defaults = settings.surfaceMode === 'dark' ? neutralDarkTheme : neutralLightTheme
+  return {
+    ...defaults,
+    ...settings,
+    colors: {
+      ...defaults.colors,
+      ...settings.colors,
+    },
+  }
+}
+
 export function useThemeState(initialTheme?: ThemeSettings) {
   const [theme, setTheme] = useState<ThemeSettings>(() => initialTheme ?? loadThemeSettings())
 
@@ -101,6 +119,11 @@ export function useThemeState(initialTheme?: ThemeSettings) {
       const withMode = {
         ...base,
         colorPreset: current.colorPreset,
+        colors: {
+          ...base.colors,
+          text: current.colors.text,
+          background: current.colors.background,
+        },
       }
       return current.colorPreset === 'high-contrast' ? applyColorPreset(withMode, 'high-contrast') : withMode
     })
@@ -124,11 +147,11 @@ export function useThemeState(initialTheme?: ThemeSettings) {
   const cssVariables = useMemo(() => {
     const dark = theme.surfaceMode === 'dark'
     return {
-      '--app-bg': dark ? '#0e141b' : '#eef2f6',
+      '--app-bg': theme.colors.background,
       '--panel-bg': dark ? '#151d26' : '#ffffff',
       '--panel-bg-soft': dark ? '#101720' : '#f7f9fc',
       '--panel-border': dark ? '#2b3642' : '#d6dde7',
-      '--text-main': dark ? '#eef3f8' : '#15202b',
+      '--text-main': theme.colors.text,
       '--text-muted': dark ? '#a7b1bd' : '#5e6a78',
       '--control-bg': dark ? '#1d2732' : '#edf2f8',
       '--control-bg-strong': dark ? '#263343' : '#dfe8f3',

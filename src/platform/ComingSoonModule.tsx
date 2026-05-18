@@ -28,12 +28,12 @@ export function ComingSoonModule({ module }: Props) {
       </div>
 
       <div className="platform-card">
-        <h2>{copy.plannedLessons}</h2>
+        <h2>{copy.plannedExplorers}</h2>
         <div className="lesson-list">
-          {localizedModule.lessons.map((lesson) => (
-            <a className="lesson-row" href={lesson.route} key={lesson.id}>
-              <span>{lesson.title}</span>
-              <small>{statusLabel(lesson.status, locale)}</small>
+          {localizedModule.explorers.map((explorer) => (
+            <a className="lesson-row" href={explorer.route} key={explorer.id}>
+              <span>{explorer.title}</span>
+              <small>{statusLabel(explorer.status, locale)}</small>
             </a>
           ))}
         </div>

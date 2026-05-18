@@ -12,26 +12,24 @@ export const numberTheoryFractalsManifest: ModuleDefinition = {
   routeBase: base,
   order: 14,
   previewKind: 'number-theory-fractals',
-  lessons: [
-    lesson('modular-circles', 'Modular Multiplication Circles'),
-    lesson('prime-patterns', 'Prime Patterns'),
-    lesson('collatz', 'Collatz Orbits'),
-    lesson('ifs-chaos-game', 'IFS / Chaos Game'),
-    lesson('mandelbrot-julia', 'Mandelbrot & Julia'),
-    lesson('newton-fractal', 'Newton Fractals'),
-    lesson('hilbert-curve', 'Hilbert Curve'),
+  explorers: [
+    explorer('modular-circles', 'Modular Multiplication Circles'),
+    explorer('prime-patterns', 'Prime Patterns'),
+    explorer('collatz', 'Collatz Orbits'),
+    explorer('ifs-chaos-game', 'IFS / Chaos Game'),
+    explorer('mandelbrot-julia', 'Mandelbrot & Julia'),
+    explorer('newton-fractal', 'Newton Fractals'),
+    explorer('hilbert-curve', 'Hilbert Curve'),
   ],
 }
 
-function lesson(id: string, title: string) {
+function explorer(id: string, title: string) {
   return {
     id,
     title,
     description: 'See simple discrete and iterative rules create complex patterns.',
     route: `${base}/${id}`,
     status: 'planned' as const,
-    difficulty: 'intermediate' as const,
-    estimatedMinutes: 15,
-    learningGoals: ['Experiment with iteration', 'Read number patterns visually'],
+    thingsToTry: ['Experiment with iteration', 'Read number patterns visually'],
   }
 }

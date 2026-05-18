@@ -98,14 +98,14 @@ const calculusCopy: Record<CalculusLocale, {
       pause: 'Pause',
       reset: 'Reset animation',
       resetView: 'Reset view',
-      lesson: 'Lesson',
+      lesson: 'Explorer',
       exportPng: 'Export PNG',
       playbackProgress: 'Playback progress',
-      seeing: 'What you are seeing',
-      why: 'Why it matters',
-      formula: 'Current formula',
-      values: 'Current values',
-      watch: 'Watch for',
+      seeing: 'Notes',
+      why: 'Notes',
+      formula: 'Formula used',
+      values: 'Readout',
+      watch: 'Assumptions / Caveats',
       graphInstructions: 'Drag to pan, scroll to zoom.',
       invalidExpression: 'Invalid expression.',
       undefinedValue: 'undefined',
@@ -171,14 +171,14 @@ const calculusCopy: Record<CalculusLocale, {
       pause: '暂停',
       reset: '重置动画',
       resetView: '重置视图',
-      lesson: '章节',
+      lesson: '探索器',
       exportPng: '导出 PNG',
       playbackProgress: '播放进度',
-      seeing: '你正在看到什么',
-      why: '为什么重要',
-      formula: '当前公式',
-      values: '当前数值',
-      watch: '注意观察',
+      seeing: '说明',
+      why: '说明',
+      formula: '使用公式',
+      values: '读数',
+      watch: '假设 / 限制',
       graphInstructions: '拖动可平移，滚轮可缩放。',
       invalidExpression: '表达式无效。',
       undefinedValue: '未定义',
@@ -500,18 +500,6 @@ export function CalculusLesson({ lessonId }: Props) {
 
       explanation={
         <>
-        <h2>{ui.seeing}</h2>
-        <p>{copy.what}</p>
-        <h2>{ui.why}</h2>
-        <p>{copy.why}</p>
-        <h2>
-          <HelpLabel topic="formula" onOpenHelpTopic={openHelpTopic}>
-            {ui.formula}
-          </HelpLabel>
-        </h2>
-        <p className="formula-text formula-card">
-          <Formula tex={copy.formulaTex} block label={copy.formula} />
-        </p>
         <h2>
           <HelpLabel topic="values" onOpenHelpTopic={openHelpTopic}>
             {ui.values}
@@ -525,6 +513,17 @@ export function CalculusLesson({ lessonId }: Props) {
             </div>
           ))}
         </dl>
+        <h2>
+          <HelpLabel topic="formula" onOpenHelpTopic={openHelpTopic}>
+            {ui.formula}
+          </HelpLabel>
+        </h2>
+        <p className="formula-text formula-card">
+          <Formula tex={copy.formulaTex} block label={copy.formula} />
+        </p>
+        <h2>{ui.seeing}</h2>
+        <p>{copy.what}</p>
+        <p>{copy.why}</p>
         <h2>
           <HelpLabel topic={watchTopicForLesson(lessonId)} onOpenHelpTopic={openHelpTopic}>
             {ui.watch}

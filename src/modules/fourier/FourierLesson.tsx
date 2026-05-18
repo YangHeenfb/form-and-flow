@@ -118,21 +118,21 @@ const fourierCopy: Record<FourierLocale, {
       commonFunctions: 'Common functions',
       inputHelp: 'Use t on [0, 1]. x is also accepted as an alias for t.',
       invalidExpression: 'Invalid expression.',
-      lesson: 'Lesson',
+      lesson: 'Explorer',
       exportPng: 'Export PNG',
       play: 'Play',
       pause: 'Pause',
       reset: 'Reset animation',
       playbackProgress: 'Playback progress',
-      seeing: 'What you are seeing',
-      why: 'Why it matters',
-      formula: 'Current formula',
-      values: 'Current values',
-      watch: 'Watch for',
-      beginnerHelp: 'Beginner Guide',
-      controlHelp: 'Control help',
-      graphHelp: 'Read the graph',
-      closeHelp: 'Close explanation',
+      seeing: 'Notes',
+      why: 'Notes',
+      formula: 'Formula used',
+      values: 'Readout',
+      watch: 'Assumptions / Caveats',
+      beginnerHelp: 'Reference',
+      controlHelp: 'Parameter notes',
+      graphHelp: 'Graph notes',
+      closeHelp: 'Close reference',
       display: 'Display',
       spectrum: 'Spectrum',
       reconstruction: 'Reconstruction',
@@ -206,21 +206,21 @@ const fourierCopy: Record<FourierLocale, {
       commonFunctions: '常用函数',
       inputHelp: '使用归一化时间 t ∈ [0, 1]；也可以用 x 作为 t 的别名。',
       invalidExpression: '表达式无效。',
-      lesson: '章节',
+      lesson: '探索器',
       exportPng: '导出 PNG',
       play: '播放',
       pause: '暂停',
       reset: '重置动画',
       playbackProgress: '播放进度',
-      seeing: '你正在看到什么',
-      why: '为什么重要',
-      formula: '当前公式',
-      values: '当前数值',
-      watch: '注意观察',
-      beginnerHelp: '新手解释',
-      controlHelp: '控件说明',
-      graphHelp: '怎么看图',
-      closeHelp: '关闭解释',
+      seeing: '说明',
+      why: '说明',
+      formula: '使用公式',
+      values: '读数',
+      watch: '假设 / 限制',
+      beginnerHelp: '参考',
+      controlHelp: '参数说明',
+      graphHelp: '图像说明',
+      closeHelp: '关闭参考',
       display: '显示',
       spectrum: '频谱',
       reconstruction: '重建',
@@ -731,19 +731,6 @@ export function FourierLesson({ lessonId }: Props) {
 
       explanation={
         <>
-        <h2>{ui.seeing}</h2>
-        <p>{renderFourierWhat(lessonKey, locale, copy.what, (term) => setHelpMode({ kind: 'term', term }))}</p>
-        <h2>{ui.why}</h2>
-        <p>{copy.why}</p>
-        <h2>{ui.formula}</h2>
-        <p className="formula-text formula-card">
-          <Formula tex={copy.formulaTex} block label={copy.formula} />
-        </p>
-        <p className="input-help">
-          {locale === 'zh'
-            ? '约定：t 在 [0,1]，N 是采样数，n 是采样点编号。f=1 表示整段信号绕一圈，f=3 表示绕三圈，f=-3 表示反方向绕三圈。公式里的负号规定分析时的旋转方向；重建时用相反方向加回来。'
-            : 'Convention: t is in [0,1], N is the sample count, and n is the sample index. f=1 means one turn, f=3 means three turns, and f=-3 turns the opposite way. The minus sign sets the analysis rotation direction; reconstruction adds components back with the opposite sign.'}
-        </p>
         <h2>{ui.values}</h2>
         <dl>
           {values.map((row) => (
@@ -753,7 +740,19 @@ export function FourierLesson({ lessonId }: Props) {
             </div>
           ))}
         </dl>
+        <h2>{ui.formula}</h2>
+        <p className="formula-text formula-card">
+          <Formula tex={copy.formulaTex} block label={copy.formula} />
+        </p>
+        <h2>{ui.seeing}</h2>
+        <p>{renderFourierWhat(lessonKey, locale, copy.what, (term) => setHelpMode({ kind: 'term', term }))}</p>
+        <p>{copy.why}</p>
         <h2>{ui.watch}</h2>
+        <p className="input-help">
+          {locale === 'zh'
+            ? '约定：t 在 [0,1]，N 是采样数，n 是采样点编号。f=1 表示整段信号绕一圈，f=3 表示绕三圈，f=-3 表示反方向绕三圈。公式里的负号规定分析时的旋转方向；重建时用相反方向加回来。'
+            : 'Convention: t is in [0,1], N is the sample count, and n is the sample index. f=1 means one turn, f=3 means three turns, and f=-3 turns the opposite way. The minus sign sets the analysis rotation direction; reconstruction adds components back with the opposite sign.'}
+        </p>
         <p>{getWatchCopy(lessonKey, locale, copy.watch, presetId, filterType)}</p>
         </>
       }
@@ -1018,7 +1017,7 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
   if (locale === 'zh') {
     const topics: Record<FourierControlGroupId, HelpTopic> = {
       samples: {
-        eyebrow: '控件说明',
+        eyebrow: '参数说明',
         title: '采样数',
         summary: '采样数决定用多少个时间点代表这条连续曲线。',
         sections: [
@@ -1039,7 +1038,7 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
         ],
       },
       spectrum: {
-        eyebrow: '控件说明',
+        eyebrow: '参数说明',
         title: '频谱扫描',
         summary: '这里改变的是“怎么测试频率”和“怎么显示频谱”，不会改变原信号本身。',
         sections: [
@@ -1068,7 +1067,7 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
         ],
       },
       reconstruction: {
-        eyebrow: '控件说明',
+        eyebrow: '参数说明',
         title: '重建参数',
         summary: '这里决定保留哪些傅里叶系数，再把它们叠回时间信号。',
         sections: [
@@ -1097,7 +1096,7 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
         ],
       },
       filtering: {
-        eyebrow: '控件说明',
+        eyebrow: '参数说明',
         title: '滤波参数',
         summary: '这里决定在频谱里保留或削弱哪些频率，再把剩下的频率叠回去。',
         sections: [
@@ -1127,7 +1126,7 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
         ],
       },
       display: {
-        eyebrow: '控件说明',
+        eyebrow: '参数说明',
         title: '显示开关',
         summary: '这些开关只改变画面显示，不改变 Fourier 计算结果。',
         sections: [
@@ -1155,7 +1154,7 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
 
   const topics: Record<FourierControlGroupId, HelpTopic> = {
     samples: {
-      eyebrow: 'Control help',
+      eyebrow: 'Parameter notes',
       title: 'Samples',
       summary: 'Samples controls how many time points represent the curve.',
       sections: [
@@ -1176,7 +1175,7 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
       ],
     },
     spectrum: {
-      eyebrow: 'Control help',
+      eyebrow: 'Parameter notes',
       title: 'Spectrum scan',
       summary: 'This group changes how frequencies are tested and displayed; it does not change the original signal.',
       sections: [
@@ -1205,7 +1204,7 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
       ],
     },
     reconstruction: {
-      eyebrow: 'Control help',
+      eyebrow: 'Parameter notes',
       title: 'Reconstruction parameters',
       summary: 'This group decides which Fourier coefficients are kept and added back into the time signal.',
       sections: [
@@ -1234,7 +1233,7 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
       ],
     },
     filtering: {
-      eyebrow: 'Control help',
+      eyebrow: 'Parameter notes',
       title: 'Filtering parameters',
       summary: 'This group decides which frequencies are kept or weakened before the signal is rebuilt.',
       sections: [
@@ -1264,7 +1263,7 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
       ],
     },
     display: {
-      eyebrow: 'Control help',
+      eyebrow: 'Parameter notes',
       title: 'Display toggles',
       summary: 'These toggles change only what is drawn; they do not change the Fourier calculation.',
       sections: [
@@ -1294,7 +1293,7 @@ function fourierGraphTopic(lessonId: string, locale: FourierLocale): HelpTopic {
   if (lessonId === 'reconstruction') {
     return locale === 'zh'
       ? {
-          eyebrow: '怎么看图',
+          eyebrow: '图像说明',
           title: '重建图像读法',
           summary: '上方比较原信号和重建信号，下方显示当前用来重建的频率系数。',
           sections: [
@@ -1303,7 +1302,7 @@ function fourierGraphTopic(lessonId: string, locale: FourierLocale): HelpTopic {
           ],
         }
       : {
-          eyebrow: 'Read the graph',
+          eyebrow: 'Graph notes',
           title: 'How to read reconstruction',
           summary: 'The top compares the original and reconstructed signals; the bottom shows which coefficients are being used.',
           sections: [
@@ -1316,7 +1315,7 @@ function fourierGraphTopic(lessonId: string, locale: FourierLocale): HelpTopic {
   if (lessonId === 'filtering') {
     return locale === 'zh'
       ? {
-          eyebrow: '怎么看图',
+          eyebrow: '图像说明',
           title: '滤波图像读法',
           summary: '上方显示滤波前后的信号，下方显示哪些频率被保留或削弱。',
           sections: [
@@ -1325,7 +1324,7 @@ function fourierGraphTopic(lessonId: string, locale: FourierLocale): HelpTopic {
           ],
         }
       : {
-          eyebrow: 'Read the graph',
+          eyebrow: 'Graph notes',
           title: 'How to read filtering',
           summary: 'The top shows before/after signals; the bottom shows which frequencies remain or are reduced.',
           sections: [
@@ -1337,7 +1336,7 @@ function fourierGraphTopic(lessonId: string, locale: FourierLocale): HelpTopic {
 
   return locale === 'zh'
     ? {
-        eyebrow: '怎么看图',
+        eyebrow: '图像说明',
         title: '频谱图像读法',
         summary: '先看原始信号，再看缠绕平面，最后看平均点或频谱峰值。',
         sections: [
@@ -1347,7 +1346,7 @@ function fourierGraphTopic(lessonId: string, locale: FourierLocale): HelpTopic {
         ],
       }
     : {
-        eyebrow: 'Read the graph',
+        eyebrow: 'Graph notes',
         title: 'How to read the spectrum',
         summary: 'Read the original signal first, then the winding plane, then the average point or spectrum peaks.',
         sections: [
@@ -1400,7 +1399,7 @@ function fourierTermTopic(term: FourierTermId, locale: FourierLocale): HelpTopic
       eyebrow: '术语',
       title: '重建',
       summary: '重建是把选中的频率成分加回去，合成一个近似原信号。',
-      sections: [{ title: '为什么重要', body: '在这个离散采样实验里，如果保留完整的一组频率系数，就能恢复原来的样本；只保留一部分时，得到的是近似。如果只用少数频率就能重建得很好，说明原信号的主要结构可以被这些频率解释。' }],
+      sections: [{ title: '说明', body: '在这个离散采样实验里，如果保留完整的一组频率系数，就能恢复原来的样本；只保留一部分时，得到的是近似。如果只用少数频率就能重建得很好，说明原信号的主要结构可以被这些频率解释。' }],
     },
     filtering: {
       eyebrow: '术语',
@@ -1451,7 +1450,7 @@ function fourierTermTopic(term: FourierTermId, locale: FourierLocale): HelpTopic
       eyebrow: 'Term',
       title: 'Reconstruction',
       summary: 'Reconstruction adds selected frequency components back together to approximate the original signal.',
-      sections: [{ title: 'Why it matters', body: 'In this sampled experiment, keeping the complete set of frequency coefficients can recover the original samples. Keeping only part of the set gives an approximation. If a few frequencies reconstruct the signal well, those frequencies explain most of its structure.' }],
+      sections: [{ title: 'Notes', body: 'In this sampled experiment, keeping the complete set of frequency coefficients can recover the original samples. Keeping only part of the set gives an approximation. If a few frequencies reconstruct the signal well, those frequencies explain most of its structure.' }],
     },
     filtering: {
       eyebrow: 'Term',

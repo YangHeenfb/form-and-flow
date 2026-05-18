@@ -15,16 +15,14 @@ export const matrixManifest: ModuleDefinition = {
   order: 1,
   previewKind: 'matrix',
   loadComponent: loadMatrixHome,
-  lessons: [
+  explorers: [
     {
       id: 'matrix-transformations',
       title: 'Matrix Transformations',
       description: 'See how matrix sequences move grids, basis vectors, and custom vectors.',
       route: `${base}/transformations`,
       status: 'ready',
-      difficulty: 'beginner',
-      estimatedMinutes: 12,
-      learningGoals: ['Compose matrix transformations', 'Read transformed basis vectors', 'Connect determinant to area or volume scale'],
+      thingsToTry: ['Compose matrix transformations', 'Read transformed basis vectors', 'Connect determinant to area or volume scale'],
       loadComponent: loadMatrixLesson,
     },
   ],

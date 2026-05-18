@@ -12,24 +12,22 @@ export const fourierSeriesManifest: ModuleDefinition = {
   routeBase: base,
   order: 11,
   previewKind: 'fourier-series',
-  lessons: [
-    lesson('draw', 'Draw a Path'),
-    lesson('epicycles', 'Epicycle Animation'),
-    lesson('spectrum', 'Coefficient Spectrum'),
-    lesson('reconstruction', 'Reconstruction Quality'),
-    lesson('intuition', 'Why It Works'),
+  explorers: [
+    explorer('draw', 'Draw a Path'),
+    explorer('epicycles', 'Epicycle Animation'),
+    explorer('spectrum', 'Coefficient Spectrum'),
+    explorer('reconstruction', 'Reconstruction Quality'),
+    explorer('intuition', 'Why It Works'),
   ],
 }
 
-function lesson(id: string, title: string) {
+function explorer(id: string, title: string) {
   return {
     id,
     title,
     description: 'Turn paths into rotating vectors and inspect their coefficients.',
     route: `${base}/${id}`,
     status: 'planned' as const,
-    difficulty: 'intermediate' as const,
-    estimatedMinutes: 15,
-    learningGoals: ['Represent a path as complex samples', 'Connect coefficients to circles'],
+    thingsToTry: ['Represent a path as complex samples', 'Connect coefficients to circles'],
   }
 }

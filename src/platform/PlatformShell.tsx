@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
-import { BookOpen, Download, Grid3X3, HelpCircle, Languages, Menu, Moon, PanelLeftClose, RotateCcw, Sun } from 'lucide-react'
+import { Compass, Download, Grid3X3, HelpCircle, Languages, Menu, Moon, PanelLeftClose, RotateCcw, Sun } from 'lucide-react'
 import type { ModuleDefinition } from './moduleTypes.ts'
 import { ModuleActionProvider, useModuleActionContext } from './ModuleActionContext.tsx'
 import { moduleRegistry } from './moduleRegistry.ts'
@@ -17,30 +17,32 @@ import {
 
 type Props = {
   currentModule?: ModuleDefinition
-  currentLessonId?: string
+  currentExplorerId?: string
   children: ReactNode
 }
 
-export function PlatformShell({ currentModule, currentLessonId, children }: Props) {
-  const resetKey = `${currentModule?.id ?? 'home'}:${currentLessonId ?? ''}`
+export function PlatformShell({ currentModule, currentExplorerId, children }: Props) {
+  const resetKey = `${currentModule?.id ?? 'home'}:${currentExplorerId ?? ''}`
 
   return (
     <ModuleActionProvider key={resetKey}>
-      <PlatformShellContent currentModule={currentModule} currentLessonId={currentLessonId}>
+      <PlatformShellContent currentModule={currentModule} currentExplorerId={currentExplorerId}>
         {children}
       </PlatformShellContent>
     </ModuleActionProvider>
   )
 }
 
-function PlatformShellContent({ currentModule, currentLessonId, children }: Props) {
+function PlatformShellContent({ currentModule, currentExplorerId, children }: Props) {
   const [locale, setLocale] = useState(() => loadStoredPlatformLocale())
   const [surfaceMode, setSurfaceMode] = useState<PlatformSurfaceMode>(() => loadStoredSurfaceMode())
   const { actions: moduleActions } = useModuleActionContext()
   const copy = platformCopy[locale].shell
   const modules = [...moduleRegistry].sort((a, b) => a.order - b.order).map((module) => localizeModule(module, locale))
+  const readyModules = modules.filter((module) => module.status === 'ready')
+  const roadmapModules = modules.filter((module) => module.status !== 'ready')
   const localizedCurrentModule = currentModule ? localizeModule(currentModule, locale) : undefined
-  const currentLesson = localizedCurrentModule?.lessons.find((lesson) => lesson.id === currentLessonId)
+  const currentExplorer = localizedCurrentModule?.explorers.find((explorer) => explorer.id === currentExplorerId)
   const showModuleSidebar = Boolean(currentModule)
   const [sidebarOpen, setSidebarOpen] = useState(!currentModule)
 
@@ -79,7 +81,7 @@ function PlatformShellContent({ currentModule, currentLessonId, children }: Prop
             ) : (
               <span>{copy.modules}</span>
             )}
-            {currentLesson && <span className="context-lesson">/ {currentLesson.title}</span>}
+            {currentExplorer && <span className="context-lesson">/ {currentExplorer.title}</span>}
           </div>
           <div className="platform-actions">
             <button type="button" aria-label={copy.switchLanguageAria} onClick={() => setLocale((current) => (current === 'en' ? 'zh' : 'en'))}>
@@ -131,20 +133,31 @@ function PlatformShellContent({ currentModule, currentLessonId, children }: Prop
                       {copy.allModules}
                     </a>
                     <p className="sidebar-label">{copy.modules}</p>
-                    {modules.map((module) => (
+                    {readyModules.map((module) => (
                       <a className={currentModule?.id === module.id ? 'active' : ''} href={module.routeBase} key={module.id}>
                         <span className="sidebar-order">{String(module.order).padStart(2, '0')}</span>
                         {module.shortTitle}
                       </a>
                     ))}
+                    {roadmapModules.length > 0 && (
+                      <details className="sidebar-roadmap">
+                        <summary>{locale === 'zh' ? '路线图' : 'Roadmap'}</summary>
+                        {roadmapModules.map((module) => (
+                          <a className={currentModule?.id === module.id ? 'active' : ''} href={module.routeBase} key={module.id}>
+                            <span className="sidebar-order">{String(module.order).padStart(2, '0')}</span>
+                            {module.shortTitle}
+                          </a>
+                        ))}
+                      </details>
+                    )}
                   </nav>
                   {localizedCurrentModule && (
                     <nav className="lesson-nav">
-                      <p className="sidebar-label">{copy.lessons}</p>
-                      {localizedCurrentModule.lessons.map((lesson) => (
-                        <a className={currentLessonId === lesson.id ? 'active' : ''} href={lesson.route} key={lesson.id}>
-                          <BookOpen size={15} />
-                          {lesson.title}
+                      <p className="sidebar-label">{copy.explorers}</p>
+                      {localizedCurrentModule.explorers.map((explorer) => (
+                        <a className={currentExplorerId === explorer.id ? 'active' : ''} href={explorer.route} key={explorer.id}>
+                          <Compass size={15} />
+                          {explorer.title}
                         </a>
                       ))}
                     </nav>

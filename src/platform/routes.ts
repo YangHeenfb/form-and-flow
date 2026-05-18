@@ -1,10 +1,10 @@
-import type { LessonDefinition, ModuleDefinition } from './moduleTypes.ts'
+import type { ExplorerDefinition, ModuleDefinition } from './moduleTypes.ts'
 import { moduleRegistry } from './moduleRegistry.ts'
 
 export type ResolvedRoute =
   | { kind: 'home' }
   | { kind: 'module'; module: ModuleDefinition }
-  | { kind: 'lesson'; module: ModuleDefinition; lesson: LessonDefinition }
+  | { kind: 'explorer'; module: ModuleDefinition; explorer: ExplorerDefinition }
   | { kind: 'not-found' }
 
 export function resolveRoute(pathname: string): ResolvedRoute {
@@ -17,9 +17,9 @@ export function resolveRoute(pathname: string): ResolvedRoute {
     if (normalized === module.routeBase) {
       return { kind: 'module', module }
     }
-    const lesson = module.lessons.find((candidate) => normalized === candidate.route)
-    if (lesson) {
-      return { kind: 'lesson', module, lesson }
+    const explorer = module.explorers.find((candidate) => normalized === candidate.route)
+    if (explorer) {
+      return { kind: 'explorer', module, explorer }
     }
   }
 

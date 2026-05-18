@@ -42,6 +42,8 @@ export type ThemeSettings = {
   surfaceMode: ThemeSurfaceMode
   colorPreset: ColorPreset
   colors: {
+    background: string
+    text: string
     grid: string
     transformedGrid: string
     axis: string

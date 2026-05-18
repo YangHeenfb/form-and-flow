@@ -1,8 +1,7 @@
 import type { Locale } from '../i18n.ts'
 import type {
-  LessonDefinition,
-  LessonDifficulty,
-  LessonStatus,
+  ExplorerDefinition,
+  ExplorerStatus,
   ModuleCategory,
   ModuleDefinition,
   ModuleStatus,
@@ -13,7 +12,7 @@ type PlatformCopy = {
     modules: string
     explore: string
     allModules: string
-    lessons: string
+    explorers: string
     help: string
     reset: string
     exportPng: string
@@ -32,31 +31,34 @@ type PlatformCopy = {
     eyebrow: string
     title: string
     summary: (count: number) => string
+    v1Title: string
+    v1Summary: string
+    roadmapTitle: string
+    roadmapSummary: string
   }
   moduleDetail: {
-    learningGoals: string
-    enterLesson: string
+    thingsToTry: string
+    openExplorer: string
   }
   comingSoon: {
     eyebrow: string
     readyTitle: string
     readyBody: string
-    plannedLessons: string
+    plannedExplorers: string
   }
   notFound: {
     title: string
     body: string
     back: string
   }
-  statusLabels: Record<ModuleStatus | LessonStatus, string>
-  difficultyLabels: Record<LessonDifficulty, string>
+  statusLabels: Record<ModuleStatus | ExplorerStatus, string>
   categoryLabels: Record<ModuleCategory, string>
 }
 
-type LessonTranslation = Partial<Pick<LessonDefinition, 'title' | 'description' | 'learningGoals'>>
+type ExplorerTranslation = Partial<Pick<ExplorerDefinition, 'title' | 'description' | 'thingsToTry'>>
 
 type ModuleTranslation = Partial<Pick<ModuleDefinition, 'title' | 'shortTitle' | 'description'>> & {
-  lessons?: Record<string, LessonTranslation>
+  explorers?: Record<string, ExplorerTranslation>
 }
 
 export const platformCopy: Record<Locale, PlatformCopy> = {
@@ -65,8 +67,8 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       modules: 'Modules',
       explore: 'Explore',
       allModules: 'All Modules',
-      lessons: 'Lessons',
-      help: 'Help',
+      explorers: 'Explorers',
+      help: 'Reference',
       reset: 'Reset',
       exportPng: 'Export PNG',
       switchLanguage: '中文',
@@ -76,25 +78,29 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       collapse: 'Collapse module navigation',
       expand: 'Expand module navigation',
       homeAria: 'Visual Math Lab home',
-      helpAria: 'Open current module help',
+      helpAria: 'Open current module reference',
       resetAria: 'Reset current module',
       exportAria: 'Export current visualization',
     },
     moduleHome: {
       eyebrow: 'Explore',
-      title: 'All Modules',
-      summary: (count) => `${count} interactive modules and implementation slots for mathematical visualization.`,
+      title: 'Visualization Sandbox',
+      summary: (count) => `${count} interactive visualization modules and roadmap slots.`,
+      v1Title: 'Version 1 explorers',
+      v1Summary: 'The first release focuses on these six interactive visualization modules.',
+      roadmapTitle: 'Roadmap',
+      roadmapSummary: 'Later modules are listed here as lower-priority slots.',
     },
     moduleDetail: {
-      learningGoals: 'Learning goals',
-      enterLesson: 'Enter lesson',
+      thingsToTry: 'Things to try',
+      openExplorer: 'Open explorer',
     },
     comingSoon: {
       eyebrow: 'Module Slot',
       readyTitle: 'Ready for implementation',
       readyBody:
-        'This route, manifest, and navigation slot are in place. A later module task can implement this module inside its own module directory without rewriting the central registry or route table.',
-      plannedLessons: 'Planned lessons',
+        'This route, manifest, and navigation slot are reserved for a later visualization module.',
+      plannedExplorers: 'Planned explorers',
     },
     notFound: {
       title: 'Page not found',
@@ -105,11 +111,6 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       ready: 'ready',
       'in-progress': 'in progress',
       planned: 'planned',
-    },
-    difficultyLabels: {
-      beginner: 'beginner',
-      intermediate: 'intermediate',
-      advanced: 'advanced',
     },
     categoryLabels: {
       'linear-algebra': 'Linear Algebra',
@@ -133,8 +134,8 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       modules: '模块',
       explore: '浏览',
       allModules: '全部模块',
-      lessons: '章节',
-      help: '帮助',
+      explorers: '探索器',
+      help: '参考',
       reset: '重置',
       exportPng: '导出 PNG',
       switchLanguage: 'EN',
@@ -144,24 +145,28 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       collapse: '收起模块导航',
       expand: '展开模块导航',
       homeAria: 'Visual Math Lab 首页',
-      helpAria: '打开当前模块帮助',
+      helpAria: '打开当前模块参考',
       resetAria: '重置当前模块',
       exportAria: '导出当前可视化',
     },
     moduleHome: {
       eyebrow: '浏览',
-      title: '全部模块',
-      summary: (count) => `${count} 个交互式模块和数学可视化实现槽位。`,
+      title: '可视化沙盒',
+      summary: (count) => `${count} 个交互式可视化模块和后续路线槽位。`,
+      v1Title: '第一版探索器',
+      v1Summary: '第一版重点保留这六个交互式可视化模块。',
+      roadmapTitle: '后续模块规划中',
+      roadmapSummary: '',
     },
     moduleDetail: {
-      learningGoals: '学习目标',
-      enterLesson: '进入章节',
+      thingsToTry: '可以尝试',
+      openExplorer: '打开探索器',
     },
     comingSoon: {
       eyebrow: '模块槽位',
       readyTitle: '已准备好实现',
       readyBody: '这个路由、模块清单和导航位置已经就绪。后续模块任务可以直接在自己的模块目录中实现，不需要重写中央注册表或路由表。',
-      plannedLessons: '规划章节',
+      plannedExplorers: '规划探索器',
     },
     notFound: {
       title: '页面未找到',
@@ -172,11 +177,6 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       ready: '已可用',
       'in-progress': '开发中',
       planned: '规划中',
-    },
-    difficultyLabels: {
-      beginner: '入门',
-      intermediate: '进阶',
-      advanced: '高级',
     },
     categoryLabels: {
       'linear-algebra': '线性代数',
@@ -203,11 +203,11 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       title: '矩阵与线性变换',
       shortTitle: '矩阵',
       description: '可视化矩阵、向量空间、基向量与线性变换。',
-      lessons: {
+      explorers: {
         'matrix-transformations': {
           title: '矩阵变换',
           description: '探索矩阵序列如何移动网格、基向量和自定义向量。',
-          learningGoals: ['组合矩阵变换', '读取变换后的基向量', '将行列式与面积或体积缩放联系起来'],
+          thingsToTry: ['组合矩阵变换', '读取变换后的基向量', '将行列式与面积或体积缩放联系起来'],
         },
       },
     },
@@ -215,26 +215,26 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       title: '微积分',
       shortTitle: '微积分',
       description: '探索导数、积分、微积分基本定理和泰勒近似。',
-      lessons: {
+      explorers: {
         derivative: {
           title: '导数',
           description: '观察割线如何逐渐变成切线。',
-          learningGoals: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
+          thingsToTry: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
         },
         integral: {
           title: '积分 / 黎曼和',
           description: '用矩形和梯形近似有符号面积。',
-          learningGoals: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
+          thingsToTry: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
         },
         'fundamental-theorem': {
           title: '微积分基本定理连接器',
           description: '把累积面积和瞬时高度联系起来。',
-          learningGoals: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
+          thingsToTry: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
         },
         taylor: {
           title: '泰勒多项式',
           description: '围绕一个中心构造局部多项式近似。',
-          learningGoals: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
+          thingsToTry: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
         },
       },
     },
@@ -242,21 +242,21 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       title: '傅里叶变换',
       shortTitle: '傅里叶',
       description: '观察信号如何在时间域和频率域之间转换。',
-      lessons: {
+      explorers: {
         spectrum: {
           title: '频率频谱',
           description: '扫描多个频率来构建频谱。',
-          learningGoals: ['理解频率成分', '把视觉运动和数值频谱联系起来'],
+          thingsToTry: ['理解频率成分', '把视觉运动和数值频谱联系起来'],
         },
         reconstruction: {
           title: '信号重建',
           description: '用选定的系数重建信号。',
-          learningGoals: ['理解频率成分', '把视觉运动和数值频谱联系起来'],
+          thingsToTry: ['理解频率成分', '把视觉运动和数值频谱联系起来'],
         },
         filtering: {
           title: '频率滤波',
           description: '保留或移除频段，并比较信号变化。',
-          learningGoals: ['理解频率成分', '把视觉运动和数值频谱联系起来'],
+          thingsToTry: ['理解频率成分', '把视觉运动和数值频谱联系起来'],
         },
       },
     },
@@ -264,36 +264,36 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       title: '微分方程',
       shortTitle: '微分方程',
       description: '交互式 ODE 求解器和系统动力学可视化。',
-      lessons: {
+      explorers: {
         'slope-fields': {
           title: '斜率场与初值问题',
           description: '探索局部变化规则如何生成整体运动。',
-          learningGoals: ['读懂变化规则', '比较数值运动和可视化轨迹'],
+          thingsToTry: ['读懂变化规则', '比较数值运动和可视化轨迹'],
         },
         'numerical-methods': {
           title: '数值方法',
           description: '探索局部变化规则如何生成整体运动。',
-          learningGoals: ['读懂变化规则', '比较数值运动和可视化轨迹'],
+          thingsToTry: ['读懂变化规则', '比较数值运动和可视化轨迹'],
         },
         'phase-portraits': {
           title: '相图与向量场',
           description: '探索局部变化规则如何生成整体运动。',
-          learningGoals: ['读懂变化规则', '比较数值运动和可视化轨迹'],
+          thingsToTry: ['读懂变化规则', '比较数值运动和可视化轨迹'],
         },
         pendulum: {
           title: '摆与振子',
           description: '探索局部变化规则如何生成整体运动。',
-          learningGoals: ['读懂变化规则', '比较数值运动和可视化轨迹'],
+          thingsToTry: ['读懂变化规则', '比较数值运动和可视化轨迹'],
         },
         population: {
           title: '种群动力学',
           description: '探索局部变化规则如何生成整体运动。',
-          learningGoals: ['读懂变化规则', '比较数值运动和可视化轨迹'],
+          thingsToTry: ['读懂变化规则', '比较数值运动和可视化轨迹'],
         },
         'heat-equation': {
           title: '热方程 / 扩散',
           description: '探索局部变化规则如何生成整体运动。',
-          learningGoals: ['读懂变化规则', '比较数值运动和可视化轨迹'],
+          thingsToTry: ['读懂变化规则', '比较数值运动和可视化轨迹'],
         },
       },
     },
@@ -301,41 +301,41 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       title: '概率直觉',
       shortTitle: '概率',
       description: '把概率公式转化为可见的人群、面积、样本和分布。',
-      lessons: {
+      explorers: {
         'conditional-probability': {
           title: '条件概率',
           description: '在人群格中比较 P(A | B) 与 P(B | A)。',
-          learningGoals: ['分清当前正在观察的总体', '比较 P(A|B) 和 P(B|A) 时不混淆分母'],
+          thingsToTry: ['分清当前正在观察的总体', '比较 P(A|B) 和 P(B|A) 时不混淆分母'],
         },
         bayes: {
           title: '贝叶斯规则',
           description: '用自然频数理解证据出现后如何更新假设。',
-          learningGoals: ['用人数理解证据来自哪里', '观察基础率如何影响后验概率'],
+          thingsToTry: ['用人数理解证据来自哪里', '观察基础率如何影响后验概率'],
         },
         'medical-test': {
           title: '医学测试悖论',
           description: '观察基础率和假阳性如何改变测试结果的含义。',
-          learningGoals: ['分清测试准确率和结果可信度', '看假阳性如何改变阳性结果含义'],
+          thingsToTry: ['分清测试准确率和结果可信度', '看假阳性如何改变阳性结果含义'],
         },
         binomial: {
           title: '二项分布',
           description: '构造重复独立试验中成功次数的分布。',
-          learningGoals: ['读懂成功次数分布', '观察 n 和 p 如何移动柱形图'],
+          thingsToTry: ['读懂成功次数分布', '观察 n 和 p 如何移动柱形图'],
         },
         'continuous-density': {
           title: '连续概率密度',
           description: '把连续概率读成密度曲线下的面积。',
-          learningGoals: ['把概率读成面积', '分清密度高度和概率'],
+          thingsToTry: ['把概率读成面积', '分清密度高度和概率'],
         },
         'central-limit-theorem': {
           title: '中心极限定理',
           description: '观察样本均值如何变窄并接近钟形。',
-          learningGoals: ['分清原始分布和样本均值分布', '观察 n 如何缩小平均数的波动'],
+          thingsToTry: ['分清原始分布和样本均值分布', '观察 n 如何缩小平均数的波动'],
         },
         'random-variable-sum': {
           title: '随机变量：X + Y',
           description: '通过汇总所有独立配对来组合两个离散分布。',
-          learningGoals: ['用配对网格理解随机变量相加', '观察相同和如何汇总成输出分布'],
+          thingsToTry: ['用配对网格理解随机变量相加', '观察相同和如何汇总成输出分布'],
         },
       },
     },
@@ -343,36 +343,36 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       title: '卷积',
       shortTitle: '卷积',
       description: '通过滑动、重叠、概率和、信号、图像与多项式理解卷积。',
-      lessons: {
+      explorers: {
         discrete: {
           title: '离散卷积',
           description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
-          learningGoals: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
+          thingsToTry: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
         },
         probability: {
           title: '概率和',
           description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
-          learningGoals: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
+          thingsToTry: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
         },
         signal: {
           title: '信号滤波',
           description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
-          learningGoals: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
+          thingsToTry: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
         },
         'image-kernel': {
           title: '图像卷积核',
           description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
-          learningGoals: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
+          thingsToTry: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
         },
         polynomial: {
           title: '多项式乘法',
           description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
-          learningGoals: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
+          thingsToTry: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
         },
         continuous: {
           title: '连续卷积',
           description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
-          learningGoals: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
+          thingsToTry: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
         },
       },
     },
@@ -380,26 +380,26 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       title: '复平面',
       shortTitle: '复平面',
       description: '探索复数、映射、保角变换和图像环路。',
-      lessons: {
+      explorers: {
         basics: {
           title: '作为点的复数',
           description: '观察复数运算如何作用在点、曲线和区域上。',
-          learningGoals: ['用几何方式读取复数', '把公式和平面运动联系起来'],
+          thingsToTry: ['用几何方式读取复数', '把公式和平面运动联系起来'],
         },
         multiplication: {
           title: '作为旋转和缩放的乘法',
           description: '观察复数运算如何作用在点、曲线和区域上。',
-          learningGoals: ['用几何方式读取复数', '把公式和平面运动联系起来'],
+          thingsToTry: ['用几何方式读取复数', '把公式和平面运动联系起来'],
         },
         maps: {
           title: '复函数映射',
           description: '观察复数运算如何作用在点、曲线和区域上。',
-          learningGoals: ['用几何方式读取复数', '把公式和平面运动联系起来'],
+          thingsToTry: ['用几何方式读取复数', '把公式和平面运动联系起来'],
         },
         'image-loops': {
           title: '图像环路',
           description: '观察复数运算如何作用在点、曲线和区域上。',
-          learningGoals: ['用几何方式读取复数', '把公式和平面运动联系起来'],
+          thingsToTry: ['用几何方式读取复数', '把公式和平面运动联系起来'],
         },
       },
     },
@@ -407,36 +407,36 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       title: '优化 / 梯度下降',
       shortTitle: '优化',
       description: '可视化优化过程和基于梯度的方法。',
-      lessons: {
+      explorers: {
         'one-dimensional-descent': {
           title: '一维梯度下降',
           description: '在损失地形中移动，并比较优化器行为。',
-          learningGoals: ['解释梯度', '比较学习率和优化路径'],
+          thingsToTry: ['解释梯度', '比较学习率和优化路径'],
         },
         'contour-descent': {
           title: '损失地形与等高线',
           description: '在损失地形中移动，并比较优化器行为。',
-          learningGoals: ['解释梯度', '比较学习率和优化路径'],
+          thingsToTry: ['解释梯度', '比较学习率和优化路径'],
         },
         'learning-rate': {
           title: '学习率',
           description: '在损失地形中移动，并比较优化器行为。',
-          learningGoals: ['解释梯度', '比较学习率和优化路径'],
+          thingsToTry: ['解释梯度', '比较学习率和优化路径'],
         },
         momentum: {
           title: '动量',
           description: '在损失地形中移动，并比较优化器行为。',
-          learningGoals: ['解释梯度', '比较学习率和优化路径'],
+          thingsToTry: ['解释梯度', '比较学习率和优化路径'],
         },
         'linear-regression': {
           title: '线性回归训练',
           description: '在损失地形中移动，并比较优化器行为。',
-          learningGoals: ['解释梯度', '比较学习率和优化路径'],
+          thingsToTry: ['解释梯度', '比较学习率和优化路径'],
         },
         'stochastic-gradient-descent': {
           title: '随机 / 小批量梯度下降',
           description: '在损失地形中移动，并比较优化器行为。',
-          learningGoals: ['解释梯度', '比较学习率和优化路径'],
+          thingsToTry: ['解释梯度', '比较学习率和优化路径'],
         },
       },
     },
@@ -444,21 +444,21 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       title: '神经网络',
       shortTitle: '神经网络',
       description: '构建、训练并理解简单神经网络。',
-      lessons: {
+      explorers: {
         perceptron: {
           title: '感知机基础',
           description: '用可视化模型连接参数、激活和训练。',
-          learningGoals: ['读懂网络结构', '把训练和参数变化联系起来'],
+          thingsToTry: ['读懂网络结构', '把训练和参数变化联系起来'],
         },
         'forward-pass': {
           title: '前向传播',
           description: '用可视化模型连接参数、激活和训练。',
-          learningGoals: ['读懂网络结构', '把训练和参数变化联系起来'],
+          thingsToTry: ['读懂网络结构', '把训练和参数变化联系起来'],
         },
         training: {
           title: '训练',
           description: '用可视化模型连接参数、激活和训练。',
-          learningGoals: ['读懂网络结构', '把训练和参数变化联系起来'],
+          thingsToTry: ['读懂网络结构', '把训练和参数变化联系起来'],
         },
       },
     },
@@ -466,36 +466,36 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       title: '向量场',
       shortTitle: '向量场',
       description: '可视化向量场、流、散度、旋度、通量和环流。',
-      lessons: {
+      explorers: {
         basics: {
           title: '向量场基础',
           description: '在二维向量场中跟随箭头、粒子和局部探针。',
-          learningGoals: ['理解每个点上的向量', '把局部箭头和整体流动联系起来'],
+          thingsToTry: ['理解每个点上的向量', '把局部箭头和整体流动联系起来'],
         },
         flow: {
           title: '流与流线',
           description: '在二维向量场中跟随箭头、粒子和局部探针。',
-          learningGoals: ['理解每个点上的向量', '把局部箭头和整体流动联系起来'],
+          thingsToTry: ['理解每个点上的向量', '把局部箭头和整体流动联系起来'],
         },
         divergence: {
           title: '散度',
           description: '在二维向量场中跟随箭头、粒子和局部探针。',
-          learningGoals: ['理解每个点上的向量', '把局部箭头和整体流动联系起来'],
+          thingsToTry: ['理解每个点上的向量', '把局部箭头和整体流动联系起来'],
         },
         curl: {
           title: '旋度',
           description: '在二维向量场中跟随箭头、粒子和局部探针。',
-          learningGoals: ['理解每个点上的向量', '把局部箭头和整体流动联系起来'],
+          thingsToTry: ['理解每个点上的向量', '把局部箭头和整体流动联系起来'],
         },
         'flux-circulation': {
           title: '通量与环流',
           description: '在二维向量场中跟随箭头、粒子和局部探针。',
-          learningGoals: ['理解每个点上的向量', '把局部箭头和整体流动联系起来'],
+          thingsToTry: ['理解每个点上的向量', '把局部箭头和整体流动联系起来'],
         },
         'gradient-fields': {
           title: '梯度场',
           description: '在二维向量场中跟随箭头、粒子和局部探针。',
-          learningGoals: ['理解每个点上的向量', '把局部箭头和整体流动联系起来'],
+          thingsToTry: ['理解每个点上的向量', '把局部箭头和整体流动联系起来'],
         },
       },
     },
@@ -503,31 +503,31 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       title: '傅里叶级数 / 圆轮',
       shortTitle: '傅里叶级数',
       description: '用圆轮和傅里叶级数绘制周期函数。',
-      lessons: {
+      explorers: {
         draw: {
           title: '绘制路径',
           description: '把路径转换为旋转向量，并检查它们的系数。',
-          learningGoals: ['把路径表示为复数采样', '把系数和圆联系起来'],
+          thingsToTry: ['把路径表示为复数采样', '把系数和圆联系起来'],
         },
         epicycles: {
           title: '圆轮动画',
           description: '把路径转换为旋转向量，并检查它们的系数。',
-          learningGoals: ['把路径表示为复数采样', '把系数和圆联系起来'],
+          thingsToTry: ['把路径表示为复数采样', '把系数和圆联系起来'],
         },
         spectrum: {
           title: '系数频谱',
           description: '把路径转换为旋转向量，并检查它们的系数。',
-          learningGoals: ['把路径表示为复数采样', '把系数和圆联系起来'],
+          thingsToTry: ['把路径表示为复数采样', '把系数和圆联系起来'],
         },
         reconstruction: {
           title: '重建质量',
           description: '把路径转换为旋转向量，并检查它们的系数。',
-          learningGoals: ['把路径表示为复数采样', '把系数和圆联系起来'],
+          thingsToTry: ['把路径表示为复数采样', '把系数和圆联系起来'],
         },
         intuition: {
           title: '为什么有效',
           description: '把路径转换为旋转向量，并检查它们的系数。',
-          learningGoals: ['把路径表示为复数采样', '把系数和圆联系起来'],
+          thingsToTry: ['把路径表示为复数采样', '把系数和圆联系起来'],
         },
       },
     },
@@ -535,41 +535,41 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       title: '群论 / 对称性',
       shortTitle: '群论',
       description: '探索对称性、群、作用、表格、图示和变换。',
-      lessons: {
+      explorers: {
         'symmetry-actions': {
           title: '对称作用',
           description: '用有限对称性让抽象群结构可见。',
-          learningGoals: ['组合不同作用', '从表格和图示中读取群结构'],
+          thingsToTry: ['组合不同作用', '从表格和图示中读取群结构'],
         },
         composition: {
           title: '复合就是运算',
           description: '用有限对称性让抽象群结构可见。',
-          learningGoals: ['组合不同作用', '从表格和图示中读取群结构'],
+          thingsToTry: ['组合不同作用', '从表格和图示中读取群结构'],
         },
         'cayley-table': {
           title: '凯莱表构建器',
           description: '用有限对称性让抽象群结构可见。',
-          learningGoals: ['组合不同作用', '从表格和图示中读取群结构'],
+          thingsToTry: ['组合不同作用', '从表格和图示中读取群结构'],
         },
         'cayley-diagram': {
           title: '生成元与凯莱图',
           description: '用有限对称性让抽象群结构可见。',
-          learningGoals: ['组合不同作用', '从表格和图示中读取群结构'],
+          thingsToTry: ['组合不同作用', '从表格和图示中读取群结构'],
         },
         permutations: {
           title: '置换',
           description: '用有限对称性让抽象群结构可见。',
-          learningGoals: ['组合不同作用', '从表格和图示中读取群结构'],
+          thingsToTry: ['组合不同作用', '从表格和图示中读取群结构'],
         },
         'subgroups-cosets': {
           title: '子群与陪集',
           description: '用有限对称性让抽象群结构可见。',
-          learningGoals: ['组合不同作用', '从表格和图示中读取群结构'],
+          thingsToTry: ['组合不同作用', '从表格和图示中读取群结构'],
         },
         isomorphism: {
           title: '同构匹配器',
           description: '用有限对称性让抽象群结构可见。',
-          learningGoals: ['组合不同作用', '从表格和图示中读取群结构'],
+          thingsToTry: ['组合不同作用', '从表格和图示中读取群结构'],
         },
       },
     },
@@ -577,31 +577,31 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       title: '拓扑 / 绕数',
       shortTitle: '拓扑',
       description: '可视化探索拓扑和绕数。',
-      lessons: {
+      explorers: {
         'winding-number': {
           title: '绕数',
           description: '用环路和目标点观察拓扑不变量。',
-          learningGoals: ['追踪环路', '把绕数和内外判断直觉联系起来'],
+          thingsToTry: ['追踪环路', '把绕数和内外判断直觉联系起来'],
         },
         regions: {
           title: '内部 / 外部区域',
           description: '用环路和目标点观察拓扑不变量。',
-          learningGoals: ['追踪环路', '把绕数和内外判断直觉联系起来'],
+          thingsToTry: ['追踪环路', '把绕数和内外判断直觉联系起来'],
         },
         homotopy: {
           title: '同伦不变性',
           description: '用环路和目标点观察拓扑不变量。',
-          learningGoals: ['追踪环路', '把绕数和内外判断直觉联系起来'],
+          thingsToTry: ['追踪环路', '把绕数和内外判断直觉联系起来'],
         },
         'image-loops': {
           title: '图像环路与定义域着色',
           description: '用环路和目标点观察拓扑不变量。',
-          learningGoals: ['追踪环路', '把绕数和内外判断直觉联系起来'],
+          thingsToTry: ['追踪环路', '把绕数和内外判断直觉联系起来'],
         },
         'root-counting': {
           title: '根计数直觉',
           description: '用环路和目标点观察拓扑不变量。',
-          learningGoals: ['追踪环路', '把绕数和内外判断直觉联系起来'],
+          thingsToTry: ['追踪环路', '把绕数和内外判断直觉联系起来'],
         },
       },
     },
@@ -609,41 +609,41 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       title: '数论 / 分形',
       shortTitle: '数与分形',
       description: '发现数字中的模式和美丽分形。',
-      lessons: {
+      explorers: {
         'modular-circles': {
           title: '模乘圆',
           description: '观察简单离散规则和迭代规则如何产生复杂图案。',
-          learningGoals: ['尝试迭代', '从视觉中读取数字模式'],
+          thingsToTry: ['尝试迭代', '从视觉中读取数字模式'],
         },
         'prime-patterns': {
           title: '素数模式',
           description: '观察简单离散规则和迭代规则如何产生复杂图案。',
-          learningGoals: ['尝试迭代', '从视觉中读取数字模式'],
+          thingsToTry: ['尝试迭代', '从视觉中读取数字模式'],
         },
         collatz: {
           title: '考拉兹轨道',
           description: '观察简单离散规则和迭代规则如何产生复杂图案。',
-          learningGoals: ['尝试迭代', '从视觉中读取数字模式'],
+          thingsToTry: ['尝试迭代', '从视觉中读取数字模式'],
         },
         'ifs-chaos-game': {
           title: 'IFS / 混沌游戏',
           description: '观察简单离散规则和迭代规则如何产生复杂图案。',
-          learningGoals: ['尝试迭代', '从视觉中读取数字模式'],
+          thingsToTry: ['尝试迭代', '从视觉中读取数字模式'],
         },
         'mandelbrot-julia': {
           title: 'Mandelbrot 与 Julia',
           description: '观察简单离散规则和迭代规则如何产生复杂图案。',
-          learningGoals: ['尝试迭代', '从视觉中读取数字模式'],
+          thingsToTry: ['尝试迭代', '从视觉中读取数字模式'],
         },
         'newton-fractal': {
           title: '牛顿分形',
           description: '观察简单离散规则和迭代规则如何产生复杂图案。',
-          learningGoals: ['尝试迭代', '从视觉中读取数字模式'],
+          thingsToTry: ['尝试迭代', '从视觉中读取数字模式'],
         },
         'hilbert-curve': {
           title: 'Hilbert 曲线',
           description: '观察简单离散规则和迭代规则如何产生复杂图案。',
-          learningGoals: ['尝试迭代', '从视觉中读取数字模式'],
+          thingsToTry: ['尝试迭代', '从视觉中读取数字模式'],
         },
       },
     },
@@ -658,27 +658,23 @@ export function localizeModule(module: ModuleDefinition, locale: Locale): Module
     title: translation.title ?? module.title,
     shortTitle: translation.shortTitle ?? module.shortTitle,
     description: translation.description ?? module.description,
-    lessons: module.lessons.map((lesson) => localizeLesson(module.id, lesson, locale)),
+    explorers: module.explorers.map((lesson) => localizeExplorer(module.id, lesson, locale)),
   }
 }
 
-export function localizeLesson(moduleId: string, lesson: LessonDefinition, locale: Locale): LessonDefinition {
-  const translation = moduleTranslations[locale]?.[moduleId]?.lessons?.[lesson.id]
+export function localizeExplorer(moduleId: string, lesson: ExplorerDefinition, locale: Locale): ExplorerDefinition {
+  const translation = moduleTranslations[locale]?.[moduleId]?.explorers?.[lesson.id]
   if (!translation) return lesson
   return {
     ...lesson,
     title: translation.title ?? lesson.title,
     description: translation.description ?? lesson.description,
-    learningGoals: translation.learningGoals ?? lesson.learningGoals,
+    thingsToTry: translation.thingsToTry ?? lesson.thingsToTry,
   }
 }
 
-export function statusLabel(status: ModuleStatus | LessonStatus, locale: Locale): string {
+export function statusLabel(status: ModuleStatus | ExplorerStatus, locale: Locale): string {
   return platformCopy[locale].statusLabels[status]
-}
-
-export function difficultyLabel(difficulty: LessonDifficulty, locale: Locale): string {
-  return platformCopy[locale].difficultyLabels[difficulty]
 }
 
 export function categoryLabel(category: ModuleCategory, locale: Locale): string {

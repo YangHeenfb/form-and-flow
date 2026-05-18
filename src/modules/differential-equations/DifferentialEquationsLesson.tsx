@@ -140,17 +140,17 @@ const differentialCopy: Record<DifferentialLocale, {
       pause: 'Pause',
       reset: 'Reset animation',
       resetView: 'Reset view',
-      lesson: 'Lesson',
+      lesson: 'Explorer',
       exportPng: 'Export PNG',
       playbackProgress: 'Playback progress',
-      seeing: 'What you are seeing',
-      why: 'Why it matters',
-      formula: 'Current model',
-      values: 'Current values',
-      watch: 'Watch for',
-      beginnerHelp: 'Beginner Guide',
-      graphHelp: 'Read the graph',
-      closeHelp: 'Close explanation',
+      seeing: 'Notes',
+      why: 'Notes',
+      formula: 'Formula used',
+      values: 'Readout',
+      watch: 'Assumptions / Caveats',
+      beginnerHelp: 'Reference',
+      graphHelp: 'Graph notes',
+      closeHelp: 'Close reference',
       graphInstructions: 'Drag to pan, scroll to zoom.',
       invalidExpression: 'Invalid differential equation.',
       undefinedValue: 'undefined',
@@ -242,17 +242,17 @@ const differentialCopy: Record<DifferentialLocale, {
       pause: '暂停',
       reset: '重置动画',
       resetView: '重置视图',
-      lesson: '章节',
+      lesson: '探索器',
       exportPng: '导出 PNG',
       playbackProgress: '播放进度',
-      seeing: '你正在看到什么',
-      why: '为什么重要',
-      formula: '当前模型',
-      values: '当前数值',
-      watch: '注意观察',
-      beginnerHelp: '新手解释',
-      graphHelp: '怎么看图',
-      closeHelp: '关闭解释',
+      seeing: '说明',
+      why: '说明',
+      formula: '使用公式',
+      values: '读数',
+      watch: '假设 / 限制',
+      beginnerHelp: '参考',
+      graphHelp: '图像说明',
+      closeHelp: '关闭参考',
       graphInstructions: '拖动可平移，滚轮可缩放。',
       invalidExpression: '微分方程表达式无效。',
       undefinedValue: '未定义',
@@ -714,16 +714,6 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
 
       explanation={
         <>
-        <h2>{ui.seeing}</h2>
-        <p>{renderDifferentialWhat(lessonId, locale, copy.what, (term) => setHelpMode({ kind: 'term', term }))}</p>
-        <h2>{ui.why}</h2>
-        <p>{copy.why}</p>
-        <h2>{ui.formula}</h2>
-        <p className="formula-text formula-card">
-          <Formula tex={currentFormulaTex(lessonId, expressionTex, phasePreset, copy.formulaTex)} block label={copy.formulaLabel} />
-        </p>
-        <LessonTermLinks lessonId={lessonId} locale={locale} onTerm={(term) => setHelpMode({ kind: 'term', term })} />
-        <Legend lessonId={lessonId} locale={locale} />
         <h2>{ui.values}</h2>
         <dl>
           {values.map((row) => (
@@ -736,6 +726,15 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
             </div>
           ))}
         </dl>
+        <h2>{ui.formula}</h2>
+        <p className="formula-text formula-card">
+          <Formula tex={currentFormulaTex(lessonId, expressionTex, phasePreset, copy.formulaTex)} block label={copy.formulaLabel} />
+        </p>
+        <LessonTermLinks lessonId={lessonId} locale={locale} onTerm={(term) => setHelpMode({ kind: 'term', term })} />
+        <Legend lessonId={lessonId} locale={locale} />
+        <h2>{ui.seeing}</h2>
+        <p>{renderDifferentialWhat(lessonId, locale, copy.what, (term) => setHelpMode({ kind: 'term', term }))}</p>
+        <p>{copy.why}</p>
         <h2>{ui.watch}</h2>
         <p>{renderWatchText(lessonId, locale, scalarPresetId, copy.watch)}</p>
         </>
@@ -1445,7 +1444,7 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
   if (lessonId === 'numerical-methods') {
     return locale === 'zh'
       ? {
-          eyebrow: '怎么看图',
+          eyebrow: '图像说明',
           title: '数值方法图像读法',
           summary: '这张图同时画出三种近似解，重点不是哪条线“好看”，而是哪条线在同样步数下更稳定。',
           sections: [
@@ -1455,7 +1454,7 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
           ],
         }
       : {
-          eyebrow: 'Read the graph',
+          eyebrow: 'Graph notes',
           title: 'How to read the numerical methods graph',
           summary: 'The graph compares three approximate solutions. The key question is which path stays stable with the same number of steps.',
           sections: [
@@ -1469,7 +1468,7 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
   if (lessonId === 'slope-fields') {
     return locale === 'zh'
       ? {
-          eyebrow: '怎么看图',
+          eyebrow: '图像说明',
           title: '斜率场图像读法',
           summary: "把这张图当作方向地图：每个短线段都在回答“如果解曲线经过这里，它应该往哪个方向走”。",
           sections: [
@@ -1479,7 +1478,7 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
           ],
         }
       : {
-          eyebrow: 'Read the graph',
+          eyebrow: 'Graph notes',
           title: 'How to read a slope field',
           summary: 'Treat the graph as a direction map: each segment says where a solution would head if it passed through that point.',
           sections: [
@@ -1493,7 +1492,7 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
   if (lessonId === 'phase-portraits') {
     return locale === 'zh'
       ? {
-          eyebrow: '怎么看图',
+          eyebrow: '图像说明',
           title: '相图图像读法',
           summary: '横轴和纵轴都是状态变量，时间藏在轨迹的前进方向里。',
           sections: [
@@ -1503,7 +1502,7 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
           ],
         }
       : {
-          eyebrow: 'Read the graph',
+          eyebrow: 'Graph notes',
           title: 'How to read a phase portrait',
           summary: 'Both axes are state variables. Time is carried by the direction of travel along trajectories.',
           sections: [
@@ -1517,7 +1516,7 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
   if (lessonId === 'pendulum') {
     return locale === 'zh'
       ? {
-          eyebrow: '怎么看图',
+          eyebrow: '图像说明',
           title: '摆相图读法',
           summary: '主图不是摆锤的真实空间路线，而是角度和角速度组成的状态图。',
           sections: [
@@ -1527,7 +1526,7 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
           ],
         }
       : {
-          eyebrow: 'Read the graph',
+          eyebrow: 'Graph notes',
           title: 'How to read the pendulum phase plot',
           summary: 'The main plot is not the bob route in real space. It is a state plot of angle and angular velocity.',
           sections: [
@@ -1541,7 +1540,7 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
   if (lessonId === 'population') {
     return locale === 'zh'
       ? {
-          eyebrow: '怎么看图',
+          eyebrow: '图像说明',
           title: '种群相图读法',
           summary: '横轴是猎物，纵轴是捕食者；轨迹方向表示两个种群随时间怎样互相追赶。',
           sections: [
@@ -1551,7 +1550,7 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
           ],
         }
       : {
-          eyebrow: 'Read the graph',
+          eyebrow: 'Graph notes',
           title: 'How to read the population phase plot',
           summary: 'The horizontal axis is prey; the vertical axis is predators. Trajectory direction shows how the two counts chase each other over time.',
           sections: [
@@ -1565,7 +1564,7 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
   if (lessonId === 'heat-equation') {
     return locale === 'zh'
       ? {
-          eyebrow: '怎么看图',
+          eyebrow: '图像说明',
           title: '热方程图像读法',
           summary: '这里没有箭头或相轨迹；你看到的是同一根杆的温度曲线随时间变平。',
           sections: [
@@ -1575,7 +1574,7 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
           ],
         }
       : {
-          eyebrow: 'Read the graph',
+          eyebrow: 'Graph notes',
           title: 'How to read the heat equation graph',
           summary: 'There are no arrows or phase trajectories here. You are watching one rod temperature curve smooth over time.',
           sections: [
@@ -1588,7 +1587,7 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
 
   return locale === 'zh'
     ? {
-        eyebrow: '怎么看图',
+        eyebrow: '图像说明',
         title: '图像读法',
         summary: '先看每个位置的局部方向，再看从初值出发形成的整体轨迹。',
         sections: [
@@ -1597,7 +1596,7 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
         ],
       }
     : {
-        eyebrow: 'Read the graph',
+        eyebrow: 'Graph notes',
         title: 'How to read this graph',
         summary: 'Read the local direction first, then read the full trajectory selected by the initial condition.',
         sections: [
@@ -1628,7 +1627,7 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
       eyebrow: '术语',
       title: '初值是什么',
       summary: '初值就是解曲线的起点，例如 y(t0)=y0。',
-      sections: [{ title: '为什么重要', body: '同一个变化规则可以有很多条解曲线。初值会从这些可能性里选出其中一条。' }],
+      sections: [{ title: '说明', body: '同一个变化规则可以有很多条解曲线。初值会从这些可能性里选出其中一条。' }],
     },
     'slope-field': {
       eyebrow: '术语',
@@ -1808,7 +1807,7 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
       eyebrow: 'Term',
       title: 'Initial value',
       summary: 'An initial value is the starting point of a solution, such as y(t0)=y0.',
-      sections: [{ title: 'Why it matters', body: 'The same change rule can have many solution curves. The initial value selects one of them.' }],
+      sections: [{ title: 'Notes', body: 'The same change rule can have many solution curves. The initial value selects one of them.' }],
     },
     'slope-field': {
       eyebrow: 'Term',
@@ -1887,7 +1886,7 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
       title: 'State point',
       summary: 'A state point is not a physical location. It is the current values of a set of variables.',
       sections: [
-        { title: 'Examples', body: 'In the pendulum lesson, a point is (angle, angular velocity). In the population lesson, a point is (prey count, predator count).' },
+        { title: 'Examples', body: 'In the pendulum explorer, a point is (angle, angular velocity). In the population explorer, a point is (prey count, predator count).' },
         { title: 'Why it helps', body: 'One point tells the current situation. Following a trajectory shows how that situation changes over time.' },
       ],
     },

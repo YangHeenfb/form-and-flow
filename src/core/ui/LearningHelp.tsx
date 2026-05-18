@@ -40,7 +40,15 @@ export function TermButton({ children, onClick }: { children: ReactNode; onClick
   )
 }
 
-export function LearningDrawer({ topic, closeLabel, onClose }: { topic: HelpTopic | null; closeLabel: string; onClose: () => void }) {
+export function LearningDrawer({
+  topic,
+  closeLabel,
+  onClose,
+}: {
+  topic: HelpTopic | null
+  closeLabel: string
+  onClose: () => void
+}) {
   const drawerRef = useRef<HTMLElement | null>(null)
   const closeRef = useRef<HTMLButtonElement | null>(null)
 

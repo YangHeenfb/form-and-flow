@@ -12,24 +12,22 @@ export const topologyManifest: ModuleDefinition = {
   routeBase: base,
   order: 13,
   previewKind: 'topology',
-  lessons: [
-    lesson('winding-number', 'Winding Number'),
-    lesson('regions', 'Inside / Outside Regions'),
-    lesson('homotopy', 'Homotopy Invariance'),
-    lesson('image-loops', 'Image Loops & Domain Coloring'),
-    lesson('root-counting', 'Root Counting Intuition'),
+  explorers: [
+    explorer('winding-number', 'Winding Number'),
+    explorer('regions', 'Inside / Outside Regions'),
+    explorer('homotopy', 'Homotopy Invariance'),
+    explorer('image-loops', 'Image Loops & Domain Coloring'),
+    explorer('root-counting', 'Root Counting Intuition'),
   ],
 }
 
-function lesson(id: string, title: string) {
+function explorer(id: string, title: string) {
   return {
     id,
     title,
     description: 'Use loops and target points to see topological invariants.',
     route: `${base}/${id}`,
     status: 'planned' as const,
-    difficulty: 'intermediate' as const,
-    estimatedMinutes: 14,
-    learningGoals: ['Trace loops', 'Connect winding to inside/outside intuition'],
+    thingsToTry: ['Trace loops', 'Connect winding to inside/outside intuition'],
   }
 }

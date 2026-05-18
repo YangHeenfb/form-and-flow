@@ -10,6 +10,8 @@ type Props = {
 }
 
 const colorFields: Array<keyof ThemeSettings['colors']> = [
+  'background',
+  'text',
   'grid',
   'transformedGrid',
   'axis',
@@ -27,6 +29,7 @@ export function ThemePanel({
   onColorChange,
 }: Props) {
   const lowContrast = hasLowContrast(theme)
+  const objectLowContrast = hasObjectLowContrast(theme)
 
   return (
     <section className="panel-section">
@@ -59,13 +62,25 @@ export function ThemePanel({
           {copy.lowContrastWarning}
         </p>
       )}
+      {objectLowContrast && (
+        <p className="low-contrast-warning" role="status">
+          {copy.objectContrastWarning}
+        </p>
+      )}
     </section>
   )
 }
 
 function hasLowContrast(theme: ThemeSettings): boolean {
-  const background = theme.surfaceMode === 'dark' ? '#0d141c' : '#f8fafc'
-  return colorFields.some((field) => contrastRatio(theme.colors[field], background) < (field === 'grid' ? 2 : 3))
+  return contrastRatio(theme.colors.text, theme.colors.background) < 4.5
+}
+
+function hasObjectLowContrast(theme: ThemeSettings): boolean {
+  const background = theme.colors.background
+  return colorFields.some((field) => {
+    if (field === 'background' || field === 'text') return false
+    return contrastRatio(theme.colors[field], background) < (field === 'grid' ? 2 : 3)
+  })
 }
 
 function contrastRatio(foreground: string, background: string): number {

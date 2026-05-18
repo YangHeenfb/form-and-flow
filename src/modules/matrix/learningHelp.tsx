@@ -25,18 +25,18 @@ type LearningCopy = {
 
 export const matrixLearningCopy: Record<Locale, LearningCopy> = {
   en: {
-    entryTitle: 'Need the basics?',
-    entryHint: 'Open a short explanation when a symbol or picture is unfamiliar.',
-    openOverview: 'Beginner Guide',
-    openGraph: 'Read the graph',
-    close: 'Close explanation',
+    entryTitle: 'Reference notes',
+    entryHint: 'Use short notes when a symbol or picture is unfamiliar.',
+    openOverview: 'Reference',
+    openGraph: 'Graph notes',
+    close: 'Close reference',
   },
   zh: {
-    entryTitle: '新手解释',
-    entryHint: '遇到矩阵、基向量、行列式或秩这些概念时，可以随时打开解释。',
-    openOverview: '新手解释',
-    openGraph: '怎么看图',
-    close: '关闭解释',
+    entryTitle: '参考',
+    entryHint: '遇到矩阵、基向量、行列式或秩这些概念时，可以打开简短参考。',
+    openOverview: '参考',
+    openGraph: '图像说明',
+    close: '关闭参考',
   },
 }
 
@@ -369,7 +369,7 @@ function enTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
       ),
       sections: [
         {
-          title: 'What you are seeing',
+          title: 'Notes',
           items: [
             'The grid, basis vectors, unit shape, and custom vectors all move by the same matrix.',
             'Each column tells where one basic direction lands.',

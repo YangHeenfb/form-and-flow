@@ -33,17 +33,17 @@ export function App() {
     )
   }
 
-  if (route.kind === 'lesson') {
-    const loadComponent = route.lesson.loadComponent ?? route.module.loadComponent
+  if (route.kind === 'explorer') {
+    const loadComponent = route.explorer.loadComponent ?? route.module.loadComponent
     if (loadComponent) {
       return (
-        <PlatformShell currentModule={route.module} currentLessonId={route.lesson.id}>
-          <LazyModule loadComponent={loadComponent} lessonId={route.lesson.id} />
+        <PlatformShell currentModule={route.module} currentExplorerId={route.explorer.id}>
+          <LazyModule loadComponent={loadComponent} explorerId={route.explorer.id} />
         </PlatformShell>
       )
     }
     return (
-      <PlatformShell currentModule={route.module} currentLessonId={route.lesson.id}>
+      <PlatformShell currentModule={route.module} currentExplorerId={route.explorer.id}>
         <ComingSoonModule module={route.module} />
       </PlatformShell>
     )
@@ -56,12 +56,12 @@ export function App() {
   )
 }
 
-function LazyModule({ loadComponent, lessonId }: { loadComponent: ModuleComponentLoader; lessonId?: string }) {
+function LazyModule({ loadComponent, explorerId }: { loadComponent: ModuleComponentLoader; explorerId?: string }) {
   const Component = useMemo(() => lazy(loadComponent), [loadComponent])
 
   return (
     <Suspense fallback={<ModuleLoading />}>
-      <Component lessonId={lessonId} />
+      <Component lessonId={explorerId} />
     </Suspense>
   )
 }

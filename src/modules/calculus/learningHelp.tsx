@@ -31,18 +31,18 @@ type LearningCopy = {
 
 export const calculusLearningCopy: Record<Locale, LearningCopy> = {
   en: {
-    entryTitle: 'Need the basics?',
-    entryHint: 'Open a short explanation when the graph, formula, or slider names are unfamiliar.',
-    openOverview: 'Beginner Guide',
-    openGraph: 'Read the graph',
-    close: 'Close explanation',
+    entryTitle: 'Reference notes',
+    entryHint: 'Use short notes when the graph, formula, or slider names are unfamiliar.',
+    openOverview: 'Reference',
+    openGraph: 'Graph notes',
+    close: 'Close reference',
   },
   zh: {
-    entryTitle: '新手解释',
+    entryTitle: '参考',
     entryHint: '遇到导数、积分、黎曼和、泰勒这些概念时，可以随时打开解释。',
-    openOverview: '新手解释',
-    openGraph: '怎么看图',
-    close: '关闭解释',
+    openOverview: '参考',
+    openGraph: '图像说明',
+    close: '关闭参考',
   },
 }
 

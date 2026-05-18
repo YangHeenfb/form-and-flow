@@ -12,22 +12,20 @@ export const neuralNetworksManifest: ModuleDefinition = {
   routeBase: base,
   order: 9,
   previewKind: 'neural-networks',
-  lessons: [
-    lesson('perceptron', 'Perceptron Basics'),
-    lesson('forward-pass', 'Forward Pass'),
-    lesson('training', 'Training'),
+  explorers: [
+    explorer('perceptron', 'Perceptron Basics'),
+    explorer('forward-pass', 'Forward Pass'),
+    explorer('training', 'Training'),
   ],
 }
 
-function lesson(id: string, title: string) {
+function explorer(id: string, title: string) {
   return {
     id,
     title,
     description: 'Use visual models to connect parameters, activations, and training.',
     route: `${base}/${id}`,
     status: 'planned' as const,
-    difficulty: 'intermediate' as const,
-    estimatedMinutes: 15,
-    learningGoals: ['Read network structure', 'Connect training to changing parameters'],
+    thingsToTry: ['Read network structure', 'Connect training to changing parameters'],
   }
 }
