@@ -214,7 +214,7 @@ const calculusCopy: Record<CalculusLocale, {
         watch: '函数在 x 轴下方时，有符号面积会贡献负值。',
       },
       'fundamental-theorem': {
-        title: '微积分基本定理连接器',
+        title: '微积分基本定理',
         what: '上图高亮的累积面积，正在生成下图 A(x) 上的当前点。',
         why: '当 x 往右挪一小步，新增加的面积大约是“当前高度 f(x) × 那一小步宽度”，所以 A(x) 的变化速度就是 f(x)。',
         formula: "A(x)=∫[a,x] f(t)dt, A'(x)≈f(x)",

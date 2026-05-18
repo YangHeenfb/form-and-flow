@@ -230,7 +230,7 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
           thingsToTry: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
         },
         'fundamental-theorem': {
-          title: '微积分基本定理连接器',
+          title: '微积分基本定理',
           description: '把累积面积和瞬时高度联系起来。',
           thingsToTry: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
         },
