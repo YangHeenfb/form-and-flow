@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
-import { Compass, Download, Grid3X3, HelpCircle, Languages, Menu, Moon, PanelLeftClose, RotateCcw, Sun } from 'lucide-react'
+import { Download, Grid3X3, HelpCircle, Languages, Menu, Moon, PanelLeftClose, RotateCcw, Sun } from 'lucide-react'
+import { SelectMenu } from '../core/ui/SelectMenu.tsx'
 import type { ModuleDefinition } from './moduleTypes.ts'
 import { ModuleActionProvider, useModuleActionContext } from './ModuleActionContext.tsx'
 import { moduleRegistry } from './moduleRegistry.ts'
@@ -14,26 +15,28 @@ import {
   platformSurfaceStorageKey,
   type PlatformSurfaceMode,
 } from './platformLocale.tsx'
+import { getExplorerMode, moduleExplorerHref } from './routes.ts'
 
 type Props = {
   currentModule?: ModuleDefinition
   currentExplorerId?: string
+  currentMode?: string
   children: ReactNode
 }
 
-export function PlatformShell({ currentModule, currentExplorerId, children }: Props) {
+export function PlatformShell({ currentModule, currentExplorerId, currentMode, children }: Props) {
   const resetKey = `${currentModule?.id ?? 'home'}:${currentExplorerId ?? ''}`
 
   return (
     <ModuleActionProvider key={resetKey}>
-      <PlatformShellContent currentModule={currentModule} currentExplorerId={currentExplorerId}>
+      <PlatformShellContent currentModule={currentModule} currentExplorerId={currentExplorerId} currentMode={currentMode}>
         {children}
       </PlatformShellContent>
     </ModuleActionProvider>
   )
 }
 
-function PlatformShellContent({ currentModule, currentExplorerId, children }: Props) {
+function PlatformShellContent({ currentModule, currentExplorerId, currentMode, children }: Props) {
   const [locale, setLocale] = useState(() => loadStoredPlatformLocale())
   const [surfaceMode, setSurfaceMode] = useState<PlatformSurfaceMode>(() => loadStoredSurfaceMode())
   const { actions: moduleActions } = useModuleActionContext()
@@ -66,6 +69,8 @@ function PlatformShellContent({ currentModule, currentExplorerId, children }: Pr
     <PlatformLocaleContext.Provider value={{ locale, setLocale }}>
       <main
         className={`platform-shell${showModuleSidebar ? '' : ' no-sidebar'}${sidebarOpen ? '' : ' sidebar-collapsed'}${moduleActions.isVisualizationExpanded ? ' visualization-expanded' : ''}`}
+        data-current-module={currentModule?.id}
+        data-locale={locale}
         style={surfaceVariables(surfaceMode)}
       >
         <header className="platform-topbar">
@@ -81,7 +86,26 @@ function PlatformShellContent({ currentModule, currentExplorerId, children }: Pr
             ) : (
               <span>{copy.modules}</span>
             )}
-            {currentExplorer && <span className="context-lesson">/ {currentExplorer.title}</span>}
+            {currentModule && localizedCurrentModule && currentExplorer && (
+              <div className="platform-tool-selector">
+                <span>{copy.tool}</span>
+                <SelectMenu
+                  className="platform-tool-menu"
+                  ariaLabel={copy.toolSelectorAria}
+                  disabled={localizedCurrentModule.explorers.length === 0}
+                  value={currentMode ?? getExplorerMode(currentExplorer)}
+                  options={localizedCurrentModule.explorers.map((explorer) => ({
+                    value: getExplorerMode(explorer),
+                    label: explorer.title,
+                    textValue: explorer.title,
+                  }))}
+                  onChange={(nextMode) => {
+                    const nextExplorer = currentModule.explorers.find((explorer) => getExplorerMode(explorer) === nextMode)
+                    if (nextExplorer) window.location.href = moduleExplorerHref(currentModule, nextExplorer)
+                  }}
+                />
+              </div>
+            )}
           </div>
           <div className="platform-actions">
             <button type="button" aria-label={copy.switchLanguageAria} onClick={() => setLocale((current) => (current === 'en' ? 'zh' : 'en'))}>
@@ -151,17 +175,6 @@ function PlatformShellContent({ currentModule, currentExplorerId, children }: Pr
                       </details>
                     )}
                   </nav>
-                  {localizedCurrentModule && (
-                    <nav className="lesson-nav">
-                      <p className="sidebar-label">{copy.explorers}</p>
-                      {localizedCurrentModule.explorers.map((explorer) => (
-                        <a className={currentExplorerId === explorer.id ? 'active' : ''} href={explorer.route} key={explorer.id}>
-                          <Compass size={15} />
-                          {explorer.title}
-                        </a>
-                      ))}
-                    </nav>
-                  )}
                 </>
               )}
             </aside>

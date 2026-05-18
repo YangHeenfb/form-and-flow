@@ -41,7 +41,7 @@ export function decodeBinomialUrlState(search: string) {
     n: integerParam(params, 'n', 10, 1, 100),
     p: numberParam(params, 'p', 0.5, 0, 1),
     k: integerParam(params, 'k', 5, 0, 100),
-    mode: stringParam(params, 'mode', 'exact', ['exact', 'at-most', 'at-least', 'between'] as const),
+    mode: stringParam(params, 'binomialMode', 'exact', ['exact', 'at-most', 'at-least', 'between'] as const),
   }
 }
 

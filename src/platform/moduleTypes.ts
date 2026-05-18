@@ -1,6 +1,11 @@
 import type { ComponentType } from 'react'
 
-export type ModuleComponent = ComponentType<any>
+export type ModuleComponentProps = {
+  mode?: string
+  activeExplorerId?: string
+}
+
+export type ModuleComponent = ComponentType<ModuleComponentProps>
 
 export type ModuleComponentLoader = () => Promise<{ default: ModuleComponent }>
 

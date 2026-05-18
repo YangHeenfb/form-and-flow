@@ -1,8 +1,7 @@
 import type { ModuleDefinition } from '../../platform/moduleTypes.ts'
 
 const base = '/modules/matrix'
-const loadMatrixHome = () => import('./MatrixHome.tsx').then(({ MatrixHome }) => ({ default: MatrixHome }))
-const loadMatrixLesson = () => import('./MatrixModuleAdapter.tsx').then(({ MatrixModuleAdapter }) => ({ default: MatrixModuleAdapter }))
+const loadMatrixModule = () => import('./MatrixModuleAdapter.tsx').then(({ MatrixModuleAdapter }) => ({ default: MatrixModuleAdapter }))
 
 export const matrixManifest: ModuleDefinition = {
   id: 'matrix',
@@ -14,7 +13,7 @@ export const matrixManifest: ModuleDefinition = {
   routeBase: base,
   order: 1,
   previewKind: 'matrix',
-  loadComponent: loadMatrixHome,
+  loadComponent: loadMatrixModule,
   explorers: [
     {
       id: 'matrix-transformations',
@@ -23,7 +22,7 @@ export const matrixManifest: ModuleDefinition = {
       route: `${base}/transformations`,
       status: 'ready',
       thingsToTry: ['Compose matrix transformations', 'Read transformed basis vectors', 'Connect determinant to area or volume scale'],
-      loadComponent: loadMatrixLesson,
+      loadComponent: loadMatrixModule,
     },
   ],
 }

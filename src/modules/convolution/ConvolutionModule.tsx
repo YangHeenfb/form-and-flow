@@ -1,12 +1,7 @@
-import { ConvolutionHome } from './ConvolutionHome.tsx'
+import type { ModuleComponentProps } from '../../platform/moduleTypes.ts'
 import { ConvolutionLesson } from './ConvolutionLesson.tsx'
 import type { ConvolutionLessonId } from './convolutionCopy.ts'
 
-type Props = {
-  lessonId?: string
-}
-
-export function ConvolutionModule({ lessonId }: Props) {
-  if (!lessonId) return <ConvolutionHome />
-  return <ConvolutionLesson lessonId={lessonId as ConvolutionLessonId} />
+export function ConvolutionModule({ activeExplorerId, mode }: ModuleComponentProps) {
+  return <ConvolutionLesson lessonId={(activeExplorerId ?? mode ?? 'discrete') as ConvolutionLessonId} />
 }

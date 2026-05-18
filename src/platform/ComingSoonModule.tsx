@@ -1,6 +1,7 @@
 import type { ModuleDefinition } from './moduleTypes.ts'
 import { localizeModule, platformCopy, statusLabel } from './platformCopy.ts'
 import { usePlatformLocale } from './platformLocale.tsx'
+import { moduleExplorerHref } from './routes.ts'
 
 type Props = {
   module: ModuleDefinition
@@ -31,7 +32,7 @@ export function ComingSoonModule({ module }: Props) {
         <h2>{copy.plannedExplorers}</h2>
         <div className="lesson-list">
           {localizedModule.explorers.map((explorer) => (
-            <a className="lesson-row" href={explorer.route} key={explorer.id}>
+            <a className="lesson-row" href={moduleExplorerHref(localizedModule, explorer)} key={explorer.id}>
               <span>{explorer.title}</span>
               <small>{statusLabel(explorer.status, locale)}</small>
             </a>

@@ -16,9 +16,10 @@ type Props<T extends string | number> = {
   onChange: (value: T) => void
   ariaLabel: string
   className?: string
+  disabled?: boolean
 }
 
-export function SelectMenu<T extends string | number>({ value, options, onChange, ariaLabel, className }: Props<T>) {
+export function SelectMenu<T extends string | number>({ value, options, onChange, ariaLabel, className, disabled = false }: Props<T>) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement | null>(null)
   const buttonRef = useRef<HTMLButtonElement | null>(null)
@@ -61,8 +62,10 @@ export function SelectMenu<T extends string | number>({ value, options, onChange
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listboxId}
+        disabled={disabled}
         onClick={() => setOpen((current) => !current)}
         onKeyDown={(event) => {
+          if (disabled) return
           if (event.key === 'ArrowDown') {
             event.preventDefault()
             if (!open) setOpen(true)

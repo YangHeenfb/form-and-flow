@@ -1,13 +1,6 @@
-import { FourierHome } from './FourierHome.tsx'
+import type { ModuleComponentProps } from '../../platform/moduleTypes.ts'
 import { FourierLesson } from './FourierLesson.tsx'
 
-type Props = {
-  lessonId?: string
-}
-
-export function FourierModule({ lessonId }: Props) {
-  if (!lessonId) {
-    return <FourierHome />
-  }
-  return <FourierLesson lessonId={lessonId} />
+export function FourierModule({ activeExplorerId, mode }: ModuleComponentProps) {
+  return <FourierLesson lessonId={activeExplorerId ?? mode ?? 'spectrum'} />
 }

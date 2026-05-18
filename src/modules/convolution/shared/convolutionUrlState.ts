@@ -52,7 +52,7 @@ export function decodeDiscreteState(params: URLSearchParams): DiscreteUrlState {
   return {
     a: readNumberList(params, 'a', [1, 2, 3]),
     b: readNumberList(params, 'b', [1, 1]),
-    mode: readChoice(params, 'mode', ['full', 'same', 'valid'], 'full'),
+    mode: readChoice(params, 'convMode', ['full', 'same', 'valid'], 'full'),
     operation: readChoice(params, 'operation', ['convolution', 'correlation'], 'convolution'),
     k: readNumber(params, 'k', 0),
   }
@@ -69,7 +69,7 @@ export function decodeSignalState(params: URLSearchParams): SignalUrlState {
   return {
     signal: params.get('signal') ?? 'noisy-sine',
     kernel: params.get('kernel') ?? 'gaussian',
-    mode: readChoice(params, 'mode', ['full', 'same', 'valid'], 'same'),
+    mode: readChoice(params, 'convMode', ['full', 'same', 'valid'], 'same'),
     boundary: readChoice(params, 'boundary', ['zero', 'clamp', 'wrap'], 'zero'),
     length: clamp(readNumber(params, 'length', 64), 8, 512),
     sigma: clamp(readNumber(params, 'sigma', 1.2), 0.1, 5),

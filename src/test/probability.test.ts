@@ -96,7 +96,7 @@ describe('random variable sums', () => {
 describe('probability URL state', () => {
   it('decodes supported state only', () => {
     expect(decodeBayesUrlState('?prior=0.01&likelihood=0.9&falseAlarm=0.09&population=10000').prior).toBe(0.01)
-    expect(decodeBinomialUrlState('?n=10&p=0.5&k=5&mode=exact').mode).toBe('exact')
+    expect(decodeBinomialUrlState('?n=10&p=0.5&k=5&binomialMode=at-least').mode).toBe('at-least')
     expect(decodeCltUrlState('?source=die&sampleSize=30&samples=5000&seed=123').sampleSize).toBe(30)
     expect(decodeBinomialUrlState('?n=oops&p=2').n).toBe(10)
   })
@@ -107,14 +107,14 @@ describe('probability registry integration', () => {
     expect(moduleRegistry.filter((module) => module.id === 'probability')).toHaveLength(1)
     expect(probabilityManifest.status).toBe('ready')
     expect(resolveRoute('/modules/probability').kind).toBe('module')
-    for (const explorer of probabilityManifest.explorers) expect(resolveRoute(explorer.route).kind).toBe('explorer')
+    for (const explorer of probabilityManifest.explorers) expect(resolveRoute(explorer.route).kind).toBe('module')
     expect(new Set(probabilityManifest.explorers.map((explorer) => explorer.id)).size).toBe(probabilityManifest.explorers.length)
   })
 
-  it('renders the probability home and explorers without crashing', () => {
-    expect(renderToStaticMarkup(createElement(ProbabilityModule))).toContain('Probability Intuition')
+  it('renders the default probability explorer and selectable explorers without crashing', () => {
+    expect(renderToStaticMarkup(createElement(ProbabilityModule))).toContain('probability-main-canvas')
     for (const explorer of probabilityManifest.explorers) {
-      const html = renderToStaticMarkup(createElement(ProbabilityModule, { lessonId: explorer.id }))
+      const html = renderToStaticMarkup(createElement(ProbabilityModule, { activeExplorerId: explorer.id }))
       expect(html).toContain('probability-main-canvas')
     }
   })

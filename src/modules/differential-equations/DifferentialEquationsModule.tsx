@@ -1,13 +1,6 @@
-import { DifferentialEquationsHome } from './DifferentialEquationsHome.tsx'
+import type { ModuleComponentProps } from '../../platform/moduleTypes.ts'
 import { DifferentialEquationsLesson } from './DifferentialEquationsLesson.tsx'
 
-type Props = {
-  lessonId?: string
-}
-
-export function DifferentialEquationsModule({ lessonId }: Props) {
-  if (!lessonId) {
-    return <DifferentialEquationsHome />
-  }
-  return <DifferentialEquationsLesson lessonId={lessonId} />
+export function DifferentialEquationsModule({ activeExplorerId, mode }: ModuleComponentProps) {
+  return <DifferentialEquationsLesson lessonId={activeExplorerId ?? mode ?? 'slope-fields'} />
 }

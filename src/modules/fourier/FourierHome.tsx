@@ -1,5 +1,6 @@
 import { localizeModule, platformCopy } from '../../platform/platformCopy.ts'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
+import { moduleExplorerHref } from '../../platform/routes.ts'
 import { fourierManifest } from './manifest.ts'
 
 export function FourierHome() {
@@ -24,7 +25,7 @@ export function FourierHome() {
 
       <div className="lesson-card-grid">
         {module.explorers.map((explorer) => (
-          <a className="lesson-card fourier-lesson-card" href={explorer.route} key={explorer.id}>
+          <a className="lesson-card fourier-lesson-card" href={moduleExplorerHref(module, explorer)} key={explorer.id}>
             <h2>{explorer.title}</h2>
             <p>{explorer.description}</p>
             <strong>{copy.thingsToTry}</strong>

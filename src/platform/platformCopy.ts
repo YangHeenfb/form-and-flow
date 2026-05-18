@@ -12,7 +12,8 @@ type PlatformCopy = {
     modules: string
     explore: string
     allModules: string
-    explorers: string
+    tool: string
+    toolSelectorAria: string
     help: string
     reset: string
     exportPng: string
@@ -67,7 +68,8 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       modules: 'Modules',
       explore: 'Explore',
       allModules: 'All Modules',
-      explorers: 'Explorers',
+      tool: 'Tool',
+      toolSelectorAria: 'Select module tool',
       help: 'Reference',
       reset: 'Reset',
       exportPng: 'Export PNG',
@@ -134,7 +136,8 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       modules: '模块',
       explore: '浏览',
       allModules: '全部模块',
-      explorers: '探索器',
+      tool: '工具',
+      toolSelectorAria: '选择模块工具',
       help: '参考',
       reset: '重置',
       exportPng: '导出 PNG',
@@ -658,18 +661,18 @@ export function localizeModule(module: ModuleDefinition, locale: Locale): Module
     title: translation.title ?? module.title,
     shortTitle: translation.shortTitle ?? module.shortTitle,
     description: translation.description ?? module.description,
-    explorers: module.explorers.map((lesson) => localizeExplorer(module.id, lesson, locale)),
+    explorers: module.explorers.map((explorer) => localizeExplorer(module.id, explorer, locale)),
   }
 }
 
-export function localizeExplorer(moduleId: string, lesson: ExplorerDefinition, locale: Locale): ExplorerDefinition {
-  const translation = moduleTranslations[locale]?.[moduleId]?.explorers?.[lesson.id]
-  if (!translation) return lesson
+export function localizeExplorer(moduleId: string, explorer: ExplorerDefinition, locale: Locale): ExplorerDefinition {
+  const translation = moduleTranslations[locale]?.[moduleId]?.explorers?.[explorer.id]
+  if (!translation) return explorer
   return {
-    ...lesson,
-    title: translation.title ?? lesson.title,
-    description: translation.description ?? lesson.description,
-    thingsToTry: translation.thingsToTry ?? lesson.thingsToTry,
+    ...explorer,
+    title: translation.title ?? explorer.title,
+    description: translation.description ?? explorer.description,
+    thingsToTry: translation.thingsToTry ?? explorer.thingsToTry,
   }
 }
 

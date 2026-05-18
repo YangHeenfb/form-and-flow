@@ -1,5 +1,6 @@
 import { categoryLabel, localizeModule, platformCopy } from '../../platform/platformCopy.ts'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
+import { moduleExplorerHref } from '../../platform/routes.ts'
 import { probabilityManifest } from './manifest.ts'
 
 export function ProbabilityHome() {
@@ -20,7 +21,7 @@ export function ProbabilityHome() {
 
       <div className="lesson-card-grid probability-lesson-grid">
         {module.explorers.map((explorer) => (
-          <a className="lesson-card probability-lesson-card" href={explorer.route} key={explorer.id}>
+          <a className="lesson-card probability-lesson-card" href={moduleExplorerHref(module, explorer)} key={explorer.id}>
             <div>
               <h2>{explorer.title}</h2>
               <p>{explorer.description}</p>

@@ -1,13 +1,6 @@
-import { CalculusHome } from './CalculusHome.tsx'
+import type { ModuleComponentProps } from '../../platform/moduleTypes.ts'
 import { CalculusLesson } from './CalculusLesson.tsx'
 
-type Props = {
-  lessonId?: string
-}
-
-export function CalculusModule({ lessonId }: Props) {
-  if (!lessonId) {
-    return <CalculusHome />
-  }
-  return <CalculusLesson lessonId={lessonId} />
+export function CalculusModule({ activeExplorerId, mode }: ModuleComponentProps) {
+  return <CalculusLesson lessonId={activeExplorerId ?? mode ?? 'derivative'} />
 }

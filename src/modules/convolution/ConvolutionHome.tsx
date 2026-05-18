@@ -1,5 +1,6 @@
 import { localizeModule, platformCopy } from '../../platform/platformCopy.ts'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
+import { moduleExplorerHref } from '../../platform/routes.ts'
 import { convolutionUiCopy } from './convolutionCopy.ts'
 import { convolutionManifest } from './manifest.ts'
 
@@ -43,7 +44,7 @@ export function ConvolutionHome() {
 
       <div className="lesson-card-grid">
         {module.explorers.map((explorer) => (
-          <a className="lesson-card convolution-lesson-card" href={explorer.route} key={explorer.id}>
+          <a className="lesson-card convolution-lesson-card" href={moduleExplorerHref(module, explorer)} key={explorer.id}>
             <h2>{explorer.title}</h2>
             <p>{explorer.description}</p>
             <strong>{moduleCopy.thingsToTry}</strong>

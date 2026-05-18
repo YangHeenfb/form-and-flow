@@ -144,6 +144,11 @@ input[type="color"] {
   background: color-mix(in srgb, var(--focus) 8%, var(--panel-bg-soft));
 }
 
+.select-menu-trigger:disabled {
+  cursor: default;
+  opacity: 0.78;
+}
+
 .select-menu-value {
   min-width: 0;
   overflow: hidden;
@@ -1464,8 +1469,60 @@ dt {
   color: var(--text-main);
 }
 
-.context-lesson {
+.platform-tool-selector {
+  min-width: 220px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   color: var(--text-main);
+}
+
+.platform-tool-selector span {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.platform-tool-menu {
+  width: min(360px, 42vw);
+  max-width: min(360px, 42vw);
+}
+
+.platform-tool-menu .select-menu-trigger {
+  min-height: 38px;
+  background: var(--control-bg);
+  padding-inline: 12px 10px;
+}
+
+.platform-tool-menu .select-menu-popover {
+  min-width: min(360px, 72vw);
+}
+
+.platform-shell[data-locale="zh"] .platform-tool-selector,
+.platform-shell[data-locale="zh"] .platform-tool-menu .select-menu-trigger,
+.platform-shell[data-locale="zh"] .platform-tool-menu .select-menu-option {
+  font-family:
+    "Hiragino Sans GB", "Heiti SC", "STHeiti", "PingFang SC", "Microsoft YaHei",
+    ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+.platform-shell[data-locale="zh"] .platform-tool-selector > span {
+  color: var(--text-main);
+  font-size: 15px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.platform-shell[data-locale="zh"] .platform-tool-menu .select-menu-value,
+.platform-shell[data-locale="zh"] .platform-tool-menu .select-menu-option {
+  color: var(--text-main);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0;
 }
 
 .platform-actions {
@@ -1563,10 +1620,6 @@ dt {
   min-height: 34px;
   font-size: 13px;
   opacity: 0.74;
-}
-
-.lesson-nav {
-  margin-top: 22px;
 }
 
 .sidebar-label {
@@ -3060,6 +3113,12 @@ dt {
     flex-wrap: wrap;
   }
 
+  .platform-tool-selector,
+  .platform-tool-menu {
+    width: 100%;
+    max-width: 100%;
+  }
+
   .platform-actions {
     justify-content: flex-start;
   }
@@ -3195,26 +3254,6 @@ dt {
 
 .lesson-card-grid > .lesson-card:not(:has(.lesson-order)):not(:has(.module-order)):not(.complex-lesson-card)::before {
   content: counter(lesson-card, decimal-leading-zero);
-}
-
-.lesson-nav {
-  counter-reset: lesson-nav;
-}
-
-.lesson-nav a {
-  counter-increment: lesson-nav;
-}
-
-.lesson-nav a svg {
-  display: none;
-}
-
-.lesson-nav a::before {
-  content: counter(lesson-nav, decimal-leading-zero);
-  min-width: 22px;
-  color: var(--focus);
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
 }
 
 .lesson-list {

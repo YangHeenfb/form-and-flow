@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo } from 'react'
+import { lazy, Suspense, useEffect, useMemo } from 'react'
 import { ComingSoonModule } from '../platform/ComingSoonModule.tsx'
 import { ModuleHome } from '../platform/ModuleHome.tsx'
 import { PlatformShell } from '../platform/PlatformShell.tsx'
@@ -8,7 +8,20 @@ import { usePlatformLocale } from '../platform/platformLocale.tsx'
 import { resolveRoute } from '../platform/routes.ts'
 
 export function App() {
-  const route = resolveRoute(typeof window === 'undefined' ? '/modules' : window.location.pathname)
+  const route = resolveRoute(
+    typeof window === 'undefined' ? '/modules' : window.location.pathname,
+    typeof window === 'undefined' ? '' : window.location.search,
+  )
+  const legacyRedirectTo = route.kind === 'module' ? route.legacyRedirectTo : undefined
+
+  useEffect(() => {
+    if (!legacyRedirectTo || typeof window === 'undefined') return
+    const nextUrl = `${legacyRedirectTo}${window.location.hash}`
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
+    if (currentUrl !== nextUrl) {
+      window.history.replaceState(null, '', nextUrl)
+    }
+  }, [legacyRedirectTo])
 
   if (route.kind === 'home') {
     return (
@@ -19,31 +32,16 @@ export function App() {
   }
 
   if (route.kind === 'module') {
-    if (route.module.loadComponent) {
-      return (
-        <PlatformShell currentModule={route.module}>
-          <LazyModule loadComponent={route.module.loadComponent} />
-        </PlatformShell>
-      )
-    }
-    return (
-      <PlatformShell currentModule={route.module}>
-        <ComingSoonModule module={route.module} />
-      </PlatformShell>
-    )
-  }
-
-  if (route.kind === 'explorer') {
-    const loadComponent = route.explorer.loadComponent ?? route.module.loadComponent
+    const loadComponent = route.activeExplorer?.loadComponent ?? route.module.loadComponent
     if (loadComponent) {
       return (
-        <PlatformShell currentModule={route.module} currentExplorerId={route.explorer.id}>
-          <LazyModule loadComponent={loadComponent} explorerId={route.explorer.id} />
+        <PlatformShell currentModule={route.module} currentExplorerId={route.activeExplorer?.id} currentMode={route.activeMode}>
+          <LazyModule loadComponent={loadComponent} mode={route.activeMode} activeExplorerId={route.activeExplorer?.id} />
         </PlatformShell>
       )
     }
     return (
-      <PlatformShell currentModule={route.module} currentExplorerId={route.explorer.id}>
+      <PlatformShell currentModule={route.module} currentExplorerId={route.activeExplorer?.id} currentMode={route.activeMode}>
         <ComingSoonModule module={route.module} />
       </PlatformShell>
     )
@@ -56,12 +54,20 @@ export function App() {
   )
 }
 
-function LazyModule({ loadComponent, explorerId }: { loadComponent: ModuleComponentLoader; explorerId?: string }) {
+function LazyModule({
+  loadComponent,
+  mode,
+  activeExplorerId,
+}: {
+  loadComponent: ModuleComponentLoader
+  mode?: string
+  activeExplorerId?: string
+}) {
   const Component = useMemo(() => lazy(loadComponent), [loadComponent])
 
   return (
     <Suspense fallback={<ModuleLoading />}>
-      <Component lessonId={explorerId} />
+      <Component mode={mode} activeExplorerId={activeExplorerId} />
     </Suspense>
   )
 }
