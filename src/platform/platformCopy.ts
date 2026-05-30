@@ -151,13 +151,13 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
     },
     moduleDetail: {
       thingsToTry: '可以尝试',
-      openExplorer: '打开探索器',
+      openExplorer: '开始探索',
     },
     comingSoon: {
       eyebrow: '模块槽位',
       readyTitle: '已准备好实现',
-      readyBody: '这个路由、模块清单和导航位置已经就绪。后续模块任务可以直接在自己的模块目录中实现，不需要重写中央注册表或路由表。',
-      plannedExplorers: '规划探索器',
+      readyBody: '这个模块已预留位置，后续会补上对应的交互场景。',
+      plannedExplorers: '规划中的工具',
     },
     notFound: {
       title: '页面未找到',

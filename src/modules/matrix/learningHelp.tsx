@@ -57,7 +57,7 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
   return {
     overview: {
       eyebrow: '矩阵模块',
-      title: '这个实验到底在做什么？',
+      title: '这个模块能观察什么？',
       summary: (
         <>
           先把矩阵看成一台“移动空间的机器”：输入向量 <Formula tex="v" />，输出新向量 <Formula tex="Av" />。数字表是输入方式，空间怎么动是它的几何意义。
@@ -65,7 +65,7 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
       ),
       sections: [
         {
-          title: '你在看什么',
+          title: '画面元素',
           items: [
             '网格、基向量、单位形状和你添加的向量，会按同一个矩阵一起移动。',
             '每一列告诉你一个基础方向会被送到哪里。',

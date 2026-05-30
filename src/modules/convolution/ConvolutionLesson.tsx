@@ -1065,7 +1065,7 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
           sections: [
             { title: '为什么 7 比 2 更常见', body: '两个公平骰子掷出 7 的组合有 1+6、2+5、3+4、4+3、5+2、6+1；掷出 2 只有 1+1。组合越多，总概率通常越大。' },
             { title: '偏置时怎么算', body: <>{formula('x+y=s')} 的每个组合不是同样重要。组合 {formula('(x,y)')} 的贡献是 {formula('P_X(x)P_Y(y)')}。把所有贡献加起来，就是 {formula('P(S=s)')}。</> },
-            { title: '怎么探索', items: ['先看公平 d6 + 公平 d6，观察 7 的组合最多。', '再看偏置硬币，注意每个组合下面的概率贡献不同。', '拖动和 s，看当前计算如何把多个概率乘积加起来。'] },
+            { title: '怎么探索', items: ['先看公平六面骰 + 公平六面骰，观察 7 的组合最多。', '再看偏置硬币，注意每个组合下面的概率贡献不同。', '拖动和 s，看当前计算如何把多个概率乘积加起来。'] },
           ],
         }
       : {

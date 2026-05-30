@@ -363,7 +363,7 @@ export const appCopy: Record<Locale, AppCopy> = {
           return `${spacePlain(3)} → ${spacePlain(2)} 桥接视图`
         }
         if (inputDim === 2 && outputDim === 3) {
-          return `${spacePlain(2)} → ${spacePlain(3)} 进入 3D 视图`
+          return `${spacePlain(2)} → ${spacePlain(3)} 映射到 3D`
         }
         return `${spacePlain(inputDim)} → ${spacePlain(outputDim)} 视图`
       },
