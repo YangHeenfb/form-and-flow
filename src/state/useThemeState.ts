@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ColorPreset, ThemeSettings, ThemeSurfaceMode } from '../math/types.ts'
 
-const storageKey = 'matrix-motion-lab-theme'
+const storageKey = 'form-and-flow-matrix-theme'
+const legacyStorageKey = 'matrix-motion-lab-theme'
 
 export const neutralDarkTheme: ThemeSettings = {
   surfaceMode: 'dark',
@@ -68,7 +69,7 @@ export function saveThemeSettings(settings: ThemeSettings, storage: Storage = lo
 }
 
 export function loadThemeSettings(storage: Storage = localStorage): ThemeSettings {
-  const raw = storage.getItem(storageKey)
+  const raw = storage.getItem(storageKey) ?? storage.getItem(legacyStorageKey)
   if (!raw) {
     return neutralDarkTheme
   }

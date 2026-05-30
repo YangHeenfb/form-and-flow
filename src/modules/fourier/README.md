@@ -1,6 +1,6 @@
 # Fourier Transform
 
-This module implements the `/modules/fourier` learning path inside the existing Visual Math platform.
+This module implements the `/modules/fourier` learning path inside the existing Form & Flow platform.
 
 It uses the shared platform shell, module registry, `GraphCanvas`, `Formula`, `SelectMenu`, and the safe expression parser from `src/core/math/expression.ts`. The math convention is normalized time `t in [0, 1]` with coefficients:
 

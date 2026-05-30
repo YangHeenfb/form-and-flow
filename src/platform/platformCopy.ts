@@ -9,6 +9,7 @@ import type {
 
 type PlatformCopy = {
   shell: {
+    brandName: string
     modules: string
     explore: string
     allModules: string
@@ -29,11 +30,6 @@ type PlatformCopy = {
     exportAria: string
   }
   moduleHome: {
-    eyebrow: string
-    title: string
-    summary: (count: number) => string
-    v1Title: string
-    v1Summary: string
     roadmapTitle: string
     roadmapSummary: string
   }
@@ -65,6 +61,7 @@ type ModuleTranslation = Partial<Pick<ModuleDefinition, 'title' | 'shortTitle' |
 export const platformCopy: Record<Locale, PlatformCopy> = {
   en: {
     shell: {
+      brandName: 'Form & Flow',
       modules: 'Modules',
       explore: 'Explore',
       allModules: 'All Modules',
@@ -79,17 +76,12 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       switchToDarkMode: 'Dark mode',
       collapse: 'Collapse module navigation',
       expand: 'Expand module navigation',
-      homeAria: 'Visual Math Lab home',
+      homeAria: 'Form & Flow home',
       helpAria: 'Open current module reference',
       resetAria: 'Reset current module',
       exportAria: 'Export current visualization',
     },
     moduleHome: {
-      eyebrow: 'Explore',
-      title: 'Visualization Sandbox',
-      summary: (count) => `${count} interactive visualization modules and roadmap slots.`,
-      v1Title: 'Version 1 explorers',
-      v1Summary: 'The first release focuses on these six interactive visualization modules.',
       roadmapTitle: 'Roadmap',
       roadmapSummary: 'Later modules are listed here as lower-priority slots.',
     },
@@ -133,6 +125,7 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
   },
   zh: {
     shell: {
+      brandName: '形与流',
       modules: '模块',
       explore: '浏览',
       allModules: '全部模块',
@@ -147,17 +140,12 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       switchToDarkMode: '深色模式',
       collapse: '收起模块导航',
       expand: '展开模块导航',
-      homeAria: 'Visual Math Lab 首页',
+      homeAria: '形与流首页',
       helpAria: '打开当前模块参考',
       resetAria: '重置当前模块',
       exportAria: '导出当前可视化',
     },
     moduleHome: {
-      eyebrow: '浏览',
-      title: '可视化沙盒',
-      summary: (count) => `${count} 个交互式可视化模块和后续路线槽位。`,
-      v1Title: '第一版探索器',
-      v1Summary: '第一版重点保留这六个交互式可视化模块。',
       roadmapTitle: '后续模块规划中',
       roadmapSummary: '',
     },

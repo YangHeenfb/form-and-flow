@@ -1,4 +1,6 @@
-# Visual Math Lab
+# Form & Flow
+
+中文名：形与流
 
 Interactive math visualization modules built with React, Vite, Canvas, and Three.js.
 

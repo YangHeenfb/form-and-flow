@@ -11,19 +11,7 @@ export function ModuleHome() {
 
   return (
     <section className="platform-page module-home">
-      <div className="platform-page-heading">
-        <div>
-          <p className="eyebrow">{copy.eyebrow}</p>
-          <h1>{copy.title}</h1>
-          <p>{copy.summary(readyModules.length)}</p>
-        </div>
-      </div>
-
       <section className="module-home-section">
-        <div className="module-section-heading">
-          <h2>{copy.v1Title}</h2>
-          <p>{copy.v1Summary}</p>
-        </div>
         <div className="module-grid">
           {readyModules.map((module) => (
             <a className={`module-card module-card-${module.status}`} href={module.routeBase} key={module.id}>

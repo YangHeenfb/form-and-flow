@@ -1,4 +1,5 @@
-export const autoHideStorageKey = 'visual-math-lab-auto-hide-hud'
+export const autoHideStorageKey = 'form-and-flow-auto-hide-hud'
+const legacyAutoHideStorageKey = 'visual-math-lab-auto-hide-hud'
 export const hudIdleDelayMs = 2600
 
 export function loadAutoHideHud(): boolean {
@@ -7,7 +8,7 @@ export function loadAutoHideHud(): boolean {
   }
 
   try {
-    return localStorage.getItem(autoHideStorageKey) === 'true'
+    return (localStorage.getItem(autoHideStorageKey) ?? localStorage.getItem(legacyAutoHideStorageKey)) === 'true'
   } catch {
     return false
   }

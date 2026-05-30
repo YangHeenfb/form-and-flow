@@ -23,7 +23,13 @@ import {
 import type { AnimationState, LinearMap, Matrix, PlaybackMode, ThreeCameraView, ViewOptions, ViewPan } from '../../math/types.ts'
 import { useModuleActions } from '../../platform/ModuleActionContext.tsx'
 import { LessonStageActions } from '../../platform/LessonStageActions.tsx'
-import { platformLocaleEventName, platformLocaleStorageKey, platformSurfaceModeEventName, platformSurfaceStorageKey } from '../../platform/platformLocale.tsx'
+import {
+  platformLocaleEventName,
+  platformLocaleStorageKey,
+  platformSurfaceModeEventName,
+  readStoredPlatformLocaleValue,
+  readStoredSurfaceModeValue,
+} from '../../platform/platformLocale.tsx'
 import { VisualizationWorkbench, type VisualizationWorkbenchHandle } from '../../platform/VisualizationWorkbench.tsx'
 import type { OverlayPanelDefinition, VisualizationWorkbenchStatus } from '../../platform/visualizationLayoutTypes.ts'
 import type { MatrixAnimationFrame } from '../../render/RendererAdapter.ts'
@@ -43,7 +49,8 @@ const initialAnimation: AnimationState = {
 const basePlaybackSpeed = 0.75
 const minViewZoom = 0.25
 const maxViewZoom = 2.5
-const matrixLocaleStorageKey = 'matrix-motion-lab-locale'
+const matrixLocaleStorageKey = 'form-and-flow-matrix-locale'
+const legacyMatrixLocaleStorageKey = 'matrix-motion-lab-locale'
 
 type MatrixMotionLabProps = {
   embedded?: boolean
@@ -117,7 +124,7 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
     }
     window.addEventListener(platformLocaleEventName, syncLocale)
     window.addEventListener(platformSurfaceModeEventName, syncSurfaceMode)
-    const storedSurfaceMode = localStorage.getItem(platformSurfaceStorageKey)
+    const storedSurfaceMode = readStoredSurfaceModeValue()
     if (storedSurfaceMode === 'dark' || storedSurfaceMode === 'light') {
       themeState.setSurfaceMode(storedSurfaceMode)
     }
@@ -607,11 +614,11 @@ function loadLocale(): Locale {
   if (typeof window === 'undefined') {
     return 'en'
   }
-  const globalLocale = localStorage.getItem(platformLocaleStorageKey)
+  const globalLocale = readStoredPlatformLocaleValue()
   if (globalLocale === 'zh' || globalLocale === 'en') {
     return globalLocale
   }
-  return localStorage.getItem(matrixLocaleStorageKey) === 'zh' ? 'zh' : 'en'
+  return (localStorage.getItem(matrixLocaleStorageKey) ?? localStorage.getItem(legacyMatrixLocaleStorageKey)) === 'zh' ? 'zh' : 'en'
 }
 
 function usePrefersReducedMotion(): boolean {

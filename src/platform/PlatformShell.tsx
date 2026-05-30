@@ -37,6 +37,7 @@ export function PlatformShell({ currentModule, currentExplorerId, currentMode, c
 }
 
 function PlatformShellContent({ currentModule, currentExplorerId, currentMode, children }: Props) {
+  const assetBase = import.meta.env.BASE_URL
   const [locale, setLocale] = useState(() => loadStoredPlatformLocale())
   const [surfaceMode, setSurfaceMode] = useState<PlatformSurfaceMode>(() => loadStoredSurfaceMode())
   const { actions: moduleActions } = useModuleActionContext()
@@ -75,8 +76,10 @@ function PlatformShellContent({ currentModule, currentExplorerId, currentMode, c
       >
         <header className="platform-topbar">
           <a className="platform-brand" href="/modules" aria-label={copy.homeAria}>
-            <span className="brand-mark">VM</span>
-            <strong>Visual Math</strong>
+            <span className="brand-mark" aria-hidden="true">
+              <img src={`${assetBase}brand/form-flow-logo.png`} alt="" />
+            </span>
+            <strong>{copy.brandName}</strong>
           </a>
           <div className="platform-context">
             {localizedCurrentModule ? (
