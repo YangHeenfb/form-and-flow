@@ -6,6 +6,12 @@ Languages: English | [中文](README.zh-CN.md)
 
 The first release focuses on six visual explorers: linear transformations, calculus, Fourier analysis, differential equations, probability, and convolution.
 
+## Preview
+
+| Linear transformations | Derivative motion | Fourier spectrum |
+|---|---|---|
+| ![Matrix transformation preview](docs/media/matrix-transform.gif) | ![Derivative preview](docs/media/calculus-derivative.gif) | ![Fourier spectrum preview](docs/media/fourier-spectrum.gif) |
+
 ## What you can explore
 
 Form & Flow is built around visual experiments. Each module combines an interactive scene, adjustable controls, compact formulas, and live numerical readouts.
