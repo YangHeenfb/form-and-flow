@@ -2,7 +2,9 @@
 
 Languages: English | [中文](README.zh-CN.md)
 
-Interactive math visualization modules built with React, Vite, Canvas, and Three.js.
+Form & Flow is an interactive math visualization tool for building intuition. It is not a course, textbook, or teaching package; it helps users explore mathematical objects by dragging, tuning parameters, playing animations, and reading lightweight values.
+
+Built with React, Vite, Canvas, and Three.js.
 
 ## Local Development
 

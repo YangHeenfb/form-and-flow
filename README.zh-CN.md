@@ -2,7 +2,9 @@
 
 语言：[English](README.md) | 中文
 
-Form & Flow 是一个交互式数学可视化项目，使用 React、Vite、Canvas 和 Three.js 构建。
+形与流是一个用于建立直觉理解的交互式数学可视化工具。它不是课程、教材或教学项目；它帮助用户通过拖动、调参、播放动画和查看简短读数来观察数学对象如何变化。
+
+项目使用 React、Vite、Canvas 和 Three.js 构建。
 
 ## 本地开发
 
