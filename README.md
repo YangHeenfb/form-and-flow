@@ -8,9 +8,11 @@ The first release focuses on six visual explorers: linear transformations, calcu
 
 ## Preview
 
-| Linear transformations | Derivative motion | Fourier spectrum |
+| Linear transformations | Calculus | Fourier |
 |---|---|---|
-| ![Matrix transformation preview](docs/media/matrix-transform.gif) | ![Derivative preview](docs/media/calculus-derivative.gif) | ![Fourier spectrum preview](docs/media/fourier-spectrum.gif) |
+| ![Non-identity matrix transformation preview](docs/media/matrix-transform.gif) | ![Derivative motion preview](docs/media/calculus-derivative.gif) | ![Fourier spectrum preview](docs/media/fourier-spectrum.gif) |
+| **Differential equations** | **Probability** | **Convolution** |
+| ![Slope field preview](docs/media/differential-slope-fields.gif) | ![Conditional probability preview](docs/media/probability-conditional.gif) | ![Discrete convolution preview](docs/media/convolution-discrete.gif) |
 
 ## What you can explore
 

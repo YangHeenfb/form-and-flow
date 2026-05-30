@@ -8,9 +8,11 @@
 
 ## 可视化预览
 
-| 线性变换 | 导数运动 | 傅里叶频谱 |
+| 线性变换 | 微积分 | 傅里叶 |
 |---|---|---|
-| ![矩阵变换预览](docs/media/matrix-transform.gif) | ![导数预览](docs/media/calculus-derivative.gif) | ![傅里叶频谱预览](docs/media/fourier-spectrum.gif) |
+| ![非单位矩阵变换预览](docs/media/matrix-transform.gif) | ![导数运动预览](docs/media/calculus-derivative.gif) | ![傅里叶频谱预览](docs/media/fourier-spectrum.gif) |
+| **微分方程** | **概率** | **卷积** |
+| ![斜率场预览](docs/media/differential-slope-fields.gif) | ![条件概率预览](docs/media/probability-conditional.gif) | ![离散卷积预览](docs/media/convolution-discrete.gif) |
 
 ## 可以探索什么
 
