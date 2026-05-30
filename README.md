@@ -1,6 +1,6 @@
 # Form & Flow
 
-中文名：形与流
+Languages: English | [中文](README.zh-CN.md)
 
 Interactive math visualization modules built with React, Vite, Canvas, and Three.js.
 
@@ -9,14 +9,14 @@ Interactive math visualization modules built with React, Vite, Canvas, and Three
 Install dependencies, then run the Vite dev server:
 
 ```sh
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 Do not expose the Vite development server to the public internet with `--host` unless you have reviewed the current Vite/esbuild dev-server advisories and added the necessary network protections. Use a production build for public hosting:
 
 ```sh
-npm run build
+pnpm build
 ```
 
 ## Static Hosting
