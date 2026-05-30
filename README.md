@@ -181,4 +181,4 @@ Use `pnpm preview` only to inspect the production build locally; use a proper st
 
 ## License
 
-No license file is currently included. Add a license before encouraging reuse or redistribution.
+This project is licensed under the MIT License. See [LICENSE](LICENSE).

@@ -181,4 +181,4 @@ Run pnpm build and pnpm test before summarizing the change.
 
 ## License
 
-当前仓库还没有包含 license 文件。如果希望其他人复用或分发这个项目，建议之后补充一个明确的开源许可证。
+本项目使用 MIT License。详见 [LICENSE](LICENSE)。
