@@ -179,28 +179,6 @@ Form & Flow is a Vite single-page application. For static hosting:
 
 Use `pnpm preview` only to inspect the production build locally; use a proper static hosting provider for public deployment.
 
-## Suggested repository metadata
-
-Recommended GitHub description:
-
-```text
-Interactive math visualization lab for exploring form, motion, and mathematical structure.
-```
-
-Recommended topics:
-
-```text
-math-visualization
-interactive-math
-react
-typescript
-vite
-canvas
-threejs
-visual-learning
-education
-```
-
 ## License
 
 No license file is currently included. Add a license before encouraging reuse or redistribution.

@@ -179,28 +179,6 @@ Run pnpm build and pnpm test before summarizing the change.
 
 `pnpm preview` 适合在本地检查生产构建效果；公开部署请使用正式的静态托管服务。
 
-## 建议的仓库信息
-
-推荐 GitHub description：
-
-```text
-Interactive math visualization lab for exploring form, motion, and mathematical structure.
-```
-
-推荐 topics：
-
-```text
-math-visualization
-interactive-math
-react
-typescript
-vite
-canvas
-threejs
-visual-learning
-education
-```
-
 ## License
 
 当前仓库还没有包含 license 文件。如果希望其他人复用或分发这个项目，建议之后补充一个明确的开源许可证。
