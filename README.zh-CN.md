@@ -2,7 +2,7 @@
 
 语言：[English](README.md) | 中文
 
-**形与流** 是一个用于建立直觉理解的交互式数学可视化工具。它不是课程、教材或教学项目；它用动态图形、形状变化和直接操作来呈现数学结构，让你可以拖动点、调整参数、播放动画、比较读数，并保存当前可视化状态。
+**形与流** 是一个交互式数学可视化实验台，用动态图形、形状变化和直接操作来探索数学结构。你可以拖动点、调整参数、播放动画、比较读数，并保存当前可视化状态。
 
 第一版重点打磨六个可视化模块：线性变换、微积分、傅里叶分析、微分方程、概率和卷积。
 
@@ -13,7 +13,7 @@
 | 模块 | 可视化工具 | 主要内容 |
 |---|---|---|
 | **矩阵与线性变换** | Matrix Transformations | 矩阵序列、基向量、自定义向量、面积 / 体积缩放、方向翻转、二维和三维线性变换。 |
-| **微积分** | Derivative、Integral / Riemann Sums、Fundamental Theorem、Taylor Polynomial | 割线到切线、带符号面积近似、面积累积、局部多项式近似。 |
+| **微积分** | Derivative、Integral / Riemann Sums、Fundamental Theorem Connector、Taylor Polynomial | 割线到切线、带符号面积近似、面积累积、局部多项式近似。 |
 | **傅里叶变换** | Frequency Spectrum、Signal Reconstruction、Frequency Filtering | 时域信号、频率成分、系数幅度、信号重建和滤波。 |
 | **微分方程** | Slope Fields、Numerical Methods、Phase Portraits、Pendulum、Population Dynamics、Heat Equation | 变化规则、解曲线、向量场、数值近似、振子运动、扩散过程。 |
 | **概率直觉** | Conditional Probability、Bayes Rule、Medical Test、Binomial Distribution、Continuous Density、Central Limit Theorem、Random Variable Sum | 人群、面积、抽样、分布、基础率、条件概率和采样行为。 |
@@ -176,7 +176,7 @@ Run pnpm build and pnpm test before summarizing the change.
 推荐 GitHub description：
 
 ```text
-Interactive math visualization tool for exploring form, motion, and mathematical structure.
+Interactive math visualization lab for exploring form, motion, and mathematical structure.
 ```
 
 推荐 topics：
@@ -184,13 +184,13 @@ Interactive math visualization tool for exploring form, motion, and mathematical
 ```text
 math-visualization
 interactive-math
-math-intuition
 react
 typescript
 vite
 canvas
 threejs
-visualization
+visual-learning
+education
 ```
 
 ## License

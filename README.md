@@ -2,7 +2,7 @@
 
 Languages: English | [中文](README.zh-CN.md)
 
-**Form & Flow** is an interactive math visualization tool for building intuition through motion, shape, and direct manipulation. It is not a course, textbook, or teaching package; it turns abstract objects into scenes you can adjust: drag points, tune parameters, play animations, compare readouts, and save visual states.
+**Form & Flow** is an interactive math visualization lab for exploring mathematical structure through motion, shape, and direct manipulation. It turns abstract objects into scenes you can adjust: drag points, tune parameters, play animations, compare readouts, and save visual states.
 
 The first release focuses on six visual explorers: linear transformations, calculus, Fourier analysis, differential equations, probability, and convolution.
 
@@ -13,7 +13,7 @@ Form & Flow is built around visual experiments. Each module combines an interact
 | Module | Explorers | What it helps visualize |
 |---|---|---|
 | **Matrix and Linear Transformation** | Matrix Transformations | Matrix sequences, basis vectors, custom vectors, area / volume scaling, orientation changes, 2D and 3D linear transformations. |
-| **Calculus** | Derivative, Integral / Riemann Sums, Fundamental Theorem, Taylor Polynomial | Secant-to-tangent motion, signed area approximation, accumulation, local polynomial approximation. |
+| **Calculus** | Derivative, Integral / Riemann Sums, Fundamental Theorem Connector, Taylor Polynomial | Secant-to-tangent motion, signed area approximation, accumulation, local polynomial approximation. |
 | **Fourier Transform** | Frequency Spectrum, Signal Reconstruction, Frequency Filtering | Time-domain signals, frequency components, coefficient magnitude, reconstruction, and filtering. |
 | **Differential Equations** | Slope Fields, Numerical Methods, Phase Portraits, Pendulum, Population Dynamics, Heat Equation | Change rules, solution paths, vector fields, numerical approximation, oscillator motion, diffusion. |
 | **Probability Intuition** | Conditional Probability, Bayes Rule, Medical Test, Binomial Distribution, Continuous Density, Central Limit Theorem, Random Variable Sum | Populations, areas, samples, distributions, base rates, conditional probability, sampling behavior. |
@@ -176,7 +176,7 @@ Use `pnpm preview` only to inspect the production build locally; use a proper st
 Recommended GitHub description:
 
 ```text
-Interactive math visualization tool for exploring form, motion, and mathematical structure.
+Interactive math visualization lab for exploring form, motion, and mathematical structure.
 ```
 
 Recommended topics:
@@ -184,13 +184,13 @@ Recommended topics:
 ```text
 math-visualization
 interactive-math
-math-intuition
 react
 typescript
 vite
 canvas
 threejs
-visualization
+visual-learning
+education
 ```
 
 ## License
