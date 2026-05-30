@@ -3,7 +3,7 @@
 ## Current Status
 - Product name: Form & Flow（中文：形与流）.
 - Main app repository folder: `matrix-motion-lab`.
-- GitHub sync target: private repository under `YangHeenfb`.
+- GitHub sync target: `YangHeenfb/form-and-flow`.
 - Recent work updates matrix composition wording to use indexed names such as `A1`, `A2`, `A3`.
 
 ## Useful Commands
