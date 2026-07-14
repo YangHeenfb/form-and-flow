@@ -44,7 +44,7 @@ export function loadStoredPlatformLocale(): Locale {
 }
 
 export function loadStoredSurfaceMode(): PlatformSurfaceMode {
-  if (typeof window === 'undefined') return 'dark'
+  if (typeof window === 'undefined') return 'light'
   const storedSurfaceMode = readStoredSurfaceModeValue()
-  return storedSurfaceMode === 'light' ? 'light' : 'dark'
+  return storedSurfaceMode === 'dark' ? 'dark' : 'light'
 }

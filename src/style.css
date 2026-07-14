@@ -1386,6 +1386,26 @@ dt {
   }
 }
 
+@media (max-width: 720px) {
+  .platform-tool-menu .select-menu-trigger,
+  .learning-help-trigger,
+  .mini-help-button,
+  .concept-term {
+    min-height: 44px;
+  }
+
+  .platform-actions button,
+  .sidebar-toggle,
+  .mini-help-button,
+  .concept-term {
+    min-width: 44px;
+  }
+
+  .sidebar-toggle {
+    width: 44px;
+  }
+}
+
 .platform-shell {
   min-height: 100vh;
   color: var(--text-main);
@@ -3129,6 +3149,35 @@ dt {
     justify-content: flex-start;
   }
 
+  .platform-brand,
+  .platform-actions button,
+  .sidebar-toggle,
+  .platform-sidebar a,
+  .select-menu-trigger,
+  .select-menu-option,
+  button:not(.mini-help-button),
+  input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+  select {
+    min-height: 44px;
+  }
+
+  input[type="range"] {
+    min-height: 44px;
+  }
+
+  .diffeq-playback {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .diffeq-playback > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .platform-workspace,
   .sidebar-collapsed .platform-workspace {
     grid-template-columns: 48px minmax(0, 1fr);
@@ -3678,5 +3727,19 @@ dt {
 
   .lesson-shell-explanation dd {
     text-align: left;
+  }
+}
+
+@media (max-width: 720px) {
+  .platform-tool-menu .select-menu-trigger,
+  .learning-help-trigger,
+  .lesson-learning-entry .learning-help-trigger {
+    min-height: 44px;
+  }
+
+  .sidebar-toggle {
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 }

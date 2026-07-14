@@ -1,10 +1,10 @@
 # 形与流
 
+[![CI](https://github.com/YangHeenfb/form-and-flow/actions/workflows/ci.yml/badge.svg)](https://github.com/YangHeenfb/form-and-flow/actions/workflows/ci.yml)
+
 语言：[English](README.md) | 中文
 
-**形与流** 是一个交互式数学可视化实验台，用动态图形、形状变化和直接操作来探索数学结构。你可以拖动点、调整参数、播放动画、比较读数，并保存当前可视化状态。
-
-第一版重点打磨六个可视化模块：线性变换、微积分、傅里叶分析、微分方程、概率和卷积。
+**形与流（Form & Flow）** 是一个交互式数学实验台，通过运动、形状和直接操作帮助学习者理解抽象结构。目前完成的六个模块共有 27 个 explorer，覆盖线性代数、微积分、傅里叶分析、微分方程、概率和卷积。
 
 ## 可视化预览
 
@@ -14,171 +14,75 @@
 | **微分方程** | **概率** | **卷积** |
 | ![斜率场预览](docs/media/differential-slope-fields.gif) | ![条件概率预览](docs/media/probability-conditional.gif) | ![离散卷积预览](docs/media/convolution-discrete.gif) |
 
-## 可以探索什么
+## 已完成模块
 
-形与流围绕“可操作的视觉实验”设计。每个模块都包含一个交互场景、一组可调控件、简洁公式和实时数值读数。
+| 模块 | Explorer 数量 | 内容 |
+|---|---:|---|
+| 矩阵与线性变换 | 1 | 变换序列、基向量和自定义向量、行列式、二维与三维视图 |
+| 微积分 | 4 | 导数、黎曼和、微积分基本定理、泰勒多项式 |
+| 傅里叶变换 | 3 | 频谱、信号重建、频率滤波 |
+| 微分方程 | 6 | 斜率场、数值方法、相图、振子、种群动力学、扩散 |
+| 概率直觉 | 7 | 条件概率、贝叶斯、医学检测、概率分布、中心极限定理、随机变量和 |
+| 卷积 | 6 | 离散与连续卷积、概率和、信号滤波、图像核、多项式乘法 |
 
-| 模块 | 可视化工具 | 主要内容 |
-|---|---|---|
-| **矩阵与线性变换** | Matrix Transformations | 矩阵序列、基向量、自定义向量、面积 / 体积缩放、方向翻转、二维和三维线性变换。 |
-| **微积分** | Derivative、Integral / Riemann Sums、Fundamental Theorem Connector、Taylor Polynomial | 割线到切线、带符号面积近似、面积累积、局部多项式近似。 |
-| **傅里叶变换** | Frequency Spectrum、Signal Reconstruction、Frequency Filtering | 时域信号、频率成分、系数幅度、信号重建和滤波。 |
-| **微分方程** | Slope Fields、Numerical Methods、Phase Portraits、Pendulum、Population Dynamics、Heat Equation | 变化规则、解曲线、向量场、数值近似、振子运动、扩散过程。 |
-| **概率直觉** | Conditional Probability、Bayes Rule、Medical Test、Binomial Distribution、Continuous Density、Central Limit Theorem、Random Variable Sum | 人群、面积、抽样、分布、基础率、条件概率和采样行为。 |
-| **卷积** | Discrete Convolution、Probability Sum、Signal Filtering、Image Kernel、Polynomial Multiplication、Continuous Convolution | 滑动、重叠、相乘再求和，以及它们在信号、概率、图像和代数中的共同模式。 |
+每个 explorer 都有稳定的 `/modules/{module}/{explorer}` 深链，并在适用时共享语言、主题、专注模式、重置和导出能力。
 
-## 核心功能
+## 技术架构
 
-- 基于浏览器的交互式数学场景。
-- 使用 Canvas 绘制二维可视化，使用 Three.js 绘制三维可视化。
-- 在线性变换中支持矩阵序列和向量追踪。
-- 支持滑条、预设、开关和播放控制。
-- 实时显示公式、参数和数值结果。
-- 支持主题和颜色自定义。
-- 支持导出当前画面为 PNG。
-- 使用 URL 路由组织模块和可视化工具页面。
-- 为核心数学逻辑和部分 UI 行为提供测试。
+- React 19 与 TypeScript 6 负责应用结构和类型化数学状态。
+- 大部分图形使用 Canvas 2D；只有进入 Matrix 三维视图时才加载 Three.js。
+- KaTeX 随数学课程内容按需加载，不进入模块首页首屏。
+- 纯数值内核与渲染逻辑分离，并由 Vitest 覆盖。
+- 模块 manifest 定义路由和懒加载入口，平台外壳负责导航和共享操作。
+- Playwright 覆盖全部 27 个已完成 explorer、响应式布局、深链、无障碍和 bundle 边界。
 
-## 项目状态
+这里的数值方法以教学演示为目的。采样密度、时间步长、有限网格、截断和边界条件都会影响显示结果；可视化不能替代数学证明或科研级求解器。
 
-形与流目前处于早期公开版本。当前优先级是把第一版六个模块做得更稳定、更统一、更容易探索。
+## 本地开发
 
-后续路线包括一些已经在源码结构中出现或计划加入的模块：
-
-- 复平面
-- 优化
-- 神经网络
-- 向量场
-- 傅里叶级数
-- 群论
-- 拓扑
-- 数论与分形
-
-## 技术栈
-
-- **React**：用户界面结构。
-- **TypeScript**：类型化的应用逻辑和数学逻辑。
-- **Vite**：开发服务器和生产构建。
-- **Canvas 2D**：二维数学场景绘制。
-- **Three.js**：三维可视化。
-- **KaTeX**：数学公式显示。
-- **Vitest**：测试。
-- **pnpm**：依赖管理。
-
-## 本地运行
-
-### 前置条件
-
-请先安装 Node.js 和 pnpm。
-
-### 安装依赖
+需要 Node.js 20.19 或更高版本，以及 pnpm 11.0.9。
 
 ```sh
-pnpm install
-```
-
-### 启动开发服务器
-
-```sh
+pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-然后打开 Vite 在终端中显示的本地地址。
-
-### 构建生产版本
+常用检查命令：
 
 ```sh
-pnpm build
+pnpm typecheck       # TypeScript 类型检查
+pnpm test            # 单元与行为测试
+pnpm build           # 生产构建
+pnpm check:bundle    # 首屏与分块体积预算
+pnpm test:e2e        # Chromium 流程与无障碍检查
+pnpm check           # 单元测试、构建和 bundle 审计
 ```
 
-构建结果会生成在 `dist/` 目录中。
+第一次运行浏览器测试时，可能需要执行 `pnpm exec playwright install chromium`。
 
-### 本地预览生产构建
-
-```sh
-pnpm preview
-```
-
-### 运行测试
-
-```sh
-pnpm test
-```
-
-## 项目结构
+## 仓库结构
 
 ```text
-form-and-flow/
-├── public/                 # 静态资源
-├── src/
-│   ├── app/                # 应用外壳
-│   ├── components/         # 共享 React 组件
-│   ├── core/               # 共享 UI 和应用工具
-│   ├── math/               # 可复用数学逻辑
-│   ├── modules/            # 各个可视化模块
-│   ├── platform/           # 模块注册、路由、布局和文案
-│   ├── render/             # Canvas 和 Three.js 渲染辅助逻辑
-│   ├── state/              # 应用状态和 URL 状态辅助逻辑
-│   └── test/               # 测试辅助和测试设置
-├── index.html
-├── package.json
-├── tsconfig.json
-└── vite.config.ts
+src/
+├── components/      # 共享可视化组件
+├── core/            # 可复用 UI 和应用工具
+├── math/            # 数值计算内核
+├── modules/         # 模块 manifest、explorer、状态与渲染适配
+├── platform/        # 目录、路由、外壳与本地化
+├── render/          # Canvas 与 Three.js 辅助逻辑
+├── state/           # 共享状态与 URL 状态
+└── test/            # 测试配置和辅助工具
+e2e/                 # Playwright 测试
+public/              # 静态及优化后的视觉资源
+scripts/             # 构建审计脚本
 ```
 
-## 模块设计原则
+## 项目范围与局限
 
-每个模块都应该像一个可以直接上手的 explorer：
+模块目录中还展示了未来主题，但只有上面列出的六个模块属于已完成状态。目前没有公开托管的 Demo；可以本地运行，或将 `dist/` 发布到支持 SPA 路由回退的静态托管服务。
 
-1. 可视化场景打开后就能操作。
-2. 控件应该直接改变图像。
-3. 读数面板用数字、公式和简短说明解释当前状态。
-4. 预设应该提供好的起点。
-5. 高级选项应该默认收起，避免干扰主要观察对象。
+当前优先级是数学正确性、响应式交互、无障碍和清晰的 explorer 边界，而不是临时增加尚未充分验证的新学科内容。
 
-添加新 explorer 时，建议使用类似结构：
+## 许可证
 
-```text
-src/modules/<module-name>/
-├── manifest.ts             # 模块标题、描述、路由和 explorers
-├── <Module>.tsx            # 主模块组件
-├── <Module>Home.tsx        # 可选模块主页
-├── learningHelp.tsx        # 可选参考说明
-└── ...                     # 渲染、状态和辅助文件
-```
-
-## 和 Codex / coding agent 协作
-
-这个项目应该保持 visualization-first 的开发方向。让 Codex 或其他 coding agent 修改代码时，可以明确这些边界：
-
-- 保留 explorer 风格界面。
-- 优先做直接操作和即时反馈，而不是很长的解释流程。
-- 模块页面风格要和第一版六个模块保持一致。
-- 数学逻辑、渲染逻辑和 UI 组件尽量分离。
-- 修改数学或状态逻辑时补充测试。
-- 不要随意大规模重写，除非能让多个模块更一致。
-
-可以使用类似任务提示：
-
-```text
-Update the <module> explorer in Form & Flow.
-Keep the visualization-first interface.
-Do not change unrelated modules.
-Add or update tests for any math/state logic you touch.
-Run pnpm build and pnpm test before summarizing the change.
-```
-
-## 部署说明
-
-形与流是一个 Vite 单页应用。静态部署时：
-
-1. 运行 `pnpm build`。
-2. 部署生成的 `dist/` 目录。
-3. 如果部署在嵌套路由下，例如 `https://username.github.io/form-and-flow/`，需要把 Vite 的 `base` 选项设置为对应路径。
-4. 静态托管服务需要把 `/modules/matrix/transformations` 这类深层路由回退到 `index.html`，否则直接刷新模块页面可能会出现 404。
-
-`pnpm preview` 适合在本地检查生产构建效果；公开部署请使用正式的静态托管服务。
-
-## License
-
-本项目使用 MIT License。详见 [LICENSE](LICENSE)。
+MIT，详见 [LICENSE](LICENSE)。

@@ -71,7 +71,7 @@ export function saveThemeSettings(settings: ThemeSettings, storage: Storage = lo
 export function loadThemeSettings(storage: Storage = localStorage): ThemeSettings {
   const raw = storage.getItem(storageKey) ?? storage.getItem(legacyStorageKey)
   if (!raw) {
-    return neutralDarkTheme
+    return neutralLightTheme
   }
   try {
     const parsed = JSON.parse(raw) as ThemeSettings
@@ -82,9 +82,9 @@ export function loadThemeSettings(storage: Storage = localStorage): ThemeSetting
       return completeThemeSettings(parsed)
     }
   } catch {
-    return neutralDarkTheme
+    return neutralLightTheme
   }
-  return neutralDarkTheme
+  return neutralLightTheme
 }
 
 function isLegacyNeutralTheme(settings: ThemeSettings): boolean {
@@ -153,7 +153,7 @@ export function useThemeState(initialTheme?: ThemeSettings) {
       '--panel-bg-soft': dark ? '#101720' : '#f7f9fc',
       '--panel-border': dark ? '#2b3642' : '#d6dde7',
       '--text-main': theme.colors.text,
-      '--text-muted': dark ? '#a7b1bd' : '#5e6a78',
+      '--text-muted': dark ? '#a7b1bd' : '#4f5c69',
       '--control-bg': dark ? '#1d2732' : '#edf2f8',
       '--control-bg-strong': dark ? '#263343' : '#dfe8f3',
       '--focus': dark ? '#7fd6c2' : '#166d63',

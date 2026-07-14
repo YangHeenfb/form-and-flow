@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Focus, Languages, Moon, Sun } from 'lucide-react'
 import { AnimationControls } from '../../components/AnimationControls.tsx'
 import { Canvas2DView } from '../../components/Canvas2DView.tsx'
 import { ExplanationPanel } from '../../components/ExplanationPanel.tsx'
 import { MatrixSequencePanel } from '../../components/MatrixSequencePanel.tsx'
 import { ThemePanel } from '../../components/ThemePanel.tsx'
-import { Three3DView } from '../../components/Three3DView.tsx'
 import { VectorPanel } from '../../components/VectorPanel.tsx'
 import { HelpTrigger, LearningDrawer } from '../../core/ui/LearningHelp.tsx'
 import { appCopy } from '../../i18n.ts'
@@ -45,6 +44,8 @@ const initialAnimation: AnimationState = {
   mode: 'combined',
   stepIndex: 0,
 }
+
+const LazyThree3DView = lazy(() => import('../../components/Three3DView.tsx').then(({ Three3DView }) => ({ default: Three3DView })))
 
 const basePlaybackSpeed = 0.75
 const minViewZoom = 0.25
@@ -476,19 +477,21 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
     <>
       {usesThree ? (
         <>
-          <Three3DView
-            {...renderPayload}
-            visualMatrix={visualMatrix}
-            copy={copy.threeView}
-            title={copy.views.title(activeInputDim, activeOutputDim)}
-            subtitle={copy.views.subtitle(activeInputDim, activeOutputDim)}
-            cameraView={threeCameraView}
-            onCameraViewChange={setThreeCameraView}
-            viewResetKey={viewResetKey}
-            registerExporter={registerExporter}
-            registerFrameRenderer={registerFrameRenderer}
-            stageAction={renderStageActions()}
-          />
+          <Suspense fallback={<div className="view-panel view-panel-loading" role="status">{locale === 'zh' ? '正在加载 3D 视图…' : 'Loading 3D view…'}</div>}>
+            <LazyThree3DView
+              {...renderPayload}
+              visualMatrix={visualMatrix}
+              copy={copy.threeView}
+              title={copy.views.title(activeInputDim, activeOutputDim)}
+              subtitle={copy.views.subtitle(activeInputDim, activeOutputDim)}
+              cameraView={threeCameraView}
+              onCameraViewChange={setThreeCameraView}
+              viewResetKey={viewResetKey}
+              registerExporter={registerExporter}
+              registerFrameRenderer={registerFrameRenderer}
+              stageAction={renderStageActions()}
+            />
+          </Suspense>
           {activeInputDim === 3 && activeOutputDim === 2 && (
             <Canvas2DView
               {...renderPayload}

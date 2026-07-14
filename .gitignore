@@ -12,6 +12,9 @@ dist
 dist-ssr
 screenshots
 *.local
+CODEX_NOTES.md
+playwright-report
+test-results
 
 # Editor directories and files
 .vscode/*

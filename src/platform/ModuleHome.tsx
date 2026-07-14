@@ -53,7 +53,10 @@ function ModulePreview({ id }: { id: string }) {
   const base = import.meta.env.BASE_URL
   return (
     <div className="module-preview" aria-hidden="true">
-      <img src={`${base}module-covers/${id}.jpg`} alt="" loading="lazy" />
+      <picture>
+        <source srcSet={`${base}module-covers/${id}.webp`} type="image/webp" />
+        <img src={`${base}module-covers/${id}.jpg`} alt="" width="768" height="512" loading="lazy" decoding="async" />
+      </picture>
     </div>
   )
 }

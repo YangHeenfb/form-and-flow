@@ -22,7 +22,9 @@ export function Formula({ tex, block = false, label }: Props) {
   return (
     <span
       className={`formula-render${block ? ' block' : ''}`}
+      role="img"
       aria-label={label ?? tex}
+      tabIndex={block ? 0 : undefined}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   )
