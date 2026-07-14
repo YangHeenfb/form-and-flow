@@ -4,6 +4,7 @@ import { GraphCanvas, drawGrid, line, worldToScreen } from '../../core/graph2d/G
 import type { GraphTheme, GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton, type HelpTopic } from '../../core/ui/LearningHelp.tsx'
+import { PlaybackProgress, RangeField } from '../../core/ui/LessonControls.tsx'
 import { LessonScaffold } from '../../core/ui/LessonScaffold.tsx'
 import { expressionToTex } from '../../core/ui/mathNotation.ts'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
@@ -776,39 +777,23 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
 }
 
 function Range({ label, labelTex, value, min, max, step, valueSuffix, onChange }: { label: string; labelTex?: string; value: number; min: number; max: number; step: number; valueSuffix?: string; onChange: (value: number) => void }) {
-  if (valueSuffix) {
-    return (
-      <label className="speed-control">
-        <span className="range-label">{labelTex ? <Formula tex={labelTex} /> : label}</span>
-        <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
-        <strong>{`${value.toFixed(2)}${valueSuffix}`}</strong>
-      </label>
-    )
-  }
-
   return (
-    <label>
-      <span className="range-label">
-        <span>{labelTex ? <Formula tex={labelTex} /> : label}:</span>
-        <strong>{round(value)}</strong>
-      </span>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
-    </label>
+    <RangeField
+      label={labelTex ? <Formula tex={labelTex} /> : label}
+      accessibleLabel={label}
+      value={value}
+      min={min}
+      max={max}
+      step={step}
+      valueSuffix={valueSuffix}
+      valueFormatter={valueSuffix ? (next) => next.toFixed(2) : (next) => String(round(next))}
+      className={valueSuffix ? 'speed-control' : 'range-control'}
+      onChange={onChange}
+    />
   )
 }
 
 const differentialPlaybackStartTime = 0.5
-
-function PlaybackProgress({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
-  const progress = clampProgress(value)
-  return (
-    <label className="playback-progress-control">
-      <span>{label}</span>
-      <input type="range" min={0} max={1} step={0.001} value={progress} aria-label={label} onChange={(event) => onChange(Number(event.target.value))} />
-      <strong>{Math.round(progress * 100)}%</strong>
-    </label>
-  )
-}
 
 function getDifferentialPlaybackProgress(lessonId: string, duration: number, heatTime: number): number {
   if (lessonId === 'heat-equation') return progressFromValue(heatTime, 0, 1.2)

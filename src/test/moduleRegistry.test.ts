@@ -24,6 +24,14 @@ describe('module registry', () => {
     }
   })
 
+  it('gives every ready explorer its own lazy entry', () => {
+    for (const module of moduleRegistry.filter((candidate) => candidate.status === 'ready')) {
+      const loaders = module.explorers.map((explorer) => explorer.loadComponent)
+      expect(loaders.every(Boolean)).toBe(true)
+      expect(new Set(loaders).size).toBe(loaders.length)
+    }
+  })
+
   it('resolves core routes', () => {
     expect(resolveRoute('/modules').kind).toBe('home')
     expectModuleRoute('/modules/matrix', undefined, 'transformations', 'matrix-transformations')

@@ -1,7 +1,13 @@
-import type { ModuleDefinition } from '../../platform/moduleTypes.ts'
+import type { ModuleComponentLoader, ModuleDefinition } from '../../platform/moduleTypes.ts'
 
 const base = '/modules/calculus'
-const loadCalculusModule = () => import('./CalculusModule.tsx').then(({ CalculusModule }) => ({ default: CalculusModule }))
+const explorerLoaders: Record<string, ModuleComponentLoader> = {
+  derivative: () => import('./entries/derivative.tsx'),
+  integral: () => import('./entries/integral.tsx'),
+  'fundamental-theorem': () => import('./entries/fundamental-theorem.tsx'),
+  taylor: () => import('./entries/taylor.tsx'),
+}
+const loadCalculusModule = explorerLoaders.derivative
 
 export const calculusManifest: ModuleDefinition = {
   id: 'calculus',
@@ -30,6 +36,6 @@ function explorer(id: string, title: string, description: string) {
     route: `${base}/${id}`,
     status: 'ready' as const,
     thingsToTry: ['Connect formulas to motion and shape', 'Use sliders to compare numerical approximations'],
-    loadComponent: loadCalculusModule,
+    loadComponent: explorerLoaders[id],
   }
 }

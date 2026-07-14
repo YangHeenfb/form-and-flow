@@ -44,6 +44,16 @@ describe('fourier transform math', () => {
     expect(computeCoefficientAtFrequency(samples, 1).magnitude).toBeLessThan(0.01)
   })
 
+  it('preserves conjugate symmetry for real-valued samples', () => {
+    const samples = sampleFourierPreset('mixed-signal', 256, false)
+    for (const frequency of [1, 2, 3, 5]) {
+      const positive = computeCoefficientAtFrequency(samples, frequency).value
+      const negative = computeCoefficientAtFrequency(samples, -frequency).value
+      expect(negative.re).toBeCloseTo(positive.re, 10)
+      expect(negative.im).toBeCloseTo(-positive.im, 10)
+    }
+  })
+
   it('reconstructs from the integer spectrum', () => {
     const samples = sampleFourierPreset('sum-of-sines', 256, false)
     const spectrum = computeIntegerSpectrum(samples, 8)

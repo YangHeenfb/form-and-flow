@@ -1,7 +1,12 @@
-import type { ModuleDefinition } from '../../platform/moduleTypes.ts'
+import type { ModuleComponentLoader, ModuleDefinition } from '../../platform/moduleTypes.ts'
 
 const base = '/modules/fourier'
-const loadFourierModule = () => import('./FourierModule.tsx').then(({ FourierModule }) => ({ default: FourierModule }))
+const explorerLoaders: Record<string, ModuleComponentLoader> = {
+  spectrum: () => import('./entries/spectrum.tsx'),
+  reconstruction: () => import('./entries/reconstruction.tsx'),
+  filtering: () => import('./entries/filtering.tsx'),
+}
+const loadFourierModule = explorerLoaders.spectrum
 
 export const fourierManifest: ModuleDefinition = {
   id: 'fourier',
@@ -29,6 +34,6 @@ function explorer(id: string, title: string, description: string) {
     route: `${base}/${id}`,
     status: 'ready' as const,
     thingsToTry: ['Understand frequency components', 'Connect visual motion to a numeric spectrum'],
-    loadComponent: loadFourierModule,
+    loadComponent: explorerLoaders[id],
   }
 }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { Pause, Play, RotateCcw, Shuffle } from 'lucide-react'
 import { Formula, renderMathText } from '../../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton } from '../../../core/ui/LearningHelp.tsx'
+import { PlaybackProgress, ReadoutList, SelectField as SharedSelectField, ToggleField, TransportRow } from '../../../core/ui/LessonControls.tsx'
 import { LessonScaffold } from '../../../core/ui/LessonScaffold.tsx'
 import { SelectMenu } from '../../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../../i18n.ts'
@@ -43,7 +44,7 @@ import {
 import { convolveDiscrete, distributionById, probabilityMassGrid, sumDistributionStats } from '../math/convolution.ts'
 import { formatCount, formatNumber, formatPercent, formatProbability } from '../math/formatting.ts'
 import { medicalTestMetrics } from '../math/medical.ts'
-import { cumulativeProbability, normalizeDistribution, sumProbabilities } from '../math/probability.ts'
+import { cumulativeProbability, normalizeDistribution, sumProbabilities, type DiscreteDistribution } from '../math/probability.ts'
 import { randomSeed } from '../math/random.ts'
 import type { ProbabilityLessonId, ValueRow } from '../probabilityTypes.ts'
 import { ProbabilityCanvas } from '../shared/ProbabilityCanvas.tsx'
@@ -796,7 +797,10 @@ export function ProbabilityLesson({ lessonId }: Props) {
   const bayes = useMemo(() => bayesPosterior(prior, likelihood, falseAlarm), [falseAlarm, likelihood, prior])
   const medical = useMemo(() => medicalTestMetrics(prevalence, sensitivity, specificity), [prevalence, sensitivity, specificity])
   const binomial = useMemo(() => binomialDistribution(trials, successProbability), [successProbability, trials])
-  const binomialSimulation = useMemo(() => simulateBinomial(trials, successProbability, simulationRuns, seed), [seed, simulationRuns, successProbability, trials])
+  const binomialSimulation = useMemo<DiscreteDistribution>(
+    () => (lessonId === 'binomial' ? simulateBinomial(trials, successProbability, simulationRuns, seed) : { values: [], probabilities: [] }),
+    [lessonId, seed, simulationRuns, successProbability, trials],
+  )
   const continuousDistribution = useMemo(
     () =>
       makeContinuousDistribution(continuousId, {
@@ -809,10 +813,16 @@ export function ProbabilityLesson({ lessonId }: Props) {
       }),
     [continuousId, lambda, normalMu, normalSigma, triangularMode, uniformMax, uniformMin],
   )
-  const continuousSamples = useMemo(() => sampleContinuousDistribution(continuousDistribution, showHistogram ? sampleCount : 0, seed), [continuousDistribution, sampleCount, seed, showHistogram])
+  const continuousSamples = useMemo(
+    () => (lessonId === 'continuous-density' ? sampleContinuousDistribution(continuousDistribution, showHistogram ? sampleCount : 0, seed) : []),
+    [continuousDistribution, lessonId, sampleCount, seed, showHistogram],
+  )
   const continuousHistogram = useMemo(() => histogram(continuousSamples, continuousDistribution.domain[0], continuousDistribution.domain[1], 42), [continuousDistribution.domain, continuousSamples])
   const source = useMemo(() => getSourceDistribution(sourceId), [sourceId])
-  const cltMeans = useMemo(() => sampleMeans(source, sampleSize, cltSamples, seed, standardized), [cltSamples, sampleSize, seed, source, standardized])
+  const cltMeans = useMemo(
+    () => (lessonId === 'central-limit-theorem' ? sampleMeans(source, sampleSize, cltSamples, seed, standardized) : []),
+    [cltSamples, lessonId, sampleSize, seed, source, standardized],
+  )
   const cltDomain = useMemo<[number, number]>(() => {
     if (standardized) return [-4, 4]
     const se = theoreticalStandardError(source, sampleSize)
@@ -1028,7 +1038,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
           />
         </div>
         <div className={`probability-playback${hasAnimatedPlayback ? '' : ' probability-playback-static'} platform-card`}>
-          <div className="transport-buttons">
+          <TransportRow>
             {hasAnimatedPlayback && (
               <button type="button" className="primary-button" aria-label={playing ? ui.controls.pause : ui.controls.play} onClick={() => setPlaying((current) => !current)}>
                 {playing ? <Pause size={16} /> : <Play size={16} />}
@@ -1039,7 +1049,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
               <RotateCcw size={16} />
               {ui.controls.reset}
             </button>
-          </div>
+          </TransportRow>
           {hasAnimatedPlayback && <PlaybackProgress label={ui.controls.playbackProgress} value={sumPlaybackProgress} onChange={seekSumPlaybackProgress} />}
           {hasAnimatedPlayback && <Range label={ui.controls.speed} value={speed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setSpeed} />}
         </div>
@@ -1053,14 +1063,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
             {ui.sections.values}
           </HelpLabel>
         </h2>
-        <dl>
-          {values.map((row) => (
-            <div key={row.label}>
-              <dt>{renderMathText(row.label)}</dt>
-              <dd>{row.value}</dd>
-            </div>
-          ))}
-        </dl>
+        <ReadoutList rows={values.map((row) => ({ key: row.label, label: renderMathText(row.label), value: row.value }))} />
         <h2>
           <HelpLabel topic="formula" onOpenHelpTopic={openHelpTopic}>
             {ui.sections.formula}
@@ -1140,8 +1143,8 @@ export function ProbabilityLesson({ lessonId }: Props) {
           <Range label={ui.controls.likelihood} value={likelihood} min={0} max={1} step={0.01} onChange={setLikelihood} />
           <Range label={ui.controls.falseAlarm} value={falseAlarm} min={0} max={1} step={0.001} onChange={setFalseAlarm} />
           <PopulationSelect value={population} onChange={setPopulation} labels={ui.controls} />
-          <Toggle label={ui.controls.showOdds} checked={showOdds} onChange={setShowOdds} />
-          <Toggle label={ui.controls.naturalFrequencies} checked={showFrequencies} onChange={setShowFrequencies} />
+          <ToggleField className="checkbox-line probability-toggle" label={ui.controls.showOdds} checked={showOdds} onChange={setShowOdds} />
+          <ToggleField className="checkbox-line probability-toggle" label={ui.controls.naturalFrequencies} checked={showFrequencies} onChange={setShowFrequencies} />
         </>
       )
     }
@@ -1192,9 +1195,9 @@ export function ProbabilityLesson({ lessonId }: Props) {
           <Range label={ui.controls.intervalB} value={intervalB} min={continuousDistribution.domain[0]} max={continuousDistribution.domain[1]} step={0.05} onChange={setIntervalB} />
           <Range label={ui.controls.sampleCount} value={sampleCount} min={0} max={100000} step={1000} onChange={setSampleCount} />
           <SeedControl seed={seed} setSeed={setSeed} labels={ui.controls} />
-          <Toggle label={ui.controls.showHistogram} checked={showHistogram} onChange={setShowHistogram} />
-          <Toggle label={ui.controls.showCdf} checked={showCdf} onChange={setShowCdf} />
-          <Toggle label={ui.controls.pointMode} checked={pointMode} onChange={setPointMode} />
+          <ToggleField className="checkbox-line probability-toggle" label={ui.controls.showHistogram} checked={showHistogram} onChange={setShowHistogram} />
+          <ToggleField className="checkbox-line probability-toggle" label={ui.controls.showCdf} checked={showCdf} onChange={setShowCdf} />
+          <ToggleField className="checkbox-line probability-toggle" label={ui.controls.pointMode} checked={pointMode} onChange={setPointMode} />
         </>
       )
     }
@@ -1205,8 +1208,8 @@ export function ProbabilityLesson({ lessonId }: Props) {
           <Range label={ui.controls.sampleSize} value={sampleSize} min={1} max={100} step={1} onChange={setSampleSize} />
           <Range label={ui.controls.numberOfSamples} value={cltSamples} min={1} max={100000} step={1000} onChange={setCltSamples} />
           <SeedControl seed={seed} setSeed={setSeed} labels={ui.controls} />
-          <Toggle label={ui.controls.normalOverlay} checked={showNormal} onChange={setShowNormal} />
-          <Toggle label={ui.controls.standardizedZ} checked={standardized} onChange={setStandardized} />
+          <ToggleField className="checkbox-line probability-toggle" label={ui.controls.normalOverlay} checked={showNormal} onChange={setShowNormal} />
+          <ToggleField className="checkbox-line probability-toggle" label={ui.controls.standardizedZ} checked={standardized} onChange={setStandardized} />
         </>
       )
     }
@@ -1231,7 +1234,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
           </>
         )}
         <Range label={ui.controls.selectedSum} value={selectedSum} min={Math.min(...sumDistribution.values)} max={Math.max(...sumDistribution.values)} step={1} onChange={setSelectedSum} />
-        <Toggle label={ui.controls.showPairGrid} checked={showPairGrid} onChange={setShowPairGrid} />
+        <ToggleField className="checkbox-line probability-toggle" label={ui.controls.showPairGrid} checked={showPairGrid} onChange={setShowPairGrid} />
         <button
           type="button"
           onClick={() => {
@@ -1457,36 +1460,19 @@ function Range({
   )
 }
 
-function PlaybackProgress({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
-  const progress = clampProgress(value)
-  return (
-    <label className="playback-progress-control">
-      <span>{label}</span>
-      <input type="range" min={0} max={1} step={0.001} value={progress} aria-label={label} onChange={(event) => onChange(Number(event.target.value))} />
-      <strong>{Math.round(progress * 100)}%</strong>
-    </label>
-  )
-}
-
 function clampProgress(value: number): number {
   return Math.max(0, Math.min(1, value))
 }
 
 function SelectField<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: Array<readonly [T, string]>; onChange: (value: T) => void }) {
   return (
-    <label>
-      {label}
-      <SelectMenu value={value} options={options.map(([optionValue, text]) => ({ value: optionValue, label: text, textValue: text }))} onChange={onChange} ariaLabel={label} />
-    </label>
-  )
-}
-
-function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
-  return (
-    <label className="checkbox-line probability-toggle">
-      <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
-      {label}
-    </label>
+    <SharedSelectField
+      label={label}
+      value={value}
+      options={options.map(([optionValue, text]) => ({ value: optionValue, label: text, textValue: text }))}
+      onChange={onChange}
+      ariaLabel={label}
+    />
   )
 }
 

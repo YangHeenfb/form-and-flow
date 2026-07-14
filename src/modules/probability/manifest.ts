@@ -1,7 +1,16 @@
-import type { ModuleDefinition } from '../../platform/moduleTypes.ts'
+import type { ModuleComponentLoader, ModuleDefinition } from '../../platform/moduleTypes.ts'
 
 const base = '/modules/probability'
-const loadProbabilityModule = () => import('./ProbabilityModule.tsx').then(({ ProbabilityModule }) => ({ default: ProbabilityModule }))
+const explorerLoaders: Record<string, ModuleComponentLoader> = {
+  'conditional-probability': () => import('./entries/conditional-probability.tsx'),
+  bayes: () => import('./entries/bayes.tsx'),
+  'medical-test': () => import('./entries/medical-test.tsx'),
+  binomial: () => import('./entries/binomial.tsx'),
+  'continuous-density': () => import('./entries/continuous-density.tsx'),
+  'central-limit-theorem': () => import('./entries/central-limit-theorem.tsx'),
+  'random-variable-sum': () => import('./entries/random-variable-sum.tsx'),
+}
+const loadProbabilityModule = explorerLoaders['conditional-probability']
 
 export const probabilityManifest: ModuleDefinition = {
   id: 'probability',
@@ -33,6 +42,6 @@ function explorer(id: string, title: string, description: string, thingsToTry: s
     route: `${base}/${id}`,
     status: 'ready' as const,
     thingsToTry,
-    loadComponent: loadProbabilityModule,
+    loadComponent: explorerLoaders[id],
   }
 }

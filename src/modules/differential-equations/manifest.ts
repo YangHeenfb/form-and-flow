@@ -1,8 +1,15 @@
-import type { ModuleDefinition } from '../../platform/moduleTypes.ts'
+import type { ModuleComponentLoader, ModuleDefinition } from '../../platform/moduleTypes.ts'
 
 const base = '/modules/differential-equations'
-const loadDifferentialEquationsModule = () =>
-  import('./DifferentialEquationsModule.tsx').then(({ DifferentialEquationsModule }) => ({ default: DifferentialEquationsModule }))
+const explorerLoaders: Record<string, ModuleComponentLoader> = {
+  'slope-fields': () => import('./entries/slope-fields.tsx'),
+  'numerical-methods': () => import('./entries/numerical-methods.tsx'),
+  'phase-portraits': () => import('./entries/phase-portraits.tsx'),
+  pendulum: () => import('./entries/pendulum.tsx'),
+  population: () => import('./entries/population.tsx'),
+  'heat-equation': () => import('./entries/heat-equation.tsx'),
+}
+const loadDifferentialEquationsModule = explorerLoaders['slope-fields']
 
 export const differentialEquationsManifest: ModuleDefinition = {
   id: 'differential-equations',
@@ -33,6 +40,6 @@ function explorer(id: string, title: string, description: string) {
     route: `${base}/${id}`,
     status: 'ready' as const,
     thingsToTry: ['Read a change rule', 'Compare numerical motion and visual trajectories'],
-    loadComponent: loadDifferentialEquationsModule,
+    loadComponent: explorerLoaders[id],
   }
 }

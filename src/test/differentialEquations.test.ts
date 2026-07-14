@@ -23,6 +23,12 @@ describe('differential equation numerics', () => {
     expect(Math.abs(rk4 - Math.E)).toBeLessThan(Math.abs(euler - Math.E))
   })
 
+  it('converges as the RK4 step size is refined', () => {
+    const coarse = integrateScalarOde((_, y) => y, { t0: 0, y0: 1, step: 0.25, steps: 4, method: 'rk4' }).at(-1)?.y ?? 0
+    const fine = integrateScalarOde((_, y) => y, { t0: 0, y0: 1, step: 0.05, steps: 20, method: 'rk4' }).at(-1)?.y ?? 0
+    expect(Math.abs(fine - Math.E)).toBeLessThan(Math.abs(coarse - Math.E))
+  })
+
   it('compiles scalar ODE expressions with t and y variables', () => {
     const fn = compileScalarOdeExpression('sin(t)-0.5*y')
     expect(fn(Math.PI / 2, 2)).toBeCloseTo(0)

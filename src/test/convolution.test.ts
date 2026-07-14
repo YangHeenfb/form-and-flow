@@ -32,6 +32,13 @@ describe('discrete convolution math', () => {
     expect(discreteConvolve([1, 2, 3], [1, 1], 'valid')).toHaveLength(2)
   })
 
+  it('preserves identity and commutativity in full convolution', () => {
+    const signal = [1, -2, 3, 0.5]
+    const kernel = [0.25, 1, -0.5]
+    expect(discreteConvolve(signal, [1], 'full')).toEqual(signal)
+    expect(discreteConvolve(signal, kernel, 'full')).toEqual(discreteConvolve(kernel, signal, 'full'))
+  })
+
   it('keeps mathematical convolution distinct from correlation for asymmetric kernels', () => {
     expect(discreteConvolve([1, 2, 3], [0, 1], 'full')).toEqual([0, 1, 2, 3])
     expect(crossCorrelate([1, 2, 3], [0, 1], 'full')).toEqual([1, 2, 3, 0])

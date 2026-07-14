@@ -3,6 +3,7 @@ import { CircleHelp, Download, Pause, Play, RotateCcw } from 'lucide-react'
 import { drawGrid, GraphCanvas, worldToScreen, type GraphTheme, type GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton, type HelpTopic } from '../../core/ui/LearningHelp.tsx'
+import { PlaybackProgress } from '../../core/ui/LessonControls.tsx'
 import { LessonScaffold } from '../../core/ui/LessonScaffold.tsx'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../i18n.ts'
@@ -1653,17 +1654,6 @@ function PlaybackControls({
       <PlaybackProgress label={ui.playbackProgress} value={progress} onChange={onProgress} />
       <Range label={ui.speed} value={speed} min={0.25} max={4} step={0.05} valueSuffix="x" onChange={onSpeed} />
     </>
-  )
-}
-
-function PlaybackProgress({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
-  const progress = clampProgress(value)
-  return (
-    <label className="playback-progress-control">
-      <span>{label}</span>
-      <input type="range" min={0} max={1} step={0.001} value={progress} aria-label={label} onChange={(event) => onChange(Number(event.target.value))} />
-      <strong>{Math.round(progress * 100)}%</strong>
-    </label>
   )
 }
 

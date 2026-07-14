@@ -4,6 +4,7 @@ import { GraphCanvas, drawGrid, line, worldToScreen } from '../../core/graph2d/G
 import type { GraphTheme, GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton } from '../../core/ui/LearningHelp.tsx'
+import { PlaybackProgress, ReadoutList } from '../../core/ui/LessonControls.tsx'
 import { LessonScaffold } from '../../core/ui/LessonScaffold.tsx'
 import { expressionToTex } from '../../core/ui/mathNotation.ts'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
@@ -505,14 +506,11 @@ export function CalculusLesson({ lessonId }: Props) {
             {ui.values}
           </HelpLabel>
         </h2>
-        <dl>
-          {values.map(({ label, labelTex, helpTopic, value }) => (
-            <div key={label}>
-              <dt>{renderValueLabel(label, labelTex, helpTopic, openHelpTopic)}</dt>
-              <dd>{value}</dd>
-            </div>
-          ))}
-        </dl>
+        <ReadoutList rows={values.map(({ label, labelTex, helpTopic, value }) => ({
+          key: label,
+          label: renderValueLabel(label, labelTex, helpTopic, openHelpTopic),
+          value,
+        }))} />
         <h2>
           <HelpLabel topic="formula" onOpenHelpTopic={openHelpTopic}>
             {ui.formula}
@@ -599,17 +597,6 @@ function Range({
       <span className="range-label">{labelNode}: <strong>{round(value)}</strong></span>
       <input id={id} type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
     </div>
-  )
-}
-
-function PlaybackProgress({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
-  const progress = clampProgress(value)
-  return (
-    <label className="playback-progress-control">
-      <span>{label}</span>
-      <input type="range" min={0} max={1} step={0.001} value={progress} aria-label={label} onChange={(event) => onChange(Number(event.target.value))} />
-      <strong>{Math.round(progress * 100)}%</strong>
-    </label>
   )
 }
 

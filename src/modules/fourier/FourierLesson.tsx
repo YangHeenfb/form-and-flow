@@ -5,6 +5,7 @@ import { GraphCanvas } from '../../core/graph2d/GraphCanvas.tsx'
 import type { GraphTheme, GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton, type HelpTopic } from '../../core/ui/LearningHelp.tsx'
+import { PlaybackProgress } from '../../core/ui/LessonControls.tsx'
 import { LessonScaffold } from '../../core/ui/LessonScaffold.tsx'
 import { expressionToTex } from '../../core/ui/mathNotation.ts'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
@@ -45,6 +46,10 @@ type ValueRow = {
 type SamplesResult = {
   samples: number[]
   error: string | null
+}
+
+function emptySpectrum(sampleCount: number, frequencyMin: number, frequencyMax: number, frequencyStep: number): Spectrum {
+  return { coefficients: [], frequencyMin, frequencyMax, frequencyStep, sampleCount }
 }
 
 type DrawState = {
@@ -389,21 +394,52 @@ export function FourierLesson({ lessonId }: Props) {
   }, [expression, lessonKey, locale, presetId, roundedSampleCount, ui.invalidExpression])
 
   const safeFrequencyStep = clampSpectrumStep(frequencyMin, frequencyMax, frequencyStep)
-  const spectrum = useMemo(() => computeSpectrum(samplesResult.samples, frequencyMin, frequencyMax, safeFrequencyStep), [frequencyMax, frequencyMin, safeFrequencyStep, samplesResult.samples])
-  const integerSpectrum = useMemo(() => computeIntegerSpectrum(samplesResult.samples, roundedMaxHarmonic), [roundedMaxHarmonic, samplesResult.samples])
-  const selectedCoefficient = useMemo(() => computeCoefficientAtFrequency(samplesResult.samples, selectedFrequency), [samplesResult.samples, selectedFrequency])
-  const windingPoints = useMemo(() => computeWindingPoints(samplesResult.samples, selectedFrequency), [samplesResult.samples, selectedFrequency])
-  const includedCoefficients = useMemo(
-    () => selectReconstructionCoefficients(integerSpectrum.coefficients, reconstructionMode, reconstructionCount),
-    [integerSpectrum.coefficients, reconstructionCount, reconstructionMode],
+  const spectrum = useMemo(
+    () => lessonKey === 'spectrum'
+      ? computeSpectrum(samplesResult.samples, frequencyMin, frequencyMax, safeFrequencyStep)
+      : emptySpectrum(samplesResult.samples.length, frequencyMin, frequencyMax, safeFrequencyStep),
+    [frequencyMax, frequencyMin, lessonKey, safeFrequencyStep, samplesResult.samples],
   )
-  const reconstructedSamples = useMemo(() => reconstructSamples(includedCoefficients, roundedSampleCount), [includedCoefficients, roundedSampleCount])
+  const integerSpectrum = useMemo(
+    () => lessonKey === 'spectrum'
+      ? emptySpectrum(samplesResult.samples.length, -roundedMaxHarmonic, roundedMaxHarmonic, 1)
+      : computeIntegerSpectrum(samplesResult.samples, roundedMaxHarmonic),
+    [lessonKey, roundedMaxHarmonic, samplesResult.samples],
+  )
+  const selectedCoefficient = useMemo<FourierCoefficient>(
+    () => lessonKey === 'spectrum'
+      ? computeCoefficientAtFrequency(samplesResult.samples, selectedFrequency)
+      : { frequency: selectedFrequency, value: { re: 0, im: 0 }, magnitude: 0, phase: 0 },
+    [lessonKey, samplesResult.samples, selectedFrequency],
+  )
+  const windingPoints = useMemo(
+    () => lessonKey === 'spectrum' ? computeWindingPoints(samplesResult.samples, selectedFrequency) : [],
+    [lessonKey, samplesResult.samples, selectedFrequency],
+  )
+  const includedCoefficients = useMemo(
+    () => lessonKey === 'reconstruction'
+      ? selectReconstructionCoefficients(integerSpectrum.coefficients, reconstructionMode, reconstructionCount)
+      : [],
+    [integerSpectrum.coefficients, lessonKey, reconstructionCount, reconstructionMode],
+  )
+  const reconstructedSamples = useMemo(
+    () => lessonKey === 'reconstruction' ? reconstructSamples(includedCoefficients, roundedSampleCount) : [],
+    [includedCoefficients, lessonKey, roundedSampleCount],
+  )
   const filterConfig = useMemo<FilterConfig>(
     () => ({ type: filterType, cutoff, lowCutoff, highCutoff, threshold }),
     [cutoff, filterType, highCutoff, lowCutoff, threshold],
   )
-  const filteredSpectrum = useMemo(() => applyFilter(integerSpectrum, filterConfig), [filterConfig, integerSpectrum])
-  const filteredSamples = useMemo(() => reconstructSamples(filteredSpectrum.coefficients, roundedSampleCount), [filteredSpectrum.coefficients, roundedSampleCount])
+  const filteredSpectrum = useMemo(
+    () => lessonKey === 'filtering'
+      ? applyFilter(integerSpectrum, filterConfig)
+      : emptySpectrum(samplesResult.samples.length, -roundedMaxHarmonic, roundedMaxHarmonic, 1),
+    [filterConfig, integerSpectrum, lessonKey, roundedMaxHarmonic, samplesResult.samples.length],
+  )
+  const filteredSamples = useMemo(
+    () => lessonKey === 'filtering' ? reconstructSamples(filteredSpectrum.coefficients, roundedSampleCount) : [],
+    [filteredSpectrum.coefficients, lessonKey, roundedSampleCount],
+  )
   const displayedExpression = presetId !== 'custom' && !selectedPreset.expression ? selectedPresetLabel : expression
   const expressionTex = useMemo(
     () => (presetId !== 'custom' && !selectedPreset.expression ? selectedPreset.tex : expressionToTex(expression)),
@@ -815,17 +851,6 @@ function Range({
         {label}: <strong>{round(value)}</strong>
       </span>
       <input type="range" min={min} max={max} step={step} value={value} onChange={(event) => onChange(Number(event.target.value))} />
-    </label>
-  )
-}
-
-function PlaybackProgress({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
-  const progress = clampProgress(value)
-  return (
-    <label className="playback-progress-control">
-      <span>{label}</span>
-      <input type="range" min={0} max={1} step={0.001} value={progress} aria-label={label} onChange={(event) => onChange(Number(event.target.value))} />
-      <strong>{Math.round(progress * 100)}%</strong>
     </label>
   )
 }
