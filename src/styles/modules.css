@@ -1,0 +1,81 @@
+.module-card,
+.lesson-card,
+.platform-card {
+  border-color: var(--panel-border);
+  border-radius: var(--radius-md);
+  background: var(--panel-bg);
+  box-shadow: none;
+}
+
+.module-card,
+.lesson-card {
+  transition: border-color 130ms ease, background-color 130ms ease, transform 130ms ease;
+}
+
+.module-card:hover,
+.lesson-card:hover {
+  border-color: color-mix(in srgb, var(--focus) 38%, var(--panel-border));
+  background: var(--panel-bg);
+  transform: translateY(-1px);
+}
+
+.module-preview {
+  border-color: var(--panel-border);
+  border-radius: 6px;
+  background: var(--panel-bg-soft);
+}
+
+.module-preview::after {
+  background: linear-gradient(180deg, transparent 62%, color-mix(in srgb, var(--panel-bg) 20%, transparent));
+}
+
+.module-order,
+.lesson-order,
+.lesson-row::before,
+.lesson-card-grid > .lesson-card:not(:has(.lesson-order)):not(:has(.module-order)):not(.complex-lesson-card)::before,
+.complex-card-topline span:first-child {
+  border-radius: 5px;
+  color: var(--focus);
+  background: color-mix(in srgb, var(--focus) 9%, var(--panel-bg-soft));
+  font-weight: 700;
+}
+
+.formula-card,
+.math-formula-preview,
+.input-help,
+.probability-related-link,
+.fourier-control-group,
+.control-group {
+  box-shadow: none;
+}
+
+.primary-button {
+  color: color-mix(in srgb, var(--focus) 88%, var(--text-main));
+  border-color: color-mix(in srgb, var(--focus) 38%, var(--panel-border));
+  background: color-mix(in srgb, var(--focus) 10%, var(--panel-bg));
+}
+
+.primary-button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--focus) 16%, var(--panel-bg));
+}
+
+.distribution-table span.active small {
+  color: var(--text-main);
+}
+
+@media (max-width: 720px) {
+  .module-grid,
+  .lesson-card-grid {
+    gap: 10px;
+  }
+
+  .module-card,
+  .lesson-card {
+    min-height: 0;
+    padding: 12px;
+  }
+
+  .platform-page-heading {
+    margin-bottom: 16px;
+  }
+}

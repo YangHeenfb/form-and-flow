@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { platformSurfaceModeEventName } from '../../platform/platformLocale.tsx'
 
 export type GraphViewport = {
   xMin: number
@@ -67,7 +68,11 @@ export function GraphCanvas({ className, ariaLabel, xMin, xMax, yMin, yMax, draw
     render()
     const observer = new ResizeObserver(render)
     observer.observe(canvas)
-    return () => observer.disconnect()
+    window.addEventListener(platformSurfaceModeEventName, render)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener(platformSurfaceModeEventName, render)
+    }
   }, [draw, xMax, xMin, yMax, yMin])
 
   const makeViewportFromCanvas = () => {

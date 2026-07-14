@@ -22,6 +22,7 @@ export function SelectMenu<T extends string | number>({ value, options, onChange
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement | null>(null)
   const buttonRef = useRef<HTMLButtonElement | null>(null)
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([])
   const listboxId = useId()
   const selected = useMemo(() => options.find((option) => option.value === value) ?? options[0], [options, value])
 
@@ -44,15 +45,21 @@ export function SelectMenu<T extends string | number>({ value, options, onChange
     }
   }, [open])
 
-  const moveSelection = (direction: 1 | -1) => {
-    const enabled = options.filter((option) => !option.disabled)
-    const selectedIndex = enabled.findIndex((option) => option.value === value)
-    const next = enabled[(selectedIndex + direction + enabled.length) % enabled.length]
-    if (next) onChange(next.value)
-  }
+  useEffect(() => {
+    if (!open) return
+    const selectedIndex = Math.max(0, options.findIndex((option) => option.value === value && !option.disabled))
+    const frame = window.requestAnimationFrame(() => optionRefs.current[selectedIndex]?.focus())
+    return () => window.cancelAnimationFrame(frame)
+  }, [open, options, value])
 
   return (
-    <div className={`select-menu${className ? ` ${className}` : ''}`} ref={rootRef}>
+    <div
+      className={`select-menu${className ? ` ${className}` : ''}`}
+      ref={rootRef}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false)
+      }}
+    >
       <button
         ref={buttonRef}
         type="button"
@@ -68,12 +75,12 @@ export function SelectMenu<T extends string | number>({ value, options, onChange
           if (event.key === 'ArrowDown') {
             event.preventDefault()
             if (!open) setOpen(true)
-            else moveSelection(1)
+            else focusAdjacentOption(optionRefs.current, 1)
           }
           if (event.key === 'ArrowUp') {
             event.preventDefault()
             if (!open) setOpen(true)
-            else moveSelection(-1)
+            else focusAdjacentOption(optionRefs.current, -1)
           }
         }}
       >
@@ -81,14 +88,30 @@ export function SelectMenu<T extends string | number>({ value, options, onChange
         <ChevronDown size={15} aria-hidden="true" />
       </button>
       {open && (
-        <div className="select-menu-popover" role="listbox" id={listboxId} aria-label={ariaLabel}>
-          {options.map((option) => (
+        <div
+          className="select-menu-popover"
+          role="listbox"
+          id={listboxId}
+          aria-label={ariaLabel}
+          onKeyDown={(event) => {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+              event.preventDefault()
+              focusAdjacentOption(optionRefs.current, event.key === 'ArrowDown' ? 1 : -1)
+            } else if (event.key === 'Home' || event.key === 'End') {
+              event.preventDefault()
+              focusBoundaryOption(optionRefs.current, event.key === 'Home' ? 'first' : 'last')
+            }
+          }}
+        >
+          {options.map((option, index) => (
             <button
+              ref={(node) => { optionRefs.current[index] = node }}
               type="button"
               key={String(option.value)}
               role="option"
               aria-selected={option.value === value}
               disabled={option.disabled}
+              tabIndex={option.value === value ? 0 : -1}
               className="select-menu-option"
               onClick={() => {
                 onChange(option.value)
@@ -104,4 +127,18 @@ export function SelectMenu<T extends string | number>({ value, options, onChange
       )}
     </div>
   )
+}
+
+function focusAdjacentOption(options: Array<HTMLButtonElement | null>, direction: 1 | -1): void {
+  const enabled = options.filter((option): option is HTMLButtonElement => Boolean(option && !option.disabled))
+  if (enabled.length === 0) return
+  const currentIndex = enabled.findIndex((option) => option === document.activeElement)
+  const nextIndex = currentIndex < 0 ? 0 : (currentIndex + direction + enabled.length) % enabled.length
+  enabled[nextIndex]?.focus()
+}
+
+function focusBoundaryOption(options: Array<HTMLButtonElement | null>, boundary: 'first' | 'last'): void {
+  const enabled = options.filter((option): option is HTMLButtonElement => Boolean(option && !option.disabled))
+  const target = boundary === 'first' ? enabled[0] : enabled.at(-1)
+  target?.focus()
 }

@@ -5,6 +5,8 @@ export type VisualizationLabels = {
   focus: string
   exitFocus: string
   autoHideHud: string
+  controls?: string
+  explanation?: string
 }
 
 type VisualizationToolbarProps = {

@@ -1,0 +1,124 @@
+.visualization-workbench,
+.visualization-standard-layout,
+.visualization-center-column {
+  min-width: 0;
+}
+
+.visualization-standard-layout {
+  gap: 14px;
+}
+
+.left-panel,
+.right-panel,
+.view-panel,
+.transport,
+.panel-section,
+.info-card {
+  border-color: var(--panel-border);
+  border-radius: var(--radius-md);
+  background: var(--panel-bg);
+  box-shadow: none;
+}
+
+.visualization-mobile-section-toggle {
+  display: none;
+}
+
+.visualization-mobile-section-content {
+  display: contents;
+}
+
+.visualization-overlay-drawer {
+  border-color: var(--panel-border);
+  background: var(--panel-bg);
+  box-shadow: 0 20px 60px color-mix(in srgb, black 28%, transparent);
+}
+
+.visualization-stage-toolbar {
+  border-color: var(--panel-border);
+  background: var(--panel-bg);
+}
+
+@media (max-width: 860px) {
+  .visualization-standard-layout {
+    grid-template-areas:
+      'stage'
+      'controls'
+      'explanation';
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .visualization-center-column {
+    grid-area: stage;
+  }
+
+  .visualization-standard-left {
+    grid-area: controls;
+  }
+
+  .visualization-standard-right {
+    grid-area: explanation;
+  }
+
+  .visualization-standard-left,
+  .visualization-standard-right {
+    min-width: 0;
+    padding: 0;
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-md);
+    background: var(--panel-bg);
+    overflow: hidden;
+  }
+
+  .visualization-mobile-section-toggle {
+    width: 100%;
+    min-height: 48px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    text-align: left;
+  }
+
+  .visualization-mobile-section-toggle span {
+    justify-self: start;
+    font-weight: 650;
+  }
+
+  .visualization-mobile-section-chevron {
+    transition: transform 140ms ease;
+  }
+
+  [data-mobile-open='true'] > .visualization-mobile-section-toggle .visualization-mobile-section-chevron {
+    transform: rotate(180deg);
+  }
+
+  .visualization-mobile-section-content {
+    display: none;
+  }
+
+  [data-mobile-open='true'] > .visualization-mobile-section-content {
+    display: grid;
+    gap: 12px;
+    padding: 0 12px 12px;
+  }
+
+  .visualization-stage {
+    min-height: min(62vh, 560px);
+  }
+
+  .visualization-overlay-transport {
+    position: static;
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .visualization-overlay-transport .transport {
+    width: 100%;
+  }
+}

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Info, SlidersHorizontal } from 'lucide-react'
+import { useEffect, useId, useMemo, useState, type ReactNode } from 'react'
+import { ChevronDown, Info, SlidersHorizontal } from 'lucide-react'
 import { OverlayDrawer } from '../../platform/OverlayDrawer.tsx'
 import type { OverlayPanelSide } from '../../platform/visualizationLayoutTypes.ts'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
@@ -46,6 +46,10 @@ export function LessonScaffold({
   const { locale } = usePlatformLocale()
   const labels = focusPanelLabels[locale]
   const [activePanelId, setActivePanelId] = useState<LessonFocusPanelId | null>(null)
+  const [mobileControlsOpen, setMobileControlsOpen] = useState(false)
+  const [mobileReadoutOpen, setMobileReadoutOpen] = useState(false)
+  const controlsId = useId()
+  const readoutId = useId()
   const controlsContent = focusControls === undefined ? controls : focusControls
   const readoutContent = focusReadout === undefined ? explanation : focusReadout
   const focusPanels = useMemo(
@@ -95,9 +99,35 @@ export function LessonScaffold({
 
   return (
     <section className={joinClassNames('lesson-shell', className)} data-focus-mode={isFocusMode ? 'focus' : 'standard'}>
-      <aside className={joinClassNames('lesson-shell-controls platform-card', controlsClassName)}>{controls}</aside>
+      <aside className={joinClassNames('lesson-shell-controls platform-card', controlsClassName)} data-mobile-open={mobileControlsOpen ? 'true' : 'false'}>
+        <button
+          type="button"
+          className="lesson-mobile-section-toggle"
+          aria-expanded={mobileControlsOpen}
+          aria-controls={controlsId}
+          onClick={() => setMobileControlsOpen((open) => !open)}
+        >
+          <SlidersHorizontal size={17} />
+          <span>{labels.controls}</span>
+          <ChevronDown className="lesson-mobile-section-chevron" size={17} aria-hidden="true" />
+        </button>
+        <div className="lesson-mobile-section-content" id={controlsId}>{controls}</div>
+      </aside>
       <main className={joinClassNames('lesson-shell-main', mainClassName)}>{main}</main>
-      <aside className={joinClassNames('lesson-shell-explanation platform-card', explanationClassName)}>{explanation}</aside>
+      <aside className={joinClassNames('lesson-shell-explanation platform-card', explanationClassName)} data-mobile-open={mobileReadoutOpen ? 'true' : 'false'}>
+        <button
+          type="button"
+          className="lesson-mobile-section-toggle"
+          aria-expanded={mobileReadoutOpen}
+          aria-controls={readoutId}
+          onClick={() => setMobileReadoutOpen((open) => !open)}
+        >
+          <Info size={17} />
+          <span>{labels.readout}</span>
+          <ChevronDown className="lesson-mobile-section-chevron" size={17} aria-hidden="true" />
+        </button>
+        <div className="lesson-mobile-section-content" id={readoutId}>{explanation}</div>
+      </aside>
       {isFocusMode && (focusPanels.length > 0 || autoHideToggle) && (
         <div className="lesson-focus-panel-buttons" role="group" aria-label={labels.panelGroup}>
           {focusPanels.map((panel) => {

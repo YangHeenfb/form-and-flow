@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Download, Grid3X3, HelpCircle, Languages, Menu, Moon, PanelLeftClose, RotateCcw, Sun } from 'lucide-react'
 import { SelectMenu } from '../core/ui/SelectMenu.tsx'
 import type { ModuleDefinition } from './moduleTypes.ts'
@@ -49,10 +49,27 @@ function PlatformShellContent({ currentModule, currentExplorerId, currentMode, c
   const currentExplorer = localizedCurrentModule?.explorers.find((explorer) => explorer.id === currentExplorerId)
   const showModuleSidebar = Boolean(currentModule)
   const [sidebarOpen, setSidebarOpen] = useState(!currentModule)
+  const mobileNavTriggerRef = useRef<HTMLButtonElement | null>(null)
 
   useEffect(() => {
     setSidebarOpen(!currentModule)
   }, [currentModule?.id])
+
+  const closeSidebar = useCallback((restoreFocus = false) => {
+    setSidebarOpen(false)
+    if (restoreFocus) window.requestAnimationFrame(() => mobileNavTriggerRef.current?.focus())
+  }, [])
+
+  useEffect(() => {
+    if (!sidebarOpen || !showModuleSidebar) return
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      closeSidebar(true)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [closeSidebar, showModuleSidebar, sidebarOpen])
 
   useEffect(() => {
     localStorage.setItem(platformLocaleStorageKey, locale)
@@ -72,9 +89,23 @@ function PlatformShellContent({ currentModule, currentExplorerId, currentMode, c
         className={`platform-shell${showModuleSidebar ? '' : ' no-sidebar'}${sidebarOpen ? '' : ' sidebar-collapsed'}${moduleActions.isVisualizationExpanded ? ' visualization-expanded' : ''}`}
         data-current-module={currentModule?.id}
         data-locale={locale}
+        data-surface-mode={surfaceMode}
         style={surfaceVariables(surfaceMode)}
       >
         <header className="platform-topbar">
+          {showModuleSidebar && (
+            <button
+              ref={mobileNavTriggerRef}
+              className="platform-mobile-nav-toggle"
+              type="button"
+              aria-label={copy.expand}
+              aria-expanded={sidebarOpen}
+              aria-controls="platform-navigation"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={19} />
+            </button>
+          )}
           <a className="platform-brand" href="/modules" aria-label={copy.homeAria}>
             <span className="brand-mark" aria-hidden="true">
               <img src={`${assetBase}brand/form-flow-logo.png`} alt="" />
@@ -91,7 +122,6 @@ function PlatformShellContent({ currentModule, currentExplorerId, currentMode, c
             )}
             {currentModule && localizedCurrentModule && currentExplorer && (
               <div className="platform-tool-selector">
-                <span>{copy.tool}</span>
                 <SelectMenu
                   className="platform-tool-menu"
                   ariaLabel={copy.toolSelectorAria}
@@ -113,7 +143,7 @@ function PlatformShellContent({ currentModule, currentExplorerId, currentMode, c
           <div className="platform-actions">
             <button type="button" aria-label={copy.switchLanguageAria} onClick={() => setLocale((current) => (current === 'en' ? 'zh' : 'en'))}>
               <Languages size={17} />
-              {copy.switchLanguage}
+              <span>{copy.switchLanguage}</span>
             </button>
             <button type="button" aria-label={themeAria} title={themeAria} onClick={() => setSurfaceMode((current) => (current === 'dark' ? 'light' : 'dark'))}>
               {surfaceMode === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
@@ -121,19 +151,19 @@ function PlatformShellContent({ currentModule, currentExplorerId, currentMode, c
             {moduleActions.openHelp && (
               <button type="button" aria-label={copy.helpAria} onClick={moduleActions.openHelp}>
                 <HelpCircle size={17} />
-                {copy.help}
+                <span>{copy.help}</span>
               </button>
             )}
             {moduleActions.reset && (
               <button type="button" aria-label={copy.resetAria} onClick={moduleActions.reset}>
                 <RotateCcw size={17} />
-                {copy.reset}
+                <span>{copy.reset}</span>
               </button>
             )}
             {moduleActions.exportPng && (
               <button type="button" aria-label={copy.exportAria} onClick={moduleActions.exportPng}>
                 <Download size={17} />
-                {copy.exportPng}
+                <span>{copy.exportPng}</span>
               </button>
             )}
           </div>
@@ -141,13 +171,13 @@ function PlatformShellContent({ currentModule, currentExplorerId, currentMode, c
 
         <div className="platform-workspace">
           {showModuleSidebar && (
-            <aside className="platform-sidebar">
+            <aside className="platform-sidebar" id="platform-navigation" aria-label={copy.modules}>
               <button
                 className="sidebar-toggle"
                 type="button"
                 aria-label={sidebarOpen ? copy.collapse : copy.expand}
                 title={sidebarOpen ? copy.collapse : copy.expand}
-                onClick={() => setSidebarOpen((open) => !open)}
+                onClick={() => sidebarOpen ? closeSidebar(true) : setSidebarOpen(true)}
               >
                 {sidebarOpen ? <PanelLeftClose size={18} /> : <Menu size={18} />}
               </button>
@@ -182,6 +212,9 @@ function PlatformShellContent({ currentModule, currentExplorerId, currentMode, c
               )}
             </aside>
           )}
+          {showModuleSidebar && sidebarOpen && (
+            <button className="platform-sidebar-backdrop" type="button" aria-label={copy.collapse} onClick={() => closeSidebar(true)} />
+          )}
           <section className="platform-content">{children}</section>
         </div>
       </main>
@@ -192,18 +225,18 @@ function PlatformShellContent({ currentModule, currentExplorerId, currentMode, c
 function surfaceVariables(surfaceMode: PlatformSurfaceMode): CSSProperties {
   const dark = surfaceMode === 'dark'
   return {
-    '--app-bg': dark ? '#0e141b' : '#eef2f6',
-    '--panel-bg': dark ? '#151d26' : '#ffffff',
-    '--panel-bg-soft': dark ? '#101720' : '#f7f9fc',
-    '--panel-border': dark ? '#2b3642' : '#d6dde7',
-    '--text-main': dark ? '#eef3f8' : '#15202b',
-    '--text-muted': dark ? '#a7b1bd' : '#4f5c69',
-    '--control-bg': dark ? '#1d2732' : '#edf2f8',
-    '--control-bg-strong': dark ? '#263343' : '#dfe8f3',
-    '--focus': dark ? '#7fd6c2' : '#166d63',
-    '--grid-color': dark ? '#3f4a55' : '#c7d0da',
-    '--axis-color': dark ? '#d7dde5' : '#22303d',
-    '--graph-canvas-background': dark ? '#101720' : '#f7f9fc',
+    '--app-bg': dark ? '#101519' : '#f6f7f8',
+    '--panel-bg': dark ? '#171d21' : '#ffffff',
+    '--panel-bg-soft': dark ? '#11171b' : '#f3f5f6',
+    '--panel-border': dark ? '#323b42' : '#d9dee3',
+    '--text-main': dark ? '#edf2f5' : '#17212b',
+    '--text-muted': dark ? '#a8b3bb' : '#5c6873',
+    '--control-bg': dark ? '#20282e' : '#f2f5f6',
+    '--control-bg-strong': dark ? '#29343b' : '#e7edef',
+    '--focus': dark ? '#62c4d2' : '#0b7285',
+    '--grid-color': dark ? '#414b52' : '#cad1d6',
+    '--axis-color': dark ? '#d6dde1' : '#293640',
+    '--graph-canvas-background': dark ? '#11171b' : '#fbfcfd',
     '--native-control-scheme': dark ? 'dark' : 'light',
   } as CSSProperties
 }

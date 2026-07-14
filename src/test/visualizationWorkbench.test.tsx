@@ -54,12 +54,15 @@ describe('VisualizationWorkbench', () => {
     const workbench = getWorkbench(container)
 
     pressKey(document, 'f')
-    await click(getButton(container, 'Matrices'))
+    const matricesButton = getButton(container, 'Matrices')
+    matricesButton.focus()
+    await click(matricesButton)
     expect(container.querySelector('[role="dialog"]')?.textContent).toContain('Matrix Panel')
 
     pressKey(document, 'Escape')
     expect(container.querySelector('[role="dialog"]')).toBeNull()
     expect(workbench.classList.contains('is-focus')).toBe(true)
+    expect(document.activeElement).toBe(matricesButton)
 
     pressKey(document, 'Escape')
     expect(workbench.classList.contains('is-focus')).toBe(false)

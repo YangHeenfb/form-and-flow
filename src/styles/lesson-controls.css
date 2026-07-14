@@ -1,0 +1,145 @@
+.lesson-shell-controls,
+.lesson-shell-explanation {
+  padding: 0;
+  border-color: var(--panel-border);
+  background: var(--panel-bg);
+}
+
+.lesson-mobile-section-toggle {
+  display: none;
+}
+
+.lesson-mobile-section-content {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  padding: 15px;
+}
+
+.lesson-shell-controls :where(.control-field, .range-control, .toggle-row) {
+  min-width: 0;
+}
+
+.range-control {
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.control-field {
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.toggle-row {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.control-hint {
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.lesson-shell :where(.calculus-playback, .convolution-playback, .fourier-playback, .probability-playback, .diffeq-playback) {
+  border-color: var(--panel-border);
+  background: var(--panel-bg);
+  box-shadow: none;
+}
+
+@media (max-width: 860px) {
+  .lesson-shell,
+  .lesson-shell.calculus-lesson:not(.diffeq-lesson),
+  .lesson-shell.fourier-lesson,
+  .lesson-shell.probability-lesson,
+  .lesson-shell.convolution-lesson {
+    grid-template-areas:
+      'stage'
+      'controls'
+      'explanation';
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .lesson-shell-main {
+    grid-area: stage;
+    grid-template-rows: auto minmax(360px, 58vh) auto;
+  }
+
+  .lesson-shell-controls {
+    grid-area: controls;
+  }
+
+  .lesson-shell-explanation {
+    grid-area: explanation;
+  }
+
+  .lesson-shell-controls,
+  .lesson-shell-explanation {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .lesson-mobile-section-toggle {
+    width: 100%;
+    min-height: 48px;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    text-align: left;
+  }
+
+  .lesson-mobile-section-toggle span {
+    justify-self: start;
+    font-weight: 650;
+  }
+
+  .lesson-mobile-section-chevron {
+    transition: transform 140ms ease;
+  }
+
+  [data-mobile-open='true'] > .lesson-mobile-section-toggle .lesson-mobile-section-chevron {
+    transform: rotate(180deg);
+  }
+
+  .lesson-mobile-section-content {
+    display: none;
+  }
+
+  [data-mobile-open='true'] > .lesson-mobile-section-content {
+    display: grid;
+    padding: 0 12px 14px;
+  }
+
+  .lesson-shell :where(.graph-help-stage, .convolution-stage) {
+    min-height: 0;
+  }
+
+  .lesson-shell .graph-help-stage {
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .lesson-shell .lesson-stage-actions {
+    order: 0;
+  }
+
+  .lesson-shell :where(.calculus-playback, .convolution-playback, .fourier-playback, .probability-playback, .diffeq-playback) {
+    width: 100%;
+    min-width: 0;
+    padding: 12px;
+  }
+}

@@ -104,6 +104,97 @@ test('mobile primary controls meet the 44px touch target', async ({ page }) => {
   expect(undersized, JSON.stringify(undersized, null, 2)).toEqual([])
 })
 
+test('mobile navigation uses a dismissible top drawer instead of a persistent rail', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/modules/calculus/derivative')
+  await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+
+  const trigger = page.locator('.platform-mobile-nav-toggle')
+  const navigation = page.locator('#platform-navigation')
+  await expect(trigger).toBeVisible()
+  await expect(navigation).toBeHidden()
+
+  await trigger.click()
+  await expect(navigation).toBeVisible()
+  await expect(page.locator('.platform-sidebar-backdrop')).toBeVisible()
+
+  await page.keyboard.press('Escape')
+  await expect(navigation).toBeHidden()
+  await expect(trigger).toBeFocused()
+
+  const accessibility = await new AxeBuilder({ page }).analyze()
+  expect(accessibility.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([])
+})
+
+test('mobile lessons prioritize the graph and progressively disclose parameters and readout', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/modules/calculus/derivative')
+  await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+
+  const graph = page.locator('.calculus-canvas')
+  const playback = page.locator('.calculus-playback')
+  const parameters = page.locator('.lesson-shell-controls .lesson-mobile-section-toggle')
+  const readout = page.locator('.lesson-shell-explanation .lesson-mobile-section-toggle')
+  await expect(parameters).toHaveAttribute('aria-expanded', 'false')
+  await expect(readout).toHaveAttribute('aria-expanded', 'false')
+
+  const graphBox = await graph.boundingBox()
+  const playbackBox = await playback.boundingBox()
+  const parametersBox = await parameters.boundingBox()
+  expect(graphBox && playbackBox && parametersBox).toBeTruthy()
+  expect(graphBox!.y).toBeLessThan(playbackBox!.y)
+  expect(playbackBox!.y).toBeLessThan(parametersBox!.y)
+
+  await parameters.click()
+  await expect(parameters).toHaveAttribute('aria-expanded', 'true')
+  await expect(page.locator('.lesson-shell-controls .lesson-mobile-section-content')).toBeVisible()
+})
+
+test('Matrix mobile workbench keeps controls collapsed below visualization and transport', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/modules/matrix/transformations')
+  await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+
+  const controls = page.locator('.visualization-standard-left .visualization-mobile-section-toggle')
+  const readout = page.locator('.visualization-standard-right .visualization-mobile-section-toggle')
+  await expect(controls).toHaveAttribute('aria-expanded', 'false')
+  await expect(readout).toHaveAttribute('aria-expanded', 'false')
+  await controls.click()
+  await expect(page.locator('.visualization-standard-left .visualization-mobile-section-content')).toBeVisible()
+
+  const accessibility = await new AxeBuilder({ page }).analyze()
+  expect(accessibility.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([])
+})
+
+test('custom explorer selector supports keyboard focus and selection', async ({ page }) => {
+  await page.goto('/modules/calculus/derivative')
+  await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+  const trigger = page.locator('.platform-tool-menu .select-menu-trigger')
+  await trigger.focus()
+  await page.keyboard.press('ArrowDown')
+  const selectedOption = page.locator('.platform-tool-menu [role="option"][aria-selected="true"]')
+  await expect(selectedOption).toBeFocused()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await expect(page).toHaveURL(/\/modules\/calculus\?mode=integral/)
+})
+
+test('surface theme updates canvas colors and keeps the stored preference', async ({ page }) => {
+  await page.goto('/modules/calculus/derivative')
+  await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+  await page.getByRole('button', { name: 'Dark mode' }).click()
+  await expect(page.getByRole('button', { name: 'Light mode' })).toBeVisible()
+
+  const background = await page.locator('.calculus-canvas').evaluate((canvas: HTMLCanvasElement) =>
+    Array.from(canvas.getContext('2d')!.getImageData(2, 2, 1, 1).data.slice(0, 3)),
+  )
+  expect(background).toEqual([17, 23, 27])
+
+  await page.reload()
+  await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+  await expect(page.getByRole('button', { name: 'Light mode' })).toBeVisible()
+})
+
 test('Matrix 2D does not request the Three.js vendor chunk', async ({ page }) => {
   const scripts: string[] = []
   page.on('request', (request) => {

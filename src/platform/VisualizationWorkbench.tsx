@@ -3,12 +3,14 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useId,
   useMemo,
   useRef,
   useState,
   type ReactNode,
   type Ref,
 } from 'react'
+import { ChevronDown, Info, SlidersHorizontal } from 'lucide-react'
 import { OverlayDrawer } from './OverlayDrawer.tsx'
 import { OverlayTransport } from './OverlayTransport.tsx'
 import { VisualizationToolbar, type VisualizationLabels } from './VisualizationToolbar.tsx'
@@ -73,6 +75,10 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
     const [autoHideHud, setAutoHideHud] = useState(loadAutoHideHud)
     const [hudVisible, setHudVisible] = useState(true)
     const [hudActivityCount, setHudActivityCount] = useState(0)
+    const [mobileControlsOpen, setMobileControlsOpen] = useState(false)
+    const [mobileReadoutOpen, setMobileReadoutOpen] = useState(false)
+    const mobileControlsId = useId()
+    const mobileReadoutId = useId()
 
     const layoutState = useMemo<VisualizationLayoutState>(
       () => ({
@@ -246,14 +252,40 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
         )}
 
         <div className="visualization-standard-layout">
-          <aside className="left-panel visualization-standard-left">{leftPanel}</aside>
+          <aside className="left-panel visualization-standard-left" data-mobile-open={mobileControlsOpen ? 'true' : 'false'}>
+            <button
+              type="button"
+              className="visualization-mobile-section-toggle"
+              aria-expanded={mobileControlsOpen}
+              aria-controls={mobileControlsId}
+              onClick={() => setMobileControlsOpen((open) => !open)}
+            >
+              <SlidersHorizontal size={17} />
+              <span>{labels.controls ?? 'Controls'}</span>
+              <ChevronDown className="visualization-mobile-section-chevron" size={17} aria-hidden="true" />
+            </button>
+            <div className="visualization-mobile-section-content" id={mobileControlsId}>{leftPanel}</div>
+          </aside>
           <div className="visualization-center-column">
             <section className="center-stage visualization-stage" ref={setStageNode}>
               {stage}
             </section>
             {!isExpanded && <OverlayTransport>{transport}</OverlayTransport>}
           </div>
-          <div className="visualization-standard-right">{rightPanel}</div>
+          <div className="visualization-standard-right" data-mobile-open={mobileReadoutOpen ? 'true' : 'false'}>
+            <button
+              type="button"
+              className="visualization-mobile-section-toggle"
+              aria-expanded={mobileReadoutOpen}
+              aria-controls={mobileReadoutId}
+              onClick={() => setMobileReadoutOpen((open) => !open)}
+            >
+              <Info size={17} />
+              <span>{labels.explanation ?? 'Readout'}</span>
+              <ChevronDown className="visualization-mobile-section-chevron" size={17} aria-hidden="true" />
+            </button>
+            <div className="visualization-mobile-section-content" id={mobileReadoutId}>{rightPanel}</div>
+          </div>
         </div>
 
         {isExpanded && <OverlayTransport>{transport}</OverlayTransport>}
