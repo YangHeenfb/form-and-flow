@@ -55,6 +55,19 @@ async function expectNoHorizontalOverflow(page: Page) {
   expect(overflow).toBeLessThanOrEqual(1)
 }
 
+async function expectNoVisibleButtonTextOverflow(page: Page) {
+  const overflowing = await page.locator('button:visible').evaluateAll((buttons) =>
+    buttons
+      .filter((button) => !button.classList.contains('select-menu-trigger'))
+      .map((button) => ({
+        name: button.getAttribute('aria-label') || button.textContent?.trim() || 'button',
+        overflow: button.scrollWidth - button.clientWidth,
+      }))
+      .filter(({ overflow }) => overflow > 1),
+  )
+  expect(overflowing, JSON.stringify(overflowing, null, 2)).toEqual([])
+}
+
 test.describe('ready explorers', () => {
   for (const route of readyExplorerRoutes) {
     test(`${route} renders without runtime or accessibility errors`, async ({ page }) => {
@@ -74,12 +87,18 @@ test.describe('ready explorers', () => {
       await expect(readoutAction).toHaveCount(1)
       await expect(readoutAction).toBeVisible()
       await expect(inspector).toBeVisible()
+      await expect(page.locator('.explorer-stage-header')).toBeVisible()
+      await expect(page.locator('.lesson-stage-actions')).toBeVisible()
+      const actionLabels = await page.locator('.lesson-stage-actions > button:visible').allTextContents()
+      expect(actionLabels.map((label) => label.trim())).toEqual(['Graph notes', 'Readout', 'Focus', 'Export PNG'])
+      await expect(page.getByRole('button', { name: 'Reference', exact: true }).filter({ visible: true })).toHaveCount(1)
       const shellBox = await shell.boundingBox()
       const stageBox = await stage.boundingBox()
       const gridColumns = await shell.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(/\s+/).filter(Boolean))
       expect(shellBox && stageBox).toBeTruthy()
       expect(gridColumns).toHaveLength(2)
       expect(stageBox!.width / shellBox!.width).toBeGreaterThanOrEqual(0.65)
+      await expectNoVisibleButtonTextOverflow(page)
 
       const accessibility = await new AxeBuilder({ page }).analyze()
       const blocking = accessibility.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))
@@ -88,6 +107,54 @@ test.describe('ready explorers', () => {
     })
   }
 })
+
+test('module overview uses one card contract for all six ready modules', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/modules')
+  const cards = page.locator('.module-grid .module-card-ready')
+  await expect(cards).toHaveCount(6)
+  for (let index = 0; index < 6; index += 1) {
+    const card = cards.nth(index)
+    await expect(card.locator('.module-preview')).toBeVisible()
+    await expect(card.locator('h2')).toBeVisible()
+    await expect(card.locator('p')).toBeVisible()
+  }
+  await expectNoHorizontalOverflow(page)
+})
+
+for (const width of [375, 390, 768, 1024, 1280]) {
+  test(`all 27 explorers keep the shared chrome at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    for (const route of readyExplorerRoutes) {
+      await test.step(route, async () => {
+        await page.goto(route)
+        await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+        await expect(page.locator('.explorer-stage-header')).toBeVisible()
+        await expect(page.locator('.lesson-stage-actions')).toBeVisible()
+        await expectNoHorizontalOverflow(page)
+        await expectNoVisibleButtonTextOverflow(page)
+
+        if (width < 1180) {
+          await expect(page.locator('.lesson-stage-readout-action')).toBeHidden()
+          const visibleActions = await page.locator('.lesson-stage-actions > button:visible').allTextContents()
+          expect(visibleActions.map((label) => label.trim())).toEqual(['Graph notes', 'Focus', 'Export PNG'])
+        }
+
+        if (width <= 860) {
+          const undersized = await page.locator('.explorer-stage-header-actions button:visible, .explorer-transport button:visible').evaluateAll((elements) =>
+            elements
+              .map((element) => {
+                const rect = element.getBoundingClientRect()
+                return { name: element.getAttribute('aria-label') || element.textContent?.trim() || 'control', width: rect.width, height: rect.height }
+              })
+              .filter(({ width: elementWidth, height }) => elementWidth < 44 || height < 44),
+          )
+          expect(undersized, `${route}: ${JSON.stringify(undersized, null, 2)}`).toEqual([])
+        }
+      })
+    }
+  })
+}
 
 for (const width of [375, 390, 768, 1024, 1280]) {
   test.describe(`${width}px layout`, () => {
@@ -125,6 +192,53 @@ test('mobile primary controls meet the 44px touch target', async ({ page }) => {
       .filter(({ width, height }) => width < 44 || height < 44),
   )
   expect(undersized, JSON.stringify(undersized, null, 2)).toEqual([])
+})
+
+test('expanded mobile inspectors keep field help and edit actions touch-safe', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 })
+  for (const route of ['/modules/fourier/spectrum', '/modules/convolution/discrete']) {
+    await test.step(route, async () => {
+      await page.goto(route)
+      await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+      await page.locator('.lesson-shell-controls .lesson-mobile-section-toggle').click()
+      const undersized = await page.locator('.lesson-shell-controls button:visible').evaluateAll((elements) =>
+        elements
+          .map((element) => {
+            const rect = element.getBoundingClientRect()
+            return { name: element.getAttribute('aria-label') || element.textContent?.trim() || 'control', width: rect.width, height: rect.height }
+          })
+          .filter(({ width, height }) => width < 44 || height < 44),
+      )
+      expect(undersized, `${route}: ${JSON.stringify(undersized, null, 2)}`).toEqual([])
+    })
+  }
+})
+
+test('static explorers never reserve an empty transport shell', async ({ page }) => {
+  await page.goto('/modules/convolution/image-kernel')
+  await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+  await expect(page.locator('.lesson-standard-transport')).toHaveCount(0)
+
+  await page.goto('/modules/probability/conditional-probability')
+  await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+  const compactTransport = page.locator('.explorer-transport[data-compact="true"]')
+  await expect(compactTransport).toBeVisible()
+  await expect(compactTransport.getByRole('button', { name: 'Reset parameters' })).toBeVisible()
+})
+
+test('shared chrome remains stable when switching languages', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.goto('/modules/calculus/derivative')
+  await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+  await page.getByRole('button', { name: 'Switch language' }).click()
+  await expect(page.locator('.platform-shell')).toHaveAttribute('data-locale', 'zh')
+  await expect(page.locator('.explorer-stage-header h1')).toHaveText('导数')
+  await expect(page.locator('.lesson-shell-controls .lesson-mobile-inspector-action')).toContainText('参考')
+  await expectNoHorizontalOverflow(page)
+  await expectNoVisibleButtonTextOverflow(page)
+
+  await page.reload()
+  await expect(page.locator('.platform-shell')).toHaveAttribute('data-locale', 'zh')
 })
 
 test('mobile navigation uses a dismissible top drawer instead of a persistent rail', async ({ page }) => {

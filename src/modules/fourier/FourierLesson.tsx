@@ -3,9 +3,9 @@ import type { ReactNode } from 'react'
 import { CircleHelp, Pause, Play, RotateCcw } from 'lucide-react'
 import { GraphCanvas } from '../../core/graph2d/GraphCanvas.tsx'
 import type { GraphTheme, GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
+import { ExplorerTransport, InspectorSection } from '../../core/ui/ExplorerChrome.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton, type HelpTopic } from '../../core/ui/LearningHelp.tsx'
-import { PlaybackProgress } from '../../core/ui/LessonControls.tsx'
 import { LessonScaffold } from '../../core/ui/LessonScaffold.tsx'
 import { expressionToTex } from '../../core/ui/mathNotation.ts'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
@@ -567,14 +567,15 @@ export function FourierLesson({ lessonId }: Props) {
       isFocusMode={isFocusMode}
       autoHideToggle={autoHideToggle}
       onFocusPanelActiveChange={onFocusPanelActiveChange}
+      eyebrow={ui.lesson}
+      title={copy.title}
+      inspectorAction={(
+        <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={ui.beginnerHelp}>
+          {ui.beginnerHelp}
+        </HelpTrigger>
+      )}
       controls={
-        <>
-        <div className="lesson-learning-entry learning-help-entry">
-          <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={ui.beginnerHelp}>
-            {ui.beginnerHelp}
-          </HelpTrigger>
-        </div>
-        <h2>{ui.signal}</h2>
+        <InspectorSection title={ui.signal}>
         <label>
           {ui.preset}
           <SelectMenu
@@ -715,18 +716,10 @@ export function FourierLesson({ lessonId }: Props) {
           <Toggle label={ui.toggles.residual} checked={showResidual} onChange={setShowResidual} />
           <Toggle label={ui.toggles.labels} checked={showLabels} onChange={setShowLabels} />
         </ControlGroup>
-        </>
+        </InspectorSection>
       }
-
-      main={
-        <>
-        <div className="fourier-title-row">
-          <div>
-            <p className="eyebrow">{ui.lesson}</p>
-            <h1>{copy.title}</h1>
-          </div>
-        </div>
-        <div className="graph-help-stage">
+      stage={
+        <div className="graph-help-stage fourier-graph-stage">
           <GraphCanvas
             className="graph-canvas fourier-canvas"
             ariaLabel={`${copy.title}. ${copy.what}`}
@@ -736,34 +729,36 @@ export function FourierLesson({ lessonId }: Props) {
             yMax={1.25}
             draw={draw}
           />
-          <LessonStageActions
-            graphLabel={ui.graphHelp}
-            graphAriaLabel={ui.graphHelp}
-            onGraphHelp={() => setHelpMode({ kind: 'graph' })}
-            focusButton={focusButton}
-            exportLabel={ui.exportPng}
-            onExport={exportPng}
-          />
         </div>
-        <div className="fourier-playback platform-card">
-          <div className="transport-buttons">
-            <button type="button" className="primary-button" aria-label={playback.ariaLabel} onClick={() => setPlaying((current) => !current)}>
-              {playing ? <Pause size={16} /> : <Play size={16} />}
-              {playback.label}
-            </button>
-            <button type="button" onClick={() => {
+      }
+      stageActions={(
+        <LessonStageActions
+          graphLabel={ui.graphHelp}
+          graphAriaLabel={ui.graphHelp}
+          onGraphHelp={() => setHelpMode({ kind: 'graph' })}
+          focusButton={focusButton}
+          exportLabel={ui.exportPng}
+          onExport={exportPng}
+        />
+      )}
+      transport={(
+        <ExplorerTransport
+          className="fourier-playback"
+          primaryAction={{
+            label: playback.label,
+            icon: playing ? <Pause size={16} /> : <Play size={16} />,
+            onClick: () => setPlaying((current) => !current),
+          }}
+          secondaryActions={[
+            { label: ui.reset, icon: <RotateCcw size={16} />, onClick: () => {
               setPlaying(false)
               resetLesson(lessonKey, selectedPreset.defaultFrequency, setSelectedFrequency, setCoefficientCount, setCutoff, setPlayhead)
-            }}>
-              <RotateCcw size={16} />
-              {ui.reset}
-            </button>
-          </div>
-          <PlaybackProgress label={ui.playbackProgress} value={playbackProgress} onChange={seekPlaybackProgress} />
-          <Range label={ui.controls.speed} value={playbackSpeed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setPlaybackSpeed} />
-        </div>
-        </>
-      }
+            } },
+          ]}
+          progress={{ label: ui.playbackProgress, value: playbackProgress, onChange: seekPlaybackProgress }}
+          speed={{ label: ui.controls.speed, value: playbackSpeed, min: 0.25, max: 3, step: 0.05, onChange: setPlaybackSpeed }}
+        />
+      )}
 
       explanation={
         <>

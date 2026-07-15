@@ -4,6 +4,7 @@ import { OverlayDrawer } from '../../platform/OverlayDrawer.tsx'
 import { StandardReadoutActionProvider } from '../../platform/LessonStageActions.tsx'
 import type { OverlayPanelSide } from '../../platform/visualizationLayoutTypes.ts'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
+import { ExplorerStageHeader } from './ExplorerChrome.tsx'
 
 type LessonScaffoldProps = {
   className?: string
@@ -12,7 +13,14 @@ type LessonScaffoldProps = {
   explanationClassName?: string
   isFocusMode?: boolean
   controls: ReactNode
-  main: ReactNode
+  main?: ReactNode
+  eyebrow?: ReactNode
+  title?: ReactNode
+  subtitle?: ReactNode
+  stage?: ReactNode
+  stageActions?: ReactNode
+  transport?: ReactNode
+  inspectorAction?: ReactNode
   explanation: ReactNode
   focusControls?: ReactNode
   focusReadout?: ReactNode
@@ -34,6 +42,13 @@ export function LessonScaffold({
   isFocusMode = false,
   controls,
   main,
+  eyebrow,
+  title,
+  subtitle,
+  stage,
+  stageActions,
+  transport,
+  inspectorAction,
   explanation,
   focusControls,
   focusReadout,
@@ -114,21 +129,33 @@ export function LessonScaffold({
           <header className="lesson-inspector-header">
             <SlidersHorizontal size={16} aria-hidden="true" />
             <span>{labels.controls}</span>
+            {inspectorAction && <div className="lesson-inspector-action">{inspectorAction}</div>}
           </header>
-          <button
-            type="button"
-            className="lesson-mobile-section-toggle"
-            aria-expanded={mobileControlsOpen}
-            aria-controls={controlsId}
-            onClick={() => setMobileControlsOpen((open) => !open)}
-          >
-            <SlidersHorizontal size={17} />
-            <span>{labels.controls}</span>
-            <ChevronDown className="lesson-mobile-section-chevron" size={17} aria-hidden="true" />
-          </button>
+          <div className="lesson-mobile-inspector-header">
+            <button
+              type="button"
+              className="lesson-mobile-section-toggle"
+              aria-expanded={mobileControlsOpen}
+              aria-controls={controlsId}
+              onClick={() => setMobileControlsOpen((open) => !open)}
+            >
+              <SlidersHorizontal size={17} />
+              <span>{labels.controls}</span>
+              <ChevronDown className="lesson-mobile-section-chevron" size={17} aria-hidden="true" />
+            </button>
+            {inspectorAction && <div className="lesson-mobile-inspector-action">{inspectorAction}</div>}
+          </div>
           <div className="lesson-mobile-section-content" id={controlsId}>{controls}</div>
         </aside>
-        <main className={joinClassNames('lesson-shell-main', mainClassName)}>{main}</main>
+        <main className={joinClassNames('lesson-shell-main', mainClassName)}>
+          {main ?? (
+            <>
+              <ExplorerStageHeader eyebrow={eyebrow} title={title} subtitle={subtitle} actions={stageActions} />
+              <div className="lesson-visualization-stage">{stage}</div>
+              {transport && <div className="lesson-standard-transport">{transport}</div>}
+            </>
+          )}
+        </main>
         <aside className={joinClassNames('lesson-shell-explanation platform-card', explanationClassName)} data-mobile-open={mobileReadoutOpen ? 'true' : 'false'}>
           <button
             type="button"

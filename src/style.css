@@ -3793,66 +3793,7 @@ dt {
   }
 }
 
-@media (max-width: 1100px) {
-  .lesson-shell:is(.calculus-lesson, .fourier-lesson, .probability-lesson) {
-    grid-template-areas:
-      "stage"
-      "controls"
-      "explanation";
-  }
-
-  .lesson-shell:is(.calculus-lesson, .fourier-lesson, .probability-lesson) .lesson-shell-main {
-    grid-template-rows: auto 520px auto;
-  }
-}
-
 @media (max-width: 860px) {
-  .visualization-standard-layout {
-    grid-template-areas:
-      "stage"
-      "controls"
-      "explanation";
-  }
-
-  .lesson-shell:is(.calculus-lesson, .fourier-lesson, .probability-lesson, .convolution-lesson) {
-    height: auto;
-    min-height: 0;
-    max-height: none;
-    overflow: visible;
-  }
-
-  .lesson-shell-main {
-    grid-template-rows: auto minmax(360px, 58vh) auto;
-  }
-
-  .lesson-shell :where(.graph-help-stage, .convolution-stage) {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-    gap: 8px;
-  }
-
-  .lesson-shell .lesson-stage-actions {
-    position: static;
-    order: -1;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .lesson-shell .lesson-stage-actions .visualization-header-action {
-    grid-column: 1 / -1;
-  }
-
-  .lesson-shell .lesson-stage-actions button,
-  .lesson-shell .lesson-stage-actions .learning-help-trigger {
-    width: 100%;
-  }
-
-  .lesson-shell-controls,
-  .lesson-shell-explanation {
-    overflow: visible;
-  }
-
   .lesson-shell-explanation dl > div {
     grid-template-columns: minmax(0, 1fr);
     gap: 2px;

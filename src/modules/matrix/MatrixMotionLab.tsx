@@ -547,7 +547,7 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
               viewResetKey={viewResetKey}
               registerExporter={registerExporter}
               registerFrameRenderer={registerFrameRenderer}
-              stageAction={renderStageActions()}
+              stageAction={workbenchStatus.mode === 'focus' ? renderStageActions() : undefined}
             />
           </Suspense>
           {activeInputDim === 3 && activeOutputDim === 2 && (
@@ -571,7 +571,7 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
           onViewPanChange={setViewPan}
           registerExporter={registerExporter}
           registerFrameRenderer={registerFrameRenderer}
-          stageAction={renderStageActions()}
+          stageAction={workbenchStatus.mode === 'focus' ? renderStageActions() : undefined}
         />
       )}
     </>
@@ -647,7 +647,7 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
       <VisualizationWorkbench
         ref={workbenchRef}
         title={copy.top.title}
-        subtitle={copy.top.eyebrow}
+        subtitle={locale === 'zh' ? '探索器' : 'Explorer'}
         labels={copy.visualization}
         leftPanel={
           <>
@@ -657,6 +657,7 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
           </>
         }
         stage={stage}
+        stageActions={renderStageActions()}
         rightPanel={explanationPanel}
         transport={transport}
         overlayPanels={overlayPanels}

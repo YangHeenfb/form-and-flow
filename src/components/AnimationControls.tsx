@@ -1,4 +1,5 @@
 import { ChevronDown, Eye, LocateFixed, Pause, Play, RotateCcw } from 'lucide-react'
+import { ExplorerTransport } from '../core/ui/ExplorerChrome.tsx'
 import type { AppCopy } from '../i18n.ts'
 import type { AnimationState, PlaybackMode, ViewOptions } from '../math/types.ts'
 
@@ -36,47 +37,19 @@ export function AnimationControls({
   const timelineProgress = getTimelineProgress(animation, stepCount)
 
   return (
-    <footer className="transport">
-      <div className="transport-buttons">
-        <button className="primary-button" type="button" aria-label={animation.playing ? copy.pause : copy.play} onClick={animation.playing ? onPause : onPlay}>
-          {animation.playing ? <Pause size={17} /> : <Play size={17} />}
-          <span className="transport-button-label">{animation.playing ? copy.pause : copy.play}</span>
-        </button>
-        <button type="button" aria-label={copy.reset} title={copy.reset} onClick={onReset}>
-          <RotateCcw size={17} />
-          <span className="transport-button-label">{copy.reset}</span>
-        </button>
-        <button type="button" aria-label={copy.resetView} title={copy.resetView} onClick={onResetView}>
-          <LocateFixed size={17} />
-          <span className="transport-button-label">{copy.resetView}</span>
-        </button>
-      </div>
-      <label className="playback-progress-control">
-        <span>{copy.progress}</span>
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.001"
-          value={timelineProgress}
-          aria-label={copy.progress}
-          onChange={(event) => onSeek(Number(event.target.value))}
-        />
-        <strong>{Math.round(timelineProgress * 100)}%</strong>
-      </label>
-      <div className="transport-secondary-controls">
-        <label className="speed-control">
-          <span>{copy.speed}</span>
-          <input
-            type="range"
-            min="0.25"
-            max="2.5"
-            step="0.05"
-            value={animation.speed}
-            onChange={(event) => onSpeedChange(Number(event.target.value))}
-          />
-          <strong>{animation.speed.toFixed(2)}x</strong>
-        </label>
+    <ExplorerTransport
+      primaryAction={{
+        label: animation.playing ? copy.pause : copy.play,
+        icon: animation.playing ? <Pause size={17} /> : <Play size={17} />,
+        onClick: animation.playing ? onPause : onPlay,
+      }}
+      secondaryActions={[
+        { label: copy.reset, icon: <RotateCcw size={17} />, onClick: onReset },
+        { label: copy.resetView, icon: <LocateFixed size={17} />, onClick: onResetView },
+      ]}
+      progress={{ label: copy.progress, value: timelineProgress, onChange: onSeek }}
+      speed={{ label: copy.speed, value: animation.speed, min: 0.25, max: 2.5, step: 0.05, onChange: onSpeedChange, formatValue: (value) => `${value.toFixed(2)}x` }}
+      mode={(
         <div className="segmented compact-segmented" role="group" aria-label={copy.playbackMode}>
           <button
             type="button"
@@ -97,27 +70,31 @@ export function AnimationControls({
             {copy.step}
           </button>
         </div>
-      </div>
-      <ViewToggles
-        className="view-toggles view-toggles-desktop"
-        copy={copy}
-        viewOptions={viewOptions}
-        onViewOptionChange={onViewOptionChange}
-      />
-      <details className="view-options-disclosure">
-        <summary>
-          <Eye size={17} aria-hidden="true" />
-          <span>{copy.display}</span>
-          <ChevronDown className="view-options-chevron" size={17} aria-hidden="true" />
-        </summary>
-        <ViewToggles
-          className="view-toggles view-toggles-mobile"
-          copy={copy}
-          viewOptions={viewOptions}
-          onViewOptionChange={onViewOptionChange}
-        />
-      </details>
-    </footer>
+      )}
+      extra={(
+        <>
+          <ViewToggles
+            className="view-toggles view-toggles-desktop"
+            copy={copy}
+            viewOptions={viewOptions}
+            onViewOptionChange={onViewOptionChange}
+          />
+          <details className="view-options-disclosure">
+            <summary>
+              <Eye size={17} aria-hidden="true" />
+              <span>{copy.display}</span>
+              <ChevronDown className="view-options-chevron" size={17} aria-hidden="true" />
+            </summary>
+            <ViewToggles
+              className="view-toggles view-toggles-mobile"
+              copy={copy}
+              viewOptions={viewOptions}
+              onViewOptionChange={onViewOptionChange}
+            />
+          </details>
+        </>
+      )}
+    />
   )
 }
 

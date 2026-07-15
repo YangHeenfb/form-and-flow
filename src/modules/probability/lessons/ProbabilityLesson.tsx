@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Pause, Play, RotateCcw, Shuffle } from 'lucide-react'
+import { ExplorerTransport, InspectorSection } from '../../../core/ui/ExplorerChrome.tsx'
 import { Formula, renderMathText } from '../../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton } from '../../../core/ui/LearningHelp.tsx'
-import { PlaybackProgress, ReadoutList, SelectField as SharedSelectField, ToggleField, TransportRow } from '../../../core/ui/LessonControls.tsx'
+import { ReadoutList, SelectField as SharedSelectField, ToggleField } from '../../../core/ui/LessonControls.tsx'
 import { LessonScaffold } from '../../../core/ui/LessonScaffold.tsx'
 import { SelectMenu } from '../../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../../i18n.ts'
@@ -902,7 +903,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
     (ctx: CanvasRenderingContext2D, size: Parameters<NonNullable<Parameters<typeof ProbabilityCanvas>[0]['draw']>>[1], theme: Parameters<NonNullable<Parameters<typeof ProbabilityCanvas>[0]['draw']>>[2]) => {
       if (lessonId === 'conditional-probability') {
         drawConditionalScene(ctx, size, theme, {
-          title: currentCopy.title,
+          title: '',
           population,
           categories: conditionalCategories(conditional, target, theme, ui.categoryLabels),
           table: conditionalTable(conditional, ui.categoryLabels),
@@ -911,7 +912,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
         })
       } else if (lessonId === 'bayes') {
         drawBayesScene(ctx, size, theme, {
-          title: currentCopy.title,
+          title: '',
           population,
           categories: bayesCategories(bayes, theme, ui.categoryLabels),
           posterior: bayes.posterior,
@@ -920,7 +921,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
         })
       } else if (lessonId === 'medical-test') {
         drawMedicalScene(ctx, size, theme, {
-          title: currentCopy.title,
+          title: '',
           population,
           categories: medicalCategories(medical, selectedTestResult, theme, ui.categoryLabels),
           selected: selectedTestResult,
@@ -929,7 +930,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
           labels: ui.drawing,
         })
       } else if (lessonId === 'binomial') {
-        drawBinomialScene(ctx, size, theme, { distribution: binomial, simulation: binomialSimulation, selectedRange, title: currentCopy.title, labels: ui.drawing })
+        drawBinomialScene(ctx, size, theme, { distribution: binomial, simulation: binomialSimulation, selectedRange, title: '', labels: ui.drawing })
       } else if (lessonId === 'continuous-density') {
         drawContinuousScene(ctx, size, theme, {
           distribution: continuousDistribution,
@@ -938,11 +939,11 @@ export function ProbabilityLesson({ lessonId }: Props) {
           showHistogram,
           showCdf,
           pointMode,
-          title: `${ui.distributionLabels[continuousId]}${locale === 'zh' ? '密度' : ' density'}`,
+          title: '',
           labels: ui.drawing,
         })
       } else if (lessonId === 'central-limit-theorem') {
-        drawCltScene(ctx, size, theme, { source, meansHistogram: cltHistogram, meanDomain: cltDomain, standardized, showNormal, sampleSize, title: currentCopy.title, sourceLabel: ui.sourceLabels[sourceId], labels: ui.drawing })
+        drawCltScene(ctx, size, theme, { source, meansHistogram: cltHistogram, meanDomain: cltDomain, standardized, showNormal, sampleSize, title: '', sourceLabel: ui.sourceLabels[sourceId], labels: ui.drawing })
       } else {
         drawRandomVariableSumScene(ctx, size, theme, {
           x: xDistribution,
@@ -951,7 +952,7 @@ export function ProbabilityLesson({ lessonId }: Props) {
           grid: pairGrid,
           selectedSum: animatedSelectedSum,
           showPairGrid,
-          title: currentCopy.title,
+          title: '',
           labels: ui.drawing,
         })
       }
@@ -1006,55 +1007,47 @@ export function ProbabilityLesson({ lessonId }: Props) {
       isFocusMode={isFocusMode}
       autoHideToggle={autoHideToggle}
       onFocusPanelActiveChange={onFocusPanelActiveChange}
+      eyebrow={ui.controls.lesson}
+      title={currentCopy.title}
+      inspectorAction={(
+        <HelpTrigger ariaLabel={learningCopy.openOverview} onClick={() => openHelpTopic('overview')}>
+          {learningCopy.openOverview}
+        </HelpTrigger>
+      )}
       controls={
-        <>
-        <div className="lesson-learning-entry learning-help-entry">
-          <HelpTrigger ariaLabel={learningCopy.openOverview} onClick={() => openHelpTopic('overview')}>
-            {learningCopy.openOverview}
-          </HelpTrigger>
-        </div>
-        <h2>{ui.controls.parameters}</h2>
-        {renderControls()}
-        </>
+        <InspectorSection title={ui.controls.parameters}>
+          {renderControls()}
+        </InspectorSection>
       }
-
-      main={
-        <>
-        <div className="calculus-title-row probability-title-row">
-          <div>
-            <p className="eyebrow">{ui.controls.lesson}</p>
-            <h1>{currentCopy.title}</h1>
-          </div>
-        </div>
+      stage={
         <div className="graph-help-stage probability-graph-stage">
           <ProbabilityCanvas ariaLabel={`${currentCopy.title} ${ui.canvasAriaSuffix}`} draw={draw} />
-          <LessonStageActions
-            graphLabel={learningCopy.openGraph}
-            graphAriaLabel={learningCopy.openGraph}
-            onGraphHelp={() => openHelpTopic('graph')}
-            focusButton={focusButton}
-            exportLabel={ui.controls.exportPng}
-            onExport={exportPng}
-          />
         </div>
-        <div className={`probability-playback${hasAnimatedPlayback ? '' : ' probability-playback-static'} platform-card`}>
-          <TransportRow>
-            {hasAnimatedPlayback && (
-              <button type="button" className="primary-button" aria-label={playing ? ui.controls.pause : ui.controls.play} onClick={() => setPlaying((current) => !current)}>
-                {playing ? <Pause size={16} /> : <Play size={16} />}
-                {playing ? ui.controls.pause : ui.controls.play}
-              </button>
-            )}
-            <button type="button" onClick={resetLesson}>
-              <RotateCcw size={16} />
-              {ui.controls.reset}
-            </button>
-          </TransportRow>
-          {hasAnimatedPlayback && <PlaybackProgress label={ui.controls.playbackProgress} value={sumPlaybackProgress} onChange={seekSumPlaybackProgress} />}
-          {hasAnimatedPlayback && <Range label={ui.controls.speed} value={speed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setSpeed} />}
-        </div>
-        </>
       }
+      stageActions={(
+        <LessonStageActions
+          graphLabel={learningCopy.openGraph}
+          graphAriaLabel={learningCopy.openGraph}
+          onGraphHelp={() => openHelpTopic('graph')}
+          focusButton={focusButton}
+          exportLabel={ui.controls.exportPng}
+          onExport={exportPng}
+        />
+      )}
+      transport={(
+        <ExplorerTransport
+          className="probability-playback"
+          compact={!hasAnimatedPlayback}
+          primaryAction={hasAnimatedPlayback ? {
+            label: playing ? ui.controls.pause : ui.controls.play,
+            icon: playing ? <Pause size={16} /> : <Play size={16} />,
+            onClick: () => setPlaying((current) => !current),
+          } : undefined}
+          secondaryActions={[{ label: ui.controls.reset, icon: <RotateCcw size={16} />, onClick: resetLesson }]}
+          progress={hasAnimatedPlayback ? { label: ui.controls.playbackProgress, value: sumPlaybackProgress, onChange: seekSumPlaybackProgress } : undefined}
+          speed={hasAnimatedPlayback ? { label: ui.controls.speed, value: speed, min: 0.25, max: 3, step: 0.05, onChange: setSpeed } : undefined}
+        />
+      )}
 
       explanation={
         <>

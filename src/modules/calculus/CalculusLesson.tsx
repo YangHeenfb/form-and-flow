@@ -4,7 +4,8 @@ import { GraphCanvas, drawGrid, line, worldToScreen } from '../../core/graph2d/G
 import type { GraphTheme, GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton } from '../../core/ui/LearningHelp.tsx'
-import { PlaybackProgress, ReadoutList } from '../../core/ui/LessonControls.tsx'
+import { ExplorerTransport, InspectorSection } from '../../core/ui/ExplorerChrome.tsx'
+import { ReadoutList } from '../../core/ui/LessonControls.tsx'
 import { LessonScaffold } from '../../core/ui/LessonScaffold.tsx'
 import { expressionToTex } from '../../core/ui/mathNotation.ts'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
@@ -348,16 +349,15 @@ export function CalculusLesson({ lessonId }: Props) {
       isFocusMode={isFocusMode}
       autoHideToggle={autoHideToggle}
       onFocusPanelActiveChange={onFocusPanelActiveChange}
+      eyebrow={ui.lesson}
+      title={copy.title}
+      inspectorAction={(
+        <HelpTrigger ariaLabel={learningCopy.openOverview} onClick={() => openHelpTopic('overview')}>
+          {learningCopy.openOverview}
+        </HelpTrigger>
+      )}
       controls={
-        <>
-        <div className="lesson-learning-entry learning-help-entry">
-          <HelpTrigger ariaLabel={learningCopy.openOverview} onClick={() => openHelpTopic('overview')}>
-            {learningCopy.openOverview}
-          </HelpTrigger>
-        </div>
-        <h2>
-          <TermButton onClick={() => openHelpTopic('function')}>{ui.function}</TermButton>
-        </h2>
+        <InspectorSection title={<TermButton onClick={() => openHelpTopic('function')}>{ui.function}</TermButton>}>
         <label>
           {ui.preset}
           <SelectMenu
@@ -444,17 +444,9 @@ export function CalculusLesson({ lessonId }: Props) {
             <Range label={ui.ranges.degree} labelTex={locale === 'zh' ? '\\text{阶数}' : '\\text{degree}'} value={degree} min={0} max={10} step={1} helpTopic="taylor" onOpenHelpTopic={openHelpTopic} onChange={setDegree} />
           </>
         )}
-        </>
+        </InspectorSection>
       }
-
-      main={
-        <>
-        <div className="calculus-title-row">
-          <div>
-            <p className="eyebrow">{ui.lesson}</p>
-            <h1>{copy.title}</h1>
-          </div>
-        </div>
+      stage={
         <div className="graph-help-stage calculus-graph-stage">
           <GraphCanvas
             className="graph-canvas calculus-canvas interactive-graph-canvas"
@@ -466,38 +458,37 @@ export function CalculusLesson({ lessonId }: Props) {
             draw={draw}
             onViewportChange={setView}
           />
-          <LessonStageActions
-            graphLabel={learningCopy.openGraph}
-            graphAriaLabel={learningCopy.openGraph}
-            onGraphHelp={() => openHelpTopic('graph')}
-            focusButton={focusButton}
-            exportLabel={ui.exportPng}
-            onExport={exportPng}
-          />
         </div>
-        <div className="calculus-playback platform-card">
-          <div className="calculus-playback-buttons">
-            <button type="button" className="primary-button" aria-label={playing ? ui.pause : ui.play} onClick={() => setPlaying((current) => !current)}>
-              {playing ? <Pause size={16} /> : <Play size={16} />}
-              {playing ? ui.pause : ui.play}
-            </button>
-            <button type="button" onClick={() => {
+      }
+      stageActions={(
+        <LessonStageActions
+          graphLabel={learningCopy.openGraph}
+          graphAriaLabel={learningCopy.openGraph}
+          onGraphHelp={() => openHelpTopic('graph')}
+          focusButton={focusButton}
+          exportLabel={ui.exportPng}
+          onExport={exportPng}
+        />
+      )}
+      transport={(
+        <ExplorerTransport
+          className="calculus-playback"
+          primaryAction={{
+            label: playing ? ui.pause : ui.play,
+            icon: playing ? <Pause size={16} /> : <Play size={16} />,
+            onClick: () => setPlaying((current) => !current),
+          }}
+          secondaryActions={[
+            { label: ui.reset, icon: <RotateCcw size={16} />, onClick: () => {
               setPlaying(false)
               resetLessonControls(lessonId, selectedPreset, setX0, setH, setA, setB, setN, setDegree)
-            }}>
-              <RotateCcw size={16} />
-              {ui.reset}
-            </button>
-            <button type="button" onClick={() => setView({ xMin: -5, xMax: 5, yMin: -3, yMax: 3 })}>
-              <LocateFixed size={16} />
-              {ui.resetView}
-            </button>
-          </div>
-          <PlaybackProgress label={ui.playbackProgress} value={playbackProgress} onChange={seekPlaybackProgress} />
-          <Range label={ui.ranges.speed} labelTex={locale === 'zh' ? '\\text{速度}' : '\\text{speed}'} value={speed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setSpeed} />
-        </div>
-        </>
-      }
+            } },
+            { label: ui.resetView, icon: <LocateFixed size={16} />, onClick: () => setView({ xMin: -5, xMax: 5, yMin: -3, yMax: 3 }) },
+          ]}
+          progress={{ label: ui.playbackProgress, value: playbackProgress, onChange: seekPlaybackProgress }}
+          speed={{ label: ui.ranges.speed, value: speed, min: 0.25, max: 3, step: 0.05, onChange: setSpeed }}
+        />
+      )}
 
       explanation={
         <>

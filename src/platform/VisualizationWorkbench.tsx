@@ -11,6 +11,7 @@ import {
   type Ref,
 } from 'react'
 import { ChevronDown, Info, SlidersHorizontal } from 'lucide-react'
+import { ExplorerStageHeader } from '../core/ui/ExplorerChrome.tsx'
 import { OverlayDrawer } from './OverlayDrawer.tsx'
 import { OverlayTransport } from './OverlayTransport.tsx'
 import { StandardReadoutActionProvider } from './LessonStageActions.tsx'
@@ -40,6 +41,7 @@ type VisualizationWorkbenchProps = {
   labels: VisualizationWorkbenchLabels
   leftPanel: ReactNode
   stage: ReactNode
+  stageActions?: ReactNode
   rightPanel: ReactNode
   transport: ReactNode
   overlayPanels: OverlayPanelDefinition[]
@@ -61,6 +63,7 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
       labels,
       leftPanel,
       stage,
+      stageActions,
       rightPanel,
       transport,
       overlayPanels,
@@ -294,6 +297,7 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
               <div className="visualization-mobile-section-content" id={mobileControlsId}>{leftPanel}</div>
             </aside>
             <div className="visualization-center-column">
+              <ExplorerStageHeader eyebrow={subtitle} title={title} actions={stageActions} />
               <section className="center-stage visualization-stage" ref={setStageNode}>
                 {stage}
               </section>

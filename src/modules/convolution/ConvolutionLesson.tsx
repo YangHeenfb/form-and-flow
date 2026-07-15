@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode, type RefObject } from 'react'
 import { CircleHelp, Download, Pause, Play, RotateCcw } from 'lucide-react'
 import { drawGrid, GraphCanvas, worldToScreen, type GraphTheme, type GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
+import { ExplorerTransport, InspectorSection } from '../../core/ui/ExplorerChrome.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton, type HelpTopic } from '../../core/ui/LearningHelp.tsx'
-import { PlaybackProgress } from '../../core/ui/LessonControls.tsx'
 import { LessonScaffold } from '../../core/ui/LessonScaffold.tsx'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
 import type { Locale } from '../../i18n.ts'
@@ -515,10 +515,11 @@ function ImageKernelLesson() {
             <Download size={16} />
             {ui.exportOutputImage}
           </button>
+          <p className="input-help">{ui.imageProcessingHelp}</p>
           {error && <p className="warning-text">{error}</p>}
         </>
       )}
-      playback={<p className="input-help">{ui.imageProcessingHelp}</p>}
+      playback={null}
       values={[
         { label: ui.labels.selectedPixel, value: `${selectedPixel.x}, ${selectedPixel.y}` },
         { label: ui.labels.kernelSum, value: formatNumber(kernelSum, ui) },
@@ -739,40 +740,34 @@ function LessonFrame({
       isFocusMode={isFocusMode}
       autoHideToggle={autoHideToggle}
       onFocusPanelActiveChange={onFocusPanelActiveChange}
+      eyebrow={locale === 'zh' ? '探索器' : 'Explorer'}
+      title={copy.title}
+      inspectorAction={(
+        <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={helpLabels.beginner}>
+          {helpLabels.beginner}
+        </HelpTrigger>
+      )}
       controls={
-        <>
-        <div className="lesson-learning-entry learning-help-entry">
-          <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={helpLabels.beginner}>
-            {helpLabels.beginner}
-          </HelpTrigger>
-        </div>
-        <h2>{ui.controls}</h2>
-        {typeof controls === 'function' ? controls({ openTerm }) : controls}
-        </>
+        <InspectorSection title={ui.controls}>
+          {typeof controls === 'function' ? controls({ openTerm }) : controls}
+        </InspectorSection>
       }
-
-      main={
-        <>
-        <div className="convolution-title-row">
-          <div>
-            <p className="eyebrow">{ui.moduleEyebrow}</p>
-            <h1>{copy.title}</h1>
-          </div>
-        </div>
+      stage={
         <div className="convolution-stage" data-convolution-export={lessonId}>
           {canvas}
-          <LessonStageActions
-            graphLabel={helpLabels.graph}
-            graphAriaLabel={helpLabels.graph}
-            onGraphHelp={() => setHelpMode({ kind: 'graph' })}
-            focusButton={focusButton}
-            exportLabel={ui.exportPng}
-            onExport={onExport}
-          />
         </div>
-        <div className="convolution-playback platform-card">{playback}</div>
-        </>
       }
+      stageActions={(
+        <LessonStageActions
+          graphLabel={helpLabels.graph}
+          graphAriaLabel={helpLabels.graph}
+          onGraphHelp={() => setHelpMode({ kind: 'graph' })}
+          focusButton={focusButton}
+          exportLabel={ui.exportPng}
+          onExport={onExport}
+        />
+      )}
+      transport={playback}
 
       explanation={
         <>
@@ -1640,20 +1635,17 @@ function PlaybackControls({
   onSpeed: (speed: number) => void
 }) {
   return (
-    <>
-      <div className="transport-buttons">
-        <button type="button" className="primary-button" aria-label={playing ? ui.pause : ui.play} onClick={playing ? onPause : onPlay}>
-          {playing ? <Pause size={16} /> : <Play size={16} />}
-          {playing ? ui.pause : ui.play}
-        </button>
-        <button type="button" onClick={onReset}>
-          <RotateCcw size={16} />
-          {ui.reset}
-        </button>
-      </div>
-      <PlaybackProgress label={ui.playbackProgress} value={progress} onChange={onProgress} />
-      <Range label={ui.speed} value={speed} min={0.25} max={4} step={0.05} valueSuffix="x" onChange={onSpeed} />
-    </>
+    <ExplorerTransport
+      className="convolution-playback"
+      primaryAction={{
+        label: playing ? ui.pause : ui.play,
+        icon: playing ? <Pause size={16} /> : <Play size={16} />,
+        onClick: playing ? onPause : onPlay,
+      }}
+      secondaryActions={[{ label: ui.reset, icon: <RotateCcw size={16} />, onClick: onReset }]}
+      progress={{ label: ui.playbackProgress, value: progress, onChange: onProgress }}
+      speed={{ label: ui.speed, value: speed, min: 0.25, max: 4, step: 0.05, onChange: onSpeed }}
+    />
   )
 }
 

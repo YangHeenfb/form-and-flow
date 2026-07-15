@@ -250,6 +250,7 @@ function clear(ctx: CanvasRenderingContext2D, size: ProbabilityCanvasSize, theme
 }
 
 function drawHeading(ctx: CanvasRenderingContext2D, title: string, x: number, y: number, theme: ProbabilityTheme) {
+  if (!title) return
   ctx.fillStyle = theme.text
   ctx.font = '700 16px Inter, system-ui, sans-serif'
   ctx.fillText(title, x, y)

@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { LocateFixed, Pause, Play, RotateCcw } from 'lucide-react'
 import { GraphCanvas, drawGrid, line, worldToScreen } from '../../core/graph2d/GraphCanvas.tsx'
 import type { GraphTheme, GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
+import { ExplorerTransport, InspectorSection } from '../../core/ui/ExplorerChrome.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
 import { HelpTrigger, LearningDrawer, TermButton, type HelpTopic } from '../../core/ui/LearningHelp.tsx'
-import { PlaybackProgress, RangeField } from '../../core/ui/LessonControls.tsx'
+import { RangeField } from '../../core/ui/LessonControls.tsx'
 import { LessonScaffold } from '../../core/ui/LessonScaffold.tsx'
 import { expressionToTex } from '../../core/ui/mathNotation.ts'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
@@ -536,118 +537,123 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
       isFocusMode={isFocusMode}
       autoHideToggle={autoHideToggle}
       onFocusPanelActiveChange={onFocusPanelActiveChange}
+      eyebrow={ui.lesson}
+      title={copy.title}
+      inspectorAction={(
+        <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={ui.beginnerHelp}>
+          {ui.beginnerHelp}
+        </HelpTrigger>
+      )}
       controls={
         <>
-        <div className="lesson-learning-entry learning-help-entry">
-          <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={ui.beginnerHelp}>
-            {ui.beginnerHelp}
-          </HelpTrigger>
-        </div>
         {(lessonId === 'slope-fields' || lessonId === 'numerical-methods') && (
           <>
-            <h2>{ui.equation}</h2>
-            <label>
-              {ui.preset}
-              <SelectMenu
-                value={scalarPresetId}
-                options={[
-                  { value: 'custom', textValue: ui.customRule, label: <Formula tex="f(t,y)" label={ui.customRule} /> },
-                  ...scalarOdePresets.map((preset) => ({
-                    value: preset.id,
-                    textValue: preset.label,
-                    label: <Formula tex={preset.formulaTex} />,
-                  })),
-                ]}
-                onChange={setScalarPresetId}
-                ariaLabel={ui.preset}
-              />
-            </label>
-            <label>
-              <Formula tex="f(t,y)" />
-              <input
-                value={expression}
-                placeholder="sin(t)-0.35*y"
-                onBlur={() => setExpression((current) => normalizeDifferentialInput(current))}
-                onChange={(event) => {
-                  setScalarPresetId('custom')
-                  setExpression(event.target.value)
-                }}
-              />
-            </label>
-            <div className="math-formula-preview" aria-label={ui.formulaPreview}>
-              <span>{ui.formulaPreview}</span>
-              <Formula tex={`\\frac{dy}{dt}=${expressionTex}`} label={`${ui.formulaPreview}: dy/dt=${expression}`} />
-            </div>
-            <p className="input-help">{ui.inputHelp}</p>
-            {scalarCompile.error && <p className="warning-text">{scalarCompile.error}</p>}
-            <h2>{ui.initialConditions}</h2>
-            <Range label={ui.ranges.t0} labelTex="t_0" value={t0} min={-4} max={4} step={0.05} onChange={setT0} />
-            <Range label={ui.ranges.y0} labelTex="y_0" value={y0} min={-4} max={6} step={0.05} onChange={setY0} />
-            <Range label={ui.ranges.duration} labelTex={locale === 'zh' ? '\\text{时间}' : '\\text{time}'} value={duration} min={0.5} max={12} step={0.1} onChange={setDuration} />
-            <Range label={ui.ranges.steps} labelTex="n" value={steps} min={4} max={160} step={1} onChange={setSteps} />
-            {lessonId === 'slope-fields' && (
+            <InspectorSection title={ui.equation}>
               <label>
-                {ui.method}
+                {ui.preset}
                 <SelectMenu
-                  value={method}
-                  options={methodOptions.map((nextMethod) => ({ value: nextMethod, textValue: methodLabel(nextMethod, locale), label: methodLabel(nextMethod, locale) }))}
-                  onChange={(value) => setMethod(value as OdeMethod)}
-                  ariaLabel={ui.method}
+                  value={scalarPresetId}
+                  options={[
+                    { value: 'custom', textValue: ui.customRule, label: <Formula tex="f(t,y)" label={ui.customRule} /> },
+                    ...scalarOdePresets.map((preset) => ({ value: preset.id, textValue: preset.label, label: <Formula tex={preset.formulaTex} /> })),
+                  ]}
+                  onChange={setScalarPresetId}
+                  ariaLabel={ui.preset}
                 />
               </label>
-            )}
+              <label>
+                <Formula tex="f(t,y)" />
+                <input
+                  value={expression}
+                  placeholder="sin(t)-0.35*y"
+                  onBlur={() => setExpression((current) => normalizeDifferentialInput(current))}
+                  onChange={(event) => {
+                    setScalarPresetId('custom')
+                    setExpression(event.target.value)
+                  }}
+                />
+              </label>
+              <div className="math-formula-preview" aria-label={ui.formulaPreview}>
+                <span>{ui.formulaPreview}</span>
+                <Formula tex={`\\frac{dy}{dt}=${expressionTex}`} label={`${ui.formulaPreview}: dy/dt=${expression}`} />
+              </div>
+              <p className="input-help">{ui.inputHelp}</p>
+              {scalarCompile.error && <p className="warning-text">{scalarCompile.error}</p>}
+            </InspectorSection>
+            <InspectorSection title={ui.initialConditions}>
+              <Range label={ui.ranges.t0} labelTex="t_0" value={t0} min={-4} max={4} step={0.05} onChange={setT0} />
+              <Range label={ui.ranges.y0} labelTex="y_0" value={y0} min={-4} max={6} step={0.05} onChange={setY0} />
+              <Range label={ui.ranges.duration} labelTex={locale === 'zh' ? '\\text{时间}' : '\\text{time}'} value={duration} min={0.5} max={12} step={0.1} onChange={setDuration} />
+              <Range label={ui.ranges.steps} labelTex="n" value={steps} min={4} max={160} step={1} onChange={setSteps} />
+              {lessonId === 'slope-fields' && (
+                <label>
+                  {ui.method}
+                  <SelectMenu
+                    value={method}
+                    options={methodOptions.map((nextMethod) => ({ value: nextMethod, textValue: methodLabel(nextMethod, locale), label: methodLabel(nextMethod, locale) }))}
+                    onChange={(value) => setMethod(value as OdeMethod)}
+                    ariaLabel={ui.method}
+                  />
+                </label>
+              )}
+            </InspectorSection>
           </>
         )}
 
         {lessonId === 'phase-portraits' && (
           <>
-            <h2>{ui.system}</h2>
-            <label>
-              {ui.preset}
-              <SelectMenu
-                value={systemId}
-                options={phasePresets.map((preset) => ({ value: preset.id, textValue: preset.label, label: <Formula tex={preset.formulaTex} label={preset.label} /> }))}
-                onChange={setSystemId}
-                ariaLabel={ui.system}
-              />
-            </label>
-            <Formula tex={phasePreset.formulaTex} block />
-            <h2>{ui.initialConditions}</h2>
-            <Range label={ui.ranges.x0} labelTex="x_0" value={x0} min={phasePreset.xRange[0]} max={phasePreset.xRange[1]} step={0.05} onChange={setX0} />
-            <Range label={ui.ranges.y0} labelTex="y_0" value={phaseY0} min={phasePreset.yRange[0]} max={phasePreset.yRange[1]} step={0.05} onChange={setPhaseY0} />
-            <Range label={ui.ranges.duration} labelTex={locale === 'zh' ? '\\text{时间}' : '\\text{time}'} value={duration} min={1} max={16} step={0.1} onChange={setDuration} />
+            <InspectorSection title={ui.system}>
+              <label>
+                {ui.preset}
+                <SelectMenu
+                  value={systemId}
+                  options={phasePresets.map((preset) => ({ value: preset.id, textValue: preset.label, label: <Formula tex={preset.formulaTex} label={preset.label} /> }))}
+                  onChange={setSystemId}
+                  ariaLabel={ui.system}
+                />
+              </label>
+              <Formula tex={phasePreset.formulaTex} block />
+            </InspectorSection>
+            <InspectorSection title={ui.initialConditions}>
+              <Range label={ui.ranges.x0} labelTex="x_0" value={x0} min={phasePreset.xRange[0]} max={phasePreset.xRange[1]} step={0.05} onChange={setX0} />
+              <Range label={ui.ranges.y0} labelTex="y_0" value={phaseY0} min={phasePreset.yRange[0]} max={phasePreset.yRange[1]} step={0.05} onChange={setPhaseY0} />
+              <Range label={ui.ranges.duration} labelTex={locale === 'zh' ? '\\text{时间}' : '\\text{time}'} value={duration} min={1} max={16} step={0.1} onChange={setDuration} />
+            </InspectorSection>
           </>
         )}
 
         {lessonId === 'pendulum' && (
           <>
-            <h2>{ui.initialConditions}</h2>
-            <Range label={ui.ranges.theta} labelTex="\\theta_0" value={theta0} min={-3.1} max={3.1} step={0.01} onChange={setTheta0} />
-            <Range label={ui.ranges.omega} labelTex="\\omega_0" value={omega0} min={-3} max={3} step={0.05} onChange={setOmega0} />
-            <h2>{ui.parameters}</h2>
-            <Range label={ui.ranges.damping} labelTex="c" value={damping} min={0} max={1.2} step={0.01} onChange={setDamping} />
-            <Range label={ui.ranges.gravity} labelTex="g" value={gravity} min={0.2} max={2.4} step={0.05} onChange={setGravity} />
-            <Range label={ui.ranges.duration} labelTex={locale === 'zh' ? '\\text{时间}' : '\\text{time}'} value={duration} min={1} max={24} step={0.1} onChange={setDuration} />
+            <InspectorSection title={ui.initialConditions}>
+              <Range label={ui.ranges.theta} labelTex="\\theta_0" value={theta0} min={-3.1} max={3.1} step={0.01} onChange={setTheta0} />
+              <Range label={ui.ranges.omega} labelTex="\\omega_0" value={omega0} min={-3} max={3} step={0.05} onChange={setOmega0} />
+            </InspectorSection>
+            <InspectorSection title={ui.parameters}>
+              <Range label={ui.ranges.damping} labelTex="c" value={damping} min={0} max={1.2} step={0.01} onChange={setDamping} />
+              <Range label={ui.ranges.gravity} labelTex="g" value={gravity} min={0.2} max={2.4} step={0.05} onChange={setGravity} />
+              <Range label={ui.ranges.duration} labelTex={locale === 'zh' ? '\\text{时间}' : '\\text{time}'} value={duration} min={1} max={24} step={0.1} onChange={setDuration} />
+            </InspectorSection>
           </>
         )}
 
         {lessonId === 'population' && (
           <>
-            <h2>{ui.initialConditions}</h2>
-            <Range label={ui.ranges.prey} labelTex="x_0" value={prey0} min={0.5} max={22} step={0.1} onChange={setPrey0} />
-            <Range label={ui.ranges.predator} labelTex="y_0" value={predator0} min={0.5} max={16} step={0.1} onChange={setPredator0} />
-            <h2>{ui.parameters}</h2>
-            <Range label={ui.ranges.preyGrowth} labelTex="a" value={preyGrowth} min={0.2} max={1.8} step={0.05} onChange={setPreyGrowth} />
-            <Range label={ui.ranges.predation} labelTex="b" value={predation} min={0.02} max={0.18} step={0.005} onChange={setPredation} />
-            <Range label={ui.ranges.predatorDeath} labelTex="d" value={predatorDeath} min={0.15} max={1.2} step={0.05} onChange={setPredatorDeath} />
-            <Range label={ui.ranges.conversion} labelTex="c" value={conversion} min={0.02} max={0.12} step={0.005} onChange={setConversion} />
-            <Range label={ui.ranges.duration} labelTex={locale === 'zh' ? '\\text{时间}' : '\\text{time}'} value={duration} min={3} max={30} step={0.2} onChange={setDuration} />
+            <InspectorSection title={ui.initialConditions}>
+              <Range label={ui.ranges.prey} labelTex="x_0" value={prey0} min={0.5} max={22} step={0.1} onChange={setPrey0} />
+              <Range label={ui.ranges.predator} labelTex="y_0" value={predator0} min={0.5} max={16} step={0.1} onChange={setPredator0} />
+            </InspectorSection>
+            <InspectorSection title={ui.parameters}>
+              <Range label={ui.ranges.preyGrowth} labelTex="a" value={preyGrowth} min={0.2} max={1.8} step={0.05} onChange={setPreyGrowth} />
+              <Range label={ui.ranges.predation} labelTex="b" value={predation} min={0.02} max={0.18} step={0.005} onChange={setPredation} />
+              <Range label={ui.ranges.predatorDeath} labelTex="d" value={predatorDeath} min={0.15} max={1.2} step={0.05} onChange={setPredatorDeath} />
+              <Range label={ui.ranges.conversion} labelTex="c" value={conversion} min={0.02} max={0.12} step={0.005} onChange={setConversion} />
+              <Range label={ui.ranges.duration} labelTex={locale === 'zh' ? '\\text{时间}' : '\\text{time}'} value={duration} min={3} max={30} step={0.2} onChange={setDuration} />
+            </InspectorSection>
           </>
         )}
 
         {lessonId === 'heat-equation' && (
-          <>
-            <h2>{ui.parameters}</h2>
+          <InspectorSection title={ui.parameters}>
             <label>
               {ui.shape}
               <SelectMenu
@@ -659,20 +665,12 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
             </label>
             <Range label={ui.ranges.diffusivity} labelTex="\\alpha" value={diffusivity} min={0.02} max={0.8} step={0.01} onChange={setDiffusivity} />
             <Range label={ui.ranges.heatTime} labelTex="t" value={heatTime} min={0} max={1.2} step={0.01} onChange={setHeatTime} />
-          </>
+          </InspectorSection>
         )}
         </>
       }
-
-      main={
-        <>
-        <div className="calculus-title-row diffeq-title-row">
-          <div>
-            <p className="eyebrow">{ui.lesson}</p>
-            <h1>{copy.title}</h1>
-          </div>
-        </div>
-        <div className="graph-help-stage">
+      stage={
+        <div className="graph-help-stage diffeq-graph-stage">
           <GraphCanvas
             className="graph-canvas diffeq-canvas interactive-graph-canvas"
             ariaLabel={`${copy.title}. ${ui.graphInstructions}`}
@@ -683,35 +681,34 @@ export function DifferentialEquationsLesson({ lessonId }: Props) {
             draw={draw}
             onViewportChange={setView}
           />
-          <LessonStageActions
-            graphLabel={ui.graphHelp}
-            graphAriaLabel={ui.graphHelp}
-            onGraphHelp={() => setHelpMode({ kind: 'graph' })}
-            focusButton={focusButton}
-            exportLabel={ui.exportPng}
-            onExport={exportPng}
-          />
         </div>
-        <div className="calculus-playback diffeq-playback platform-card">
-          <div className="transport-buttons">
-            <button type="button" className="primary-button" aria-label={playing ? ui.pause : ui.play} onClick={() => setPlaying((current) => !current)}>
-              {playing ? <Pause size={16} /> : <Play size={16} />}
-              {playing ? ui.pause : ui.play}
-            </button>
-            <button type="button" onClick={() => resetLesson()}>
-              <RotateCcw size={16} />
-              {ui.reset}
-            </button>
-            <button type="button" onClick={() => setView(defaultViewForLesson(lessonId, phasePreset))}>
-              <LocateFixed size={16} />
-              {ui.resetView}
-            </button>
-          </div>
-          <PlaybackProgress label={ui.playbackProgress} value={playbackProgress} onChange={seekPlaybackProgress} />
-          <Range label={ui.ranges.speed} labelTex={locale === 'zh' ? '\\text{速度}' : '\\text{speed}'} value={speed} min={0.25} max={3} step={0.05} valueSuffix="x" onChange={setSpeed} />
-        </div>
-        </>
       }
+      stageActions={(
+        <LessonStageActions
+          graphLabel={ui.graphHelp}
+          graphAriaLabel={ui.graphHelp}
+          onGraphHelp={() => setHelpMode({ kind: 'graph' })}
+          focusButton={focusButton}
+          exportLabel={ui.exportPng}
+          onExport={exportPng}
+        />
+      )}
+      transport={(
+        <ExplorerTransport
+          className="diffeq-playback"
+          primaryAction={{
+            label: playing ? ui.pause : ui.play,
+            icon: playing ? <Pause size={16} /> : <Play size={16} />,
+            onClick: () => setPlaying((current) => !current),
+          }}
+          secondaryActions={[
+            { label: ui.reset, icon: <RotateCcw size={16} />, onClick: resetLesson },
+            { label: ui.resetView, icon: <LocateFixed size={16} />, onClick: () => setView(defaultViewForLesson(lessonId, phasePreset)) },
+          ]}
+          progress={{ label: ui.playbackProgress, value: playbackProgress, onChange: seekPlaybackProgress }}
+          speed={{ label: ui.ranges.speed, value: speed, min: 0.25, max: 3, step: 0.05, onChange: setSpeed }}
+        />
+      )}
 
       explanation={
         <>

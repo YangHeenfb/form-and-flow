@@ -3,6 +3,7 @@ import { createRoot, type Root } from 'react-dom/client'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AnimationControls } from '../components/AnimationControls.tsx'
+import { ExplorerStageHeader, ExplorerTransport, InspectorSection } from '../core/ui/ExplorerChrome.tsx'
 import { LessonScaffold } from '../core/ui/LessonScaffold.tsx'
 import { appCopy } from '../i18n.ts'
 import { identityMatrix } from '../math/matrix.ts'
@@ -153,6 +154,44 @@ describe('LessonScaffold standard readout action', () => {
   })
 })
 
+describe('shared explorer chrome', () => {
+  it('renders the common title, inspector section, and capability-driven transport', async () => {
+    const onPlay = vi.fn()
+    const onReset = vi.fn()
+    const { container, unmount } = render(
+      <div>
+        <ExplorerStageHeader eyebrow="Explorer" title="Shared title" actions={<button type="button">Action</button>} />
+        <InspectorSection title="Parameters"><label>Value<input /></label></InspectorSection>
+        <ExplorerTransport
+          primaryAction={{ label: 'Play', onClick: onPlay }}
+          secondaryActions={[{ label: 'Reset animation', onClick: onReset }]}
+          progress={{ label: 'Playback progress', value: 0.25, onChange: vi.fn() }}
+          speed={{ label: 'Speed', value: 1, min: 0.25, max: 3, step: 0.05, onChange: vi.fn() }}
+        />
+      </div>,
+    )
+
+    expect(container.querySelector('.explorer-stage-heading')?.textContent).toContain('Shared title')
+    expect(container.querySelector('.inspector-section-header')?.textContent).toContain('Parameters')
+    expect(container.querySelector<HTMLInputElement>('[aria-label="Playback progress"]')?.value).toBe('0.25')
+    await click(getButton(container, 'Play'))
+    await click(getButton(container, 'Reset animation'))
+    expect(onPlay).toHaveBeenCalledOnce()
+    expect(onReset).toHaveBeenCalledOnce()
+    unmount()
+  })
+
+  it('marks static transports as compact and omits empty playback controls', () => {
+    const { container, unmount } = render(
+      <ExplorerTransport compact secondaryActions={[{ label: 'Reset parameters', onClick: vi.fn() }]} />,
+    )
+    expect(container.querySelector('.explorer-transport')?.getAttribute('data-compact')).toBe('true')
+    expect(container.querySelector('.playback-progress-control')).toBeNull()
+    expect(container.querySelector('.explorer-transport-speed')).toBeNull()
+    unmount()
+  })
+})
+
 describe('useResizeObserver', () => {
   it('notifies when the observed element size changes', () => {
     const originalResizeObserver = globalThis.ResizeObserver
@@ -261,7 +300,8 @@ function WorkbenchHarness({
       subtitle="Test workbench"
       labels={labels}
       leftPanel={<p>Left Panel</p>}
-      stage={(
+      stage={<input aria-label="Editable field" />}
+      stageActions={(
         <>
           <LessonStageActions
             graphLabel="Graph notes"
@@ -270,7 +310,6 @@ function WorkbenchHarness({
             exportLabel="Export"
             onExport={vi.fn()}
           />
-          <input aria-label="Editable field" />
         </>
       )}
       rightPanel={<p>Right Panel</p>}
@@ -286,7 +325,10 @@ function LessonScaffoldHarness() {
   return (
     <LessonScaffold
       controls={<p>Lesson Controls</p>}
-      main={(
+      eyebrow="Explorer"
+      title="Lesson"
+      stage={<div>Lesson Stage</div>}
+      stageActions={(
         <LessonStageActions
           graphLabel="Graph notes"
           onGraphHelp={vi.fn()}
