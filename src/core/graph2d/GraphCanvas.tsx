@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useLayoutEffect, useRef } from 'react'
 import { usePlatformSurfaceMode } from '../../platform/platformLocale.tsx'
 
 export type GraphViewport = {
@@ -39,6 +39,7 @@ type Props = {
 export function GraphCanvas({ className, ariaLabel, xMin, xMax, yMin, yMax, draw, onViewportChange }: Props) {
   const { surfaceMode } = usePlatformSurfaceMode()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const drawRef = useRef(draw)
   const dragRef = useRef<{
     pointerId: number
     startX: number
@@ -48,31 +49,36 @@ export function GraphCanvas({ className, ariaLabel, xMin, xMax, yMin, yMax, draw
     view: Pick<GraphViewport, 'xMin' | 'xMax' | 'yMin' | 'yMax'>
   } | null>(null)
 
-  useEffect(() => {
+  const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current
-    if (!canvas) {
-      return
-    }
-    const render = () => {
-      const rect = canvas.getBoundingClientRect()
-      const dpr = window.devicePixelRatio || 1
-      canvas.width = Math.max(1, Math.floor(rect.width * dpr))
-      canvas.height = Math.max(1, Math.floor(rect.height * dpr))
-      const ctx = canvas.getContext('2d')
-      if (!ctx) {
-        return
-      }
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      const viewport = { xMin, xMax, yMin, yMax, width: rect.width, height: rect.height, devicePixelRatio: dpr }
-      draw(ctx, viewport, readGraphTheme(canvas))
-    }
-    render()
-    const observer = new ResizeObserver(render)
+    if (!canvas) return
+    const rect = canvas.getBoundingClientRect()
+    const dpr = window.devicePixelRatio || 1
+    const pixelWidth = Math.max(1, Math.floor(rect.width * dpr))
+    const pixelHeight = Math.max(1, Math.floor(rect.height * dpr))
+    if (canvas.width !== pixelWidth) canvas.width = pixelWidth
+    if (canvas.height !== pixelHeight) canvas.height = pixelHeight
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    const viewport = { xMin, xMax, yMin, yMax, width: rect.width, height: rect.height, devicePixelRatio: dpr }
+    drawRef.current(ctx, viewport, readGraphTheme(canvas))
+  }, [xMax, xMin, yMax, yMin])
+
+  useLayoutEffect(() => {
+    drawRef.current = draw
+    renderCanvas()
+  }, [draw, renderCanvas, surfaceMode])
+
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const observer = new ResizeObserver(renderCanvas)
     observer.observe(canvas)
     return () => {
       observer.disconnect()
     }
-  }, [draw, surfaceMode, xMax, xMin, yMax, yMin])
+  }, [renderCanvas])
 
   const makeViewportFromCanvas = () => {
     const canvas = canvasRef.current

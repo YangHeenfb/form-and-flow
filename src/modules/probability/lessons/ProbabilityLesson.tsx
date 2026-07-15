@@ -135,7 +135,7 @@ const lessonCopy: Record<Locale, Record<ProbabilityLessonId, LessonCopy>> = {
       why: 'The sample-mean distribution keeps center near μ while its spread is about σ / √n.',
       formulaTex: '\\bar X\\approx \\mathcal N\\left(\\mu,\\frac{\\sigma^2}{n}\\right)',
       formulaLabel: 'Normal approximation for sample means',
-      watch: 'The original data does not become normal; the distribution of averages is what changes.',
+      watch: 'The original data does not become normal; the distribution of averages is what changes. This view uses i.i.d. samples from a source with finite variance.',
     },
     'random-variable-sum': {
       title: 'Random Variables: X + Y',
@@ -193,7 +193,7 @@ const lessonCopy: Record<Locale, Record<ProbabilityLessonId, LessonCopy>> = {
       why: '样本均值的中心仍在 μ 附近，宽度大约缩小为 σ / √n。',
       formulaTex: '\\bar X\\approx \\mathcal N\\left(\\mu,\\frac{\\sigma^2}{n}\\right)',
       formulaLabel: '样本均值的正态近似',
-      watch: '不是原始数据变成正态，而是平均数的分布在变化。',
+      watch: '不是原始数据变成正态，而是平均数的分布在变化。这里使用 i.i.d. 样本，并假设原始分布方差有限。',
     },
     'random-variable-sum': {
       title: '随机变量：X + Y',
@@ -353,7 +353,7 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
   en: {
     controls: {
       parameters: 'Parameters',
-      lesson: 'Explorer',
+      lesson: 'Module',
       exportPng: 'Export PNG',
       play: 'Play',
       pause: 'Pause',
@@ -425,11 +425,11 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
       randomizeSeed: 'randomize seed',
     },
     sections: {
-      what: 'Notes',
+      what: 'Observation',
       why: 'Notes',
-      formula: 'Formula used',
+      formula: 'Formula',
       values: 'Readout',
-      watch: 'Assumptions / Caveats',
+      watch: 'Notes',
     },
     values: {
       selectedConditional: 'selected conditional',
@@ -519,7 +519,7 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
   zh: {
     controls: {
       parameters: '参数',
-      lesson: '探索器',
+      lesson: '模块',
       exportPng: '导出 PNG',
       play: '播放',
       pause: '暂停',
@@ -591,11 +591,11 @@ const probabilityUiCopy: Record<Locale, ProbabilityUiCopy> = {
       randomizeSeed: '随机生成种子',
     },
     sections: {
-      what: '说明',
+      what: '观察',
       why: '说明',
-      formula: '使用公式',
+      formula: '公式',
       values: '读数',
-      watch: '假设 / 限制',
+      watch: '笔记',
     },
     values: {
       selectedConditional: '选中的条件概率',

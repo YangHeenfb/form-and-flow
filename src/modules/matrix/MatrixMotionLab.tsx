@@ -647,7 +647,7 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
       <VisualizationWorkbench
         ref={workbenchRef}
         title={copy.top.title}
-        subtitle={locale === 'zh' ? '探索器' : 'Explorer'}
+        subtitle={locale === 'zh' ? '模块' : 'Module'}
         labels={copy.visualization}
         leftPanel={
           <>

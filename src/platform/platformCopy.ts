@@ -34,8 +34,8 @@ type PlatformCopy = {
     roadmapSummary: string
   }
   moduleDetail: {
-    thingsToTry: string
-    openExplorer: string
+    observation: string
+    openModule: string
   }
   comingSoon: {
     eyebrow: string
@@ -52,7 +52,7 @@ type PlatformCopy = {
   categoryLabels: Record<ModuleCategory, string>
 }
 
-type ExplorerTranslation = Partial<Pick<ExplorerDefinition, 'title' | 'description' | 'thingsToTry'>>
+type ExplorerTranslation = Partial<Pick<ExplorerDefinition, 'title' | 'description' | 'thingsToTry' | 'observation' | 'whatChanges' | 'notes' | 'connections'>>
 
 type ModuleTranslation = Partial<Pick<ModuleDefinition, 'title' | 'shortTitle' | 'description'>> & {
   explorers?: Record<string, ExplorerTranslation>
@@ -67,7 +67,7 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       allModules: 'All Modules',
       tool: 'Tool',
       toolSelectorAria: 'Select module tool',
-      help: 'Reference',
+      help: 'Notes',
       reset: 'Reset',
       exportPng: 'Export PNG',
       switchLanguage: '中文',
@@ -77,7 +77,7 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       collapse: 'Collapse module navigation',
       expand: 'Expand module navigation',
       homeAria: 'Form & Flow home',
-      helpAria: 'Open current module reference',
+      helpAria: 'Open current module notes',
       resetAria: 'Reset current module',
       exportAria: 'Export current visualization',
     },
@@ -86,15 +86,15 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       roadmapSummary: 'Later modules are listed here as lower-priority slots.',
     },
     moduleDetail: {
-      thingsToTry: 'Things to try',
-      openExplorer: 'Open explorer',
+      observation: 'Observation',
+      openModule: 'Open module',
     },
     comingSoon: {
       eyebrow: 'Module Slot',
       readyTitle: 'Ready for implementation',
       readyBody:
         'This route, manifest, and navigation slot are reserved for a later visualization module.',
-      plannedExplorers: 'Planned explorers',
+      plannedExplorers: 'Planned modules',
     },
     notFound: {
       title: 'Page not found',
@@ -131,7 +131,7 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       allModules: '全部模块',
       tool: '工具',
       toolSelectorAria: '选择模块工具',
-      help: '参考',
+      help: '笔记',
       reset: '重置',
       exportPng: '导出 PNG',
       switchLanguage: 'EN',
@@ -141,7 +141,7 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       collapse: '收起模块导航',
       expand: '展开模块导航',
       homeAria: '形与流首页',
-      helpAria: '打开当前模块参考',
+      helpAria: '打开当前模块笔记',
       resetAria: '重置当前模块',
       exportAria: '导出当前可视化',
     },
@@ -150,14 +150,14 @@ export const platformCopy: Record<Locale, PlatformCopy> = {
       roadmapSummary: '',
     },
     moduleDetail: {
-      thingsToTry: '可以尝试',
-      openExplorer: '开始探索',
+      observation: '观察',
+      openModule: '打开模块',
     },
     comingSoon: {
       eyebrow: '模块槽位',
       readyTitle: '已准备好实现',
       readyBody: '这个模块已预留位置，后续会补上对应的交互场景。',
-      plannedExplorers: '规划中的工具',
+      plannedExplorers: '规划中的模块',
     },
     notFound: {
       title: '页面未找到',
@@ -193,177 +193,209 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
     matrix: {
       title: '矩阵与线性变换',
       shortTitle: '矩阵',
-      description: '可视化矩阵、向量空间、基向量与线性变换。',
+      description: '从基、网格、向量和线性映射的几何变化理解矩阵。',
       explorers: {
         'matrix-transformations': {
           title: '矩阵变换',
-          description: '探索矩阵序列如何移动网格、基向量和自定义向量。',
-          thingsToTry: ['组合矩阵变换', '读取变换后的基向量', '将行列式与面积或体积缩放联系起来'],
+          description: '同一个基、网格和选定向量在矩阵序列下的变化。',
+          observation: '矩阵的各列就是基向量的落点；线性性再把整个空间一起带过去。',
+          whatChanges: '改变一列会移动一个基方向，以及所有包含该方向分量的向量。',
+          notes: '相邻步骤之间的动画采用矩阵元素的逐项插值。',
+          connections: ['线性映射也会出现在卷积、傅里叶分析和微分系统中。'],
         },
       },
     },
     calculus: {
       title: '微积分',
       shortTitle: '微积分',
-      description: '探索导数、积分、微积分基本定理和泰勒近似。',
+      description: '通过运动中的几何近似观察局部变化与累积。',
       explorers: {
         derivative: {
           title: '导数',
-          description: '观察割线如何逐渐变成切线。',
-          thingsToTry: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
+          description: '割线逐渐收束为局部线性模型。',
+          observation: '当 h 趋近于 0，平均斜率会收束到所选点的导数。',
+          whatChanges: 'x₀ 决定观察位置，h 决定这次比较有多局部。',
         },
         integral: {
-          title: '积分 / 黎曼和',
-          description: '用矩形和梯形近似有符号面积。',
-          thingsToTry: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
+          title: '积分 / 面积近似',
+          description: '由越来越细的分块拼成有符号面积。',
+          observation: '分割变细时，面积估计逐渐稳定。',
+          whatChanges: 'n 细化分割，取样方式决定每一小块如何代表原曲线。',
         },
         'fundamental-theorem': {
           title: '微积分基本定理',
-          description: '把累积面积和瞬时高度联系起来。',
-          thingsToTry: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
+          description: '把累积面积与瞬时高度放在同一个运动画面中。',
+          observation: '函数高度 f(x) 就是累积面积曲线 A(x) 的斜率。',
+          whatChanges: '移动 x 时，上方新加入的面积条与下方的切线方向同步变化。',
         },
         taylor: {
           title: '泰勒多项式',
-          description: '围绕一个中心构造局部多项式近似。',
-          thingsToTry: ['把公式和运动、形状联系起来', '用滑块比较数值近似'],
+          description: '用一个中心点的局部信息构造多项式。',
+          observation: '每增加一阶，多项式就会在中心多匹配一阶导数。',
+          whatChanges: '中心决定贴合发生的位置，阶数决定保留多少局部形状。',
         },
       },
     },
     fourier: {
       title: '傅里叶变换',
       shortTitle: '傅里叶',
-      description: '观察信号如何在时间域和频率域之间转换。',
+      description: '把同一个信号看成曲线、缠绕以及一组旋转成分。',
       explorers: {
         spectrum: {
           title: '频率频谱',
-          description: '扫描多个频率来构建频谱。',
-          thingsToTry: ['理解频率成分', '把视觉运动和数值频谱联系起来'],
+          description: '由缠绕信号的平均位置构成的频率扫描。',
+          observation: '匹配的频率不会在原点周围完全抵消，因此会留下可见的系数。',
+          whatChanges: '测试频率同时连接时间曲线、缠绕方向、平均点和频谱位置。',
+          notes: '信号采样于 t∈[0,1]；幅值归一化是显式可选项。',
         },
         reconstruction: {
           title: '信号重建',
-          description: '用选定的系数重建信号。',
-          thingsToTry: ['理解频率成分', '把视觉运动和数值频谱联系起来'],
+          description: '由选定的旋转成分重新拼出信号。',
+          observation: '加入更多系数时，重建曲线会逐渐恢复原信号的结构。',
+          whatChanges: '系数集合的变化会同时反映在频谱柱和时间域近似上。',
+          notes: '信号采样于 t∈[0,1]；幅值归一化是显式可选项。',
         },
         filtering: {
           title: '频率滤波',
-          description: '保留或移除频段，并比较信号变化。',
-          thingsToTry: ['理解频率成分', '把视觉运动和数值频谱联系起来'],
+          description: '通过编辑频率成分改变时间域信号。',
+          observation: '滤波器先保留或抑制部分系数，再由剩余系数重建信号。',
+          whatChanges: '移动截止位置会改变频谱中的边界，并立即传回时间曲线。',
+          notes: '信号采样于 t∈[0,1]；幅值归一化是显式可选项。',
         },
       },
     },
     'differential-equations': {
       title: '微分方程',
       shortTitle: '微分方程',
-      description: '交互式 ODE 求解器和系统动力学可视化。',
+      description: '局部变化规则展开为轨迹、相流和扩散。',
       explorers: {
         'slope-fields': {
           title: '斜率场与初值问题',
-          description: '探索局部变化规则如何生成整体运动。',
-          thingsToTry: ['读懂变化规则', '比较数值运动和可视化轨迹'],
+          description: '局部斜率规则与初值选出的数值轨迹。',
+          observation: '斜率场包含所有局部方向，初值从中选出一条路径。',
+          whatChanges: '移动初值会改变路径，但不会改变整个斜率场。',
         },
         'numerical-methods': {
           title: '数值方法',
-          description: '探索局部变化规则如何生成整体运动。',
-          thingsToTry: ['读懂变化规则', '比较数值运动和可视化轨迹'],
+          description: '三种逐步近似同一变化规则的方法。',
+          observation: 'Euler、中点法和 RK4 的区别在于迈步前采样了多少局部方向。',
+          whatChanges: '步数变化会显露这些近似在何处一致、又在何处漂移。',
         },
         'phase-portraits': {
           title: '相图与向量场',
-          description: '探索局部变化规则如何生成整体运动。',
-          thingsToTry: ['读懂变化规则', '比较数值运动和可视化轨迹'],
+          description: '二维状态沿局部向量场运动。',
+          observation: '每个箭头给出局部速度，轨迹把这些速度连接成整体路径。',
+          whatChanges: '改变初始状态会在同一个流中选择不同路径。',
         },
         pendulum: {
           title: '摆与振子',
-          description: '探索局部变化规则如何生成整体运动。',
-          thingsToTry: ['读懂变化规则', '比较数值运动和可视化轨迹'],
+          description: '角度与角速度构成一条相空间轨道。',
+          observation: '把位置和速度合成一个状态后，摆会变成一阶相流。',
+          whatChanges: '阻尼会让轨道收缩，初始角度和速度决定起始能量。',
         },
         population: {
           title: '种群动力学',
-          description: '探索局部变化规则如何生成整体运动。',
-          thingsToTry: ['读懂变化规则', '比较数值运动和可视化轨迹'],
+          description: '捕食者与猎物通过反馈回路相互耦合。',
+          observation: '一个种群的增长会改变另一个种群接下来的运动方向。',
+          whatChanges: '改变速率会重塑相流，并移动系统的平衡点。',
         },
         'heat-equation': {
           title: '热方程 / 扩散',
-          description: '探索局部变化规则如何生成整体运动。',
-          thingsToTry: ['读懂变化规则', '比较数值运动和可视化轨迹'],
+          description: '温度曲线在局部曲率的驱动下逐渐平滑。',
+          observation: '峰值冷却、谷底升温，因为每一点都会响应附近的平均温度。',
+          whatChanges: '扩散率改变平滑速度，固定冷端让热量可以离开杆。',
         },
       },
     },
     probability: {
       title: '概率直觉',
       shortTitle: '概率',
-      description: '把概率公式转化为可见的人群、面积、样本和分布。',
+      description: '通过人群、面积、重复样本和分布读取概率。',
       explorers: {
         'conditional-probability': {
           title: '条件概率',
-          description: '在人群格中比较 P(A | B) 与 P(B | A)。',
-          thingsToTry: ['分清当前正在观察的总体', '比较 P(A|B) 和 P(B|A) 时不混淆分母'],
+          description: '同一个人群格中的两种条件视角。',
+          observation: '条件化会把原来的全集替换成一个更小的分母。',
+          whatChanges: '切换 P(A|B) 与 P(B|A) 会改变哪一组高亮区域被视作整体。',
         },
         bayes: {
           title: '贝叶斯规则',
-          description: '用自然频数理解证据出现后如何更新假设。',
-          thingsToTry: ['用人数理解证据来自哪里', '观察基础率如何影响后验概率'],
+          description: '把同一证据的不同来源汇总为后验概率。',
+          observation: '自然频数把分子和分母直接显示成可见人数。',
+          whatChanges: '基础率会改变证据中有多少部分可能真正来自这个假设。',
         },
         'medical-test': {
           title: '医学测试悖论',
-          description: '观察基础率和假阳性如何改变测试结果的含义。',
-          thingsToTry: ['分清测试准确率和结果可信度', '看假阳性如何改变阳性结果含义'],
+          description: '把测试准确率放回患病率与假阳性中理解。',
+          observation: '阳性结果混合了真阳性和假阳性，它们的比例才决定结果的含义。',
+          whatChanges: '即使灵敏度和特异度不变，患病率也能改变阳性预测值。',
         },
         binomial: {
           title: '二项分布',
-          description: '构造重复独立试验中成功次数的分布。',
-          thingsToTry: ['读懂成功次数分布', '观察 n 和 p 如何移动柱形图'],
+          description: '重复独立试验中的成功次数分布。',
+          observation: '每根柱子收集所有具有相同成功次数的试验序列。',
+          whatChanges: 'p 会移动分布，n 会改变它的中心和宽度。',
         },
         'continuous-density': {
           title: '连续概率密度',
-          description: '把连续概率读成密度曲线下的面积。',
-          thingsToTry: ['把概率读成面积', '分清密度高度和概率'],
+          description: '把概率表示为密度曲线下的面积。',
+          observation: '曲线高度表示局部集中程度，区间面积才是概率。',
+          whatChanges: '移动区间会让高亮概率质量穿过不同的密度区域。',
         },
         'central-limit-theorem': {
           title: '中心极限定理',
-          description: '观察样本均值如何变窄并接近钟形。',
-          thingsToTry: ['分清原始分布和样本均值分布', '观察 n 如何缩小平均数的波动'],
+          description: '重复样本均值形成自己的分布。',
+          observation: '取平均会保留中心，同时缩小典型波动。',
+          whatChanges: '样本量增大时，均值分布会变窄，并常常更接近钟形。',
         },
         'random-variable-sum': {
           title: '随机变量：X + Y',
-          description: '通过汇总所有独立配对来组合两个离散分布。',
-          thingsToTry: ['用配对网格理解随机变量相加', '观察相同和如何汇总成输出分布'],
+          description: '由所有独立配对拼成的和分布。',
+          observation: '同一条对角线上的格子都会贡献给相同的输出值。',
+          whatChanges: '任一来源分布的变化都会重加权配对网格，并改变输出柱。',
         },
       },
     },
     convolution: {
       title: '卷积',
       shortTitle: '卷积',
-      description: '通过滑动、重叠、概率和、信号、图像与多项式理解卷积。',
+      description: '同一个滑动乘积求和模式，出现在序列、概率、信号、图像与多项式中。',
       explorers: {
         discrete: {
           title: '离散卷积',
-          description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
-          thingsToTry: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
+          description: '在一个场景中看清翻转、平移、重叠、相乘和求和。',
+          observation: '翻转并平移 b，会显露组成当前输出 y[k] 的各项乘积。',
+          whatChanges: '改变 k 会移动重叠窗口，并选择一组新的求和项。',
         },
         probability: {
           title: '概率和',
-          description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
-          thingsToTry: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
+          description: '卷积在独立随机变量相加中的形式。',
+          observation: '总和相同的独立配对会累积成一个输出概率。',
+          whatChanges: '改变选中的和，会沿着配对网格的一条对角线移动。',
         },
         signal: {
           title: '信号滤波',
-          description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
-          thingsToTry: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
+          description: '卷积在局部信号滤波中的形式。',
+          observation: '一段短卷积核把附近样本变成一个加权输出。',
+          whatChanges: '改变卷积核会改变哪些局部特征被保留或抑制。',
         },
         'image-kernel': {
           title: '图像卷积核',
-          description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
-          thingsToTry: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
+          description: '卷积在二维像素邻域中的形式。',
+          observation: '同一个局部加权和可以作用在二维像素邻域上。',
+          whatChanges: '改变卷积核会改变每个邻域映射成输出图像的方式。',
         },
         polynomial: {
           title: '多项式乘法',
-          description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
-          thingsToTry: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
+          description: '卷积在多项式系数合并中的形式。',
+          observation: '总次数相同的乘积会收集到同一个系数。',
+          whatChanges: '改变 k 会选择一条新的系数乘积对角线。',
         },
         continuous: {
           title: '连续卷积',
-          description: '通过滑动、相乘和求和，看到卷积作为可复用模式的含义。',
-          thingsToTry: ['看到翻转、平移、重叠、相乘、求和', '连接不同语境中的卷积'],
+          description: '离散重叠和在连续曲线上的对应形式。',
+          observation: '离散乘积和在连续情形中变成两条曲线乘积下的面积。',
+          whatChanges: '改变 t 会平移其中一条曲线，并改变重叠积分。',
         },
       },
     },
@@ -661,6 +693,10 @@ export function localizeExplorer(moduleId: string, explorer: ExplorerDefinition,
     title: translation.title ?? explorer.title,
     description: translation.description ?? explorer.description,
     thingsToTry: translation.thingsToTry ?? explorer.thingsToTry,
+    observation: translation.observation ?? explorer.observation,
+    whatChanges: translation.whatChanges ?? explorer.whatChanges,
+    notes: translation.notes ?? explorer.notes,
+    connections: translation.connections ?? explorer.connections,
   }
 }
 

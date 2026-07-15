@@ -12,7 +12,7 @@ export const fourierManifest: ModuleDefinition = {
   id: 'fourier',
   title: 'Fourier Transform',
   shortTitle: 'Fourier',
-  description: 'See how signals transform between time and frequency.',
+  description: 'The same signal viewed as a curve, a winding, and a set of rotating components.',
   category: 'fourier',
   status: 'ready',
   routeBase: base,
@@ -20,20 +20,22 @@ export const fourierManifest: ModuleDefinition = {
   previewKind: 'fourier',
   loadComponent: loadFourierModule,
   explorers: [
-    explorer('spectrum', 'Frequency Spectrum', 'Scan many frequencies to build a spectrum.'),
-    explorer('reconstruction', 'Signal Reconstruction', 'Rebuild a signal from selected coefficients.'),
-    explorer('filtering', 'Frequency Filtering', 'Keep or remove frequency bands and compare the signal.'),
+    explorer('spectrum', 'Frequency Spectrum', 'A frequency scan built from the average position of wound signals.', 'A matching frequency fails to cancel around the origin, leaving a visible coefficient.', 'Changing the test frequency links the time curve, winding direction, center of mass, and spectrum position.'),
+    explorer('reconstruction', 'Signal Reconstruction', 'A signal rebuilt from selected rotating components.', 'The reconstructed curve gains structure as more coefficients are included.', 'Changing the coefficient set alters both the active spectrum bars and the time-domain approximation.'),
+    explorer('filtering', 'Frequency Filtering', 'Time-domain changes produced by editing frequency content.', 'A filter reshapes the signal by retaining some coefficients and suppressing others.', 'Changing the cutoff moves a boundary in the spectrum and immediately changes the reconstructed signal.'),
   ],
 }
 
-function explorer(id: string, title: string, description: string) {
+function explorer(id: string, title: string, description: string, observation: string, whatChanges: string) {
   return {
     id,
     title,
     description,
     route: `${base}/${id}`,
     status: 'ready' as const,
-    thingsToTry: ['Understand frequency components', 'Connect visual motion to a numeric spectrum'],
+    observation,
+    whatChanges,
+    notes: 'Signals are sampled on t in [0,1]; amplitude normalization is an explicit display choice.',
     loadComponent: explorerLoaders[id],
   }
 }

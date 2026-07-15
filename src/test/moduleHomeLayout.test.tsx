@@ -18,7 +18,7 @@ describe('ready module home layouts', () => {
   ] as const
 
   for (const [name, home] of homes) {
-    it(`${name} uses the shared heading and explorer card contract`, () => {
+    it(`${name} uses the shared heading and module card contract`, () => {
       const container = document.createElement('div')
       container.innerHTML = renderToStaticMarkup(home)
 
@@ -26,7 +26,7 @@ describe('ready module home layouts', () => {
       expect(container.querySelector('.module-detail-heading .eyebrow')).toBeTruthy()
       expect(container.querySelector('.module-detail-heading h1')).toBeTruthy()
       expect(container.querySelector('.lesson-card .lesson-card-copy')).toBeTruthy()
-      expect(container.querySelector('.lesson-card .lesson-card-try')).toBeTruthy()
+      expect(container.querySelector('.lesson-card .lesson-card-observation')).toBeTruthy()
       expect(container.querySelector('.lesson-card .open-explorer-link')).toBeTruthy()
     })
   }

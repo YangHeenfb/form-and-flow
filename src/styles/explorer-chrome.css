@@ -459,10 +459,23 @@
 }
 
 .lesson-card-copy,
-.lesson-card-try {
+.lesson-card-observation {
   display: grid;
   align-content: start;
   gap: 7px;
+}
+
+.lesson-card-observation {
+  border-left: 2px solid color-mix(in srgb, var(--focus) 54%, var(--panel-border));
+  padding-left: 10px;
+}
+
+.lesson-card-observation strong {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .module-lesson-home .lesson-card h2,

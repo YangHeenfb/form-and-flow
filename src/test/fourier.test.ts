@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { compileFourierExpression, sampleFourierPreset } from '../modules/fourier/fourierPresets.ts'
+import { compileFourierExpression, sampleFourierExpression, sampleFourierPreset } from '../modules/fourier/fourierPresets.ts'
 import { complex, div, expi, formatComplex, magnitude, mul, nearlyEqualComplex } from '../modules/fourier/math/complex.ts'
 import { applyHighPass, applyLowPass } from '../modules/fourier/math/filters.ts'
-import { computeCoefficientAtFrequency, computeIntegerSpectrum, findDominantFrequencies, selectPairedFrequencyBlocks } from '../modules/fourier/math/fourier.ts'
+import { computeCoefficientAtFrequency, computeIntegerSpectrum, findDominantFrequencies, interpolateWindingPoint, selectPairedFrequencyBlocks } from '../modules/fourier/math/fourier.ts'
 import { maxAbsError, reconstructSamples } from '../modules/fourier/math/reconstruction.ts'
 
 describe('fourier complex math', () => {
@@ -31,6 +31,13 @@ describe('fourier expression and presets', () => {
 
   it('generates deterministic noisy samples', () => {
     expect(sampleFourierPreset('noisy-sine', 16)).toEqual(sampleFourierPreset('noisy-sine', 16))
+  })
+
+  it('preserves expression amplitude unless normalization is explicitly enabled', () => {
+    const raw = sampleFourierExpression('0.25*sin(2*pi*t)', 256)
+    const normalized = sampleFourierExpression('0.25*sin(2*pi*t)', 256, true)
+    expect(Math.max(...raw)).toBeCloseTo(0.25, 6)
+    expect(Math.max(...normalized)).toBeCloseTo(1, 6)
   })
 })
 
@@ -75,5 +82,15 @@ describe('fourier transform math', () => {
     const highPass = applyHighPass(spectrum, 3)
     expect(findDominantFrequencies(lowPass, 2).every((coefficient) => Math.abs(coefficient.frequency) <= 2)).toBe(true)
     expect(findDominantFrequencies(highPass, 2).every((coefficient) => Math.abs(coefficient.frequency) >= 3)).toBe(true)
+  })
+
+  it('interpolates the animated winding vector between adjacent samples', () => {
+    const points = [
+      { t: 0, sample: 0, point: complex(0, 0) },
+      { t: 0.5, sample: 1, point: complex(2, 2) },
+    ]
+    expect(interpolateWindingPoint(points, 0.25)).toEqual(complex(1, 1))
+    expect(interpolateWindingPoint(points, 0.75)).toEqual(complex(1, 1))
+    expect(interpolateWindingPoint([], 0.5)).toBeUndefined()
   })
 })

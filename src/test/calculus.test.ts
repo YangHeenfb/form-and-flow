@@ -1,5 +1,8 @@
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { compileExpression } from '../core/math/expression.ts'
+import { CalculusLesson } from '../modules/calculus/CalculusLesson.tsx'
 import {
   approximateDerivative,
   buildTaylorCoefficientsForPreset,
@@ -91,6 +94,25 @@ describe('calculus numerics', () => {
 
   it('riemann midpoint sum gives a finite result', () => {
     expect(riemannSum(Math.sin, 0, Math.PI, 20, 'midpoint')).toBeGreaterThan(1.9)
+  })
+
+  it('keeps rectangular Riemann sums distinct from the trapezoidal rule', () => {
+    expect(riemannSum((x) => x, 0, 1, 1, 'left')).toBeCloseTo(0)
+    expect(riemannSum((x) => x, 0, 1, 1, 'trapezoid')).toBeCloseTo(0.5)
+  })
+
+  it('matches the FTC relation between accumulation slope and function height', () => {
+    const fn = (x: number) => Math.sin(x) + 1
+    const accumulation = (x: number) => referenceIntegral(fn, 0, x)
+
+    expect(approximateDerivative(accumulation, 0.7)).toBeCloseTo(fn(0.7), 3)
+  })
+
+  it('states the FTC identity exactly while numerical readouts remain estimates', () => {
+    const html = renderToStaticMarkup(createElement(CalculusLesson, { lessonId: 'fundamental-theorem' }))
+
+    expect(html).toContain('A&#x27;(x)=f(x)')
+    expect(html).not.toContain('A&#x27;(x)≈f(x)')
   })
 
   it('factorial works for small values', () => {

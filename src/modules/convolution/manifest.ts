@@ -15,7 +15,7 @@ export const convolutionManifest: ModuleDefinition = {
   id: 'convolution',
   title: 'Convolution',
   shortTitle: 'Convolution',
-  description: 'Understand convolution through sliding, overlapping, probability sums, signals, images, and polynomials.',
+  description: 'One sliding multiply-and-sum pattern appearing in sequences, probability, signals, images, and polynomials.',
   category: 'transforms',
   status: 'ready',
   routeBase: base,
@@ -24,23 +24,24 @@ export const convolutionManifest: ModuleDefinition = {
   loadComponent: loadConvolutionModule,
   relatedConcepts: ['fourier-transform', 'convolution-theorem', 'filtering'],
   explorers: [
-    explorer('discrete', 'Discrete Convolution'),
-    explorer('probability', 'Probability Sum'),
-    explorer('signal', 'Signal Filtering'),
-    explorer('image-kernel', 'Image Kernel'),
-    explorer('polynomial', 'Polynomial Multiplication'),
-    explorer('continuous', 'Continuous Convolution'),
+    explorer('discrete', 'Discrete Convolution', 'Flipping and shifting b exposes the products that form one output y[k].', 'Changing k moves the overlap window and selects a new sum.'),
+    explorer('probability', 'Probability Sum', 'Independent pairs with the same total accumulate into one probability.', 'Changing the selected sum moves along a diagonal of the pair grid.'),
+    explorer('signal', 'Signal Filtering', 'A short kernel turns nearby samples into one weighted output.', 'Changing the kernel changes which local features are preserved or suppressed.'),
+    explorer('image-kernel', 'Image Kernel', 'The same local weighted sum applied to a two-dimensional pixel neighborhood.', 'Changing the kernel changes how each neighborhood is mapped into the output image.'),
+    explorer('polynomial', 'Polynomial Multiplication', 'Terms with equal total degree collect into the same coefficient.', 'Changing k selects one diagonal of coefficient products.'),
+    explorer('continuous', 'Continuous Convolution', 'The discrete overlap sum becomes an area under a product of two curves.', 'Changing t shifts one curve and changes the overlap integral.'),
   ],
 }
 
-function explorer(id: string, title: string) {
+function explorer(id: string, title: string, observation: string, whatChanges: string) {
   return {
     id,
     title,
-    description: 'Slide, multiply, and sum to see convolution as a reusable pattern.',
+    description: 'The flip, shift, overlap, multiply, and sum pattern in one setting.',
     route: `${base}/${id}`,
     status: 'ready' as const,
-    thingsToTry: ['See flip, shift, overlap, multiply, sum', 'Connect convolution across contexts'],
+    observation,
+    whatChanges,
     loadComponent: explorerLoaders[id],
     relatedConcepts: ['fourier-transform', 'convolution-theorem', 'filtering'],
   }

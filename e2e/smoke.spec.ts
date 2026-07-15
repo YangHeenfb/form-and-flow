@@ -90,8 +90,8 @@ test.describe('ready explorers', () => {
       await expect(page.locator('.explorer-stage-header')).toBeVisible()
       await expect(page.locator('.lesson-stage-actions')).toBeVisible()
       const actionLabels = await page.locator('.lesson-stage-actions > button:visible').allTextContents()
-      expect(actionLabels.map((label) => label.trim())).toEqual(['Graph notes', 'Readout', 'Focus', 'Export PNG'])
-      await expect(page.getByRole('button', { name: 'Reference', exact: true }).filter({ visible: true })).toHaveCount(1)
+      expect(actionLabels.map((label) => label.trim())).toEqual(['Visual notes', 'Readout', 'Focus', 'Export PNG'])
+      await expect(page.getByRole('button', { name: 'Notes', exact: true }).filter({ visible: true })).toHaveCount(1)
       const shellBox = await shell.boundingBox()
       const stageBox = await stage.boundingBox()
       const gridColumns = await shell.evaluate((element) => getComputedStyle(element).gridTemplateColumns.split(/\s+/).filter(Boolean))
@@ -137,7 +137,7 @@ for (const width of [375, 390, 768, 1024, 1280]) {
         if (width < 1180) {
           await expect(page.locator('.lesson-stage-readout-action')).toBeHidden()
           const visibleActions = await page.locator('.lesson-stage-actions > button:visible').allTextContents()
-          expect(visibleActions.map((label) => label.trim())).toEqual(['Graph notes', 'Focus', 'Export PNG'])
+          expect(visibleActions.map((label) => label.trim())).toEqual(['Visual notes', 'Focus', 'Export PNG'])
         }
 
         if (width <= 860) {
@@ -233,7 +233,7 @@ test('shared chrome remains stable when switching languages', async ({ page }) =
   await page.getByRole('button', { name: 'Switch language' }).click()
   await expect(page.locator('.platform-shell')).toHaveAttribute('data-locale', 'zh')
   await expect(page.locator('.explorer-stage-header h1')).toHaveText('导数')
-  await expect(page.locator('.lesson-shell-controls .lesson-mobile-inspector-action')).toContainText('参考')
+  await expect(page.locator('.lesson-shell-controls .lesson-mobile-inspector-action')).toContainText('笔记')
   await expectNoHorizontalOverflow(page)
   await expectNoVisibleButtonTextOverflow(page)
 
@@ -366,7 +366,7 @@ test('standard lesson readout opens as a drawer and restores trigger focus', asy
   const drawer = page.locator('.lesson-standard-readout-drawer')
   await expect(drawer).toBeVisible()
   await expect(drawer).toHaveCSS('right', '0px')
-  await expect(drawer).toContainText('Formula used')
+  await expect(drawer).toContainText('Formula')
   await page.keyboard.press('Escape')
   await expect(drawer).toHaveCount(0)
   await expect(trigger).toBeFocused()

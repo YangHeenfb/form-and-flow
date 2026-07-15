@@ -142,17 +142,17 @@ const differentialCopy: Record<DifferentialLocale, {
       pause: 'Pause',
       reset: 'Reset animation',
       resetView: 'Reset view',
-      lesson: 'Explorer',
+      lesson: 'Module',
       exportPng: 'Export PNG',
       playbackProgress: 'Playback progress',
-      seeing: 'Notes',
+      seeing: 'Observation',
       why: 'Notes',
-      formula: 'Formula used',
+      formula: 'Formula',
       values: 'Readout',
-      watch: 'Assumptions / Caveats',
-      beginnerHelp: 'Reference',
-      graphHelp: 'Graph notes',
-      closeHelp: 'Close reference',
+      watch: 'Notes',
+      beginnerHelp: 'Notes',
+      graphHelp: 'Visual notes',
+      closeHelp: 'Close notes',
       graphInstructions: 'Drag to pan, scroll to zoom.',
       invalidExpression: 'Invalid differential equation.',
       undefinedValue: 'undefined',
@@ -181,15 +181,15 @@ const differentialCopy: Record<DifferentialLocale, {
     lessons: {
       'slope-fields': {
         title: 'Slope Fields & Initial Value Problems',
-        what: "Short line segments show the local slope y' at each point, and the highlighted curve follows the selected initial condition.",
+        what: "Short line segments show the local slope y' at each point, and the highlighted numerical trajectory follows the selected initial condition.",
         why: 'An ODE does not give y directly. It gives a local rule that a solution curve must obey everywhere it passes.',
         formulaTex: "\\frac{dy}{dt}=f(t,y),\\quad y(t_0)=y_0",
         formulaLabel: "dy/dt = f(t,y), y(t0)=y0",
-        watch: 'Solutions can bend toward equilibria, away from unstable states, or follow periodic forcing.',
+        watch: 'The numerical trajectory can bend toward equilibria, away from unstable states, or follow periodic forcing.',
       },
       'numerical-methods': {
         title: 'Numerical Methods',
-        what: 'Euler, midpoint, and RK4 step through the same ODE with different estimates of the next point.',
+        what: 'Euler, midpoint, and RK4 build three numerical trajectories through the same ODE using different estimates of the next point.',
         why: 'Most differential equations are solved numerically, so step size and method choice control accuracy.',
         formulaTex: "y_{n+1}=y_n+h\\,\\Phi(t_n,y_n,h)",
         formulaLabel: 'one-step numerical update',
@@ -197,7 +197,7 @@ const differentialCopy: Record<DifferentialLocale, {
       },
       'phase-portraits': {
         title: 'Phase Portraits & Vector Fields',
-        what: 'Each point is a system state. Arrows point in the next-motion direction, and the highlighted curve shows the future from the chosen state.',
+        what: 'Each point is a system state. Arrows point in the next-motion direction, and the highlighted numerical trajectory follows them from the chosen state.',
         why: 'A phase portrait shows the shape of all possible futures without plotting time on a separate axis.',
         formulaTex: "x'=F(x,y),\\quad y'=G(x,y)",
         formulaLabel: "x'=F(x,y), y'=G(x,y)",
@@ -244,17 +244,17 @@ const differentialCopy: Record<DifferentialLocale, {
       pause: '暂停',
       reset: '重置动画',
       resetView: '重置视图',
-      lesson: '探索器',
+      lesson: '模块',
       exportPng: '导出 PNG',
       playbackProgress: '播放进度',
-      seeing: '说明',
+      seeing: '观察',
       why: '说明',
-      formula: '使用公式',
+      formula: '公式',
       values: '读数',
-      watch: '假设 / 限制',
-      beginnerHelp: '参考',
-      graphHelp: '图像说明',
-      closeHelp: '关闭参考',
+      watch: '笔记',
+      beginnerHelp: '笔记',
+      graphHelp: '视觉笔记',
+      closeHelp: '关闭笔记',
       graphInstructions: '拖动可平移，滚轮可缩放。',
       invalidExpression: '微分方程表达式无效。',
       undefinedValue: '未定义',
@@ -283,15 +283,15 @@ const differentialCopy: Record<DifferentialLocale, {
     lessons: {
       'slope-fields': {
         title: '斜率场与初值问题',
-        what: "每个短线段表示该点的局部斜率 y'，高亮曲线从选定初值出发。",
+        what: "每个短线段表示该点的局部斜率 y'，高亮数值轨迹从选定初值出发。",
         why: 'ODE 不直接给出 y，而是给出解曲线在每个经过位置必须遵守的局部变化规则。',
         formulaTex: "\\frac{dy}{dt}=f(t,y),\\quad y(t_0)=y_0",
         formulaLabel: "dy/dt = f(t,y), y(t0)=y0",
-        watch: '解可能靠近平衡、远离不稳定状态，或跟随周期外力摆动。',
+        watch: '数值轨迹可能靠近平衡、远离不稳定状态，或跟随周期外力摆动。',
       },
       'numerical-methods': {
         title: '数值方法',
-        what: 'Euler、中点法和 RK4 用不同方式估计下一步，并求解同一个 ODE。',
+        what: 'Euler、中点法和 RK4 用不同方式估计下一步，为同一个 ODE 生成三条数值轨迹。',
         why: '多数微分方程需要数值求解，因此步长和方法会直接影响精度。',
         formulaTex: "y_{n+1}=y_n+h\\,\\Phi(t_n,y_n,h)",
         formulaLabel: '单步数值更新',
@@ -299,7 +299,7 @@ const differentialCopy: Record<DifferentialLocale, {
       },
       'phase-portraits': {
         title: '相图与向量场',
-        what: '每个点都是一个系统状态。箭头指向下一步运动方向，高亮曲线显示从当前状态出发的未来。',
+        what: '每个点都是一个系统状态。箭头指向下一步运动方向，高亮数值轨迹从当前状态出发并沿着这些方向前进。',
         why: '相图不用单独画时间轴，也能看出所有可能未来的形状。',
         formulaTex: "x'=F(x,y),\\quad y'=G(x,y)",
         formulaLabel: "x'=F(x,y), y'=G(x,y)",
@@ -1022,8 +1022,8 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
   if (lessonId === 'numerical-methods') {
     return locale === 'zh'
       ? {
-          eyebrow: '从零开始',
-          title: 'Euler、中点法和 RK4 到底在做什么',
+          eyebrow: '笔记',
+          title: '用局部斜率走出数值轨迹',
           summary: '它们都是“不会直接解出公式时，用很多小步把曲线走出来”的方法。',
           sections: [
             {
@@ -1055,14 +1055,14 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
               ),
             },
             {
-              title: '怎么探索',
-              items: ['把步数调低，先看三条线明显分开。', '再逐渐增加步数，观察 Euler 和中点法如何靠近 RK4。', '换一个变化规则，看哪种曲线最容易漂移。'],
+              title: '变化线索',
+              items: ['步数较少时，三条数值轨迹会明显分开。', '步数增加后，Euler 和中点法通常会逐渐靠近 RK4。', '不同变化规则对步长的敏感程度不同，漂移最先出现的位置也会改变。'],
             },
           ],
         }
       : {
-          eyebrow: 'Start from zero',
-          title: 'What Euler, midpoint, and RK4 are doing',
+          eyebrow: 'Notes',
+          title: 'Building numerical trajectories from local slopes',
           summary: 'They all approximate a curve by taking many small steps when the equation is hard to solve exactly.',
           sections: [
             {
@@ -1094,8 +1094,8 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
               ),
             },
             {
-              title: 'How to explore',
-              items: ['Lower the step count first so the paths separate visibly.', 'Increase the step count and watch Euler and midpoint move closer to RK4.', 'Switch the change rule and notice which method drifts first.'],
+              title: 'What changes',
+              items: ['With fewer steps, the three numerical trajectories separate visibly.', 'As the step count rises, Euler and midpoint usually move closer to RK4.', 'Different change rules expose step-size sensitivity in different ways.'],
             },
           ],
         }
@@ -1104,8 +1104,8 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
   if (lessonId === 'slope-fields') {
     return locale === 'zh'
       ? {
-          eyebrow: '从零开始',
-          title: "为什么斜率场要到处计算 y'",
+          eyebrow: '笔记',
+          title: '斜率场中的局部方向',
           summary: "斜率场不是一条曲线，而是一张“如果曲线经过这里，它下一瞬间该往哪走”的地图。",
           sections: [
             {
@@ -1131,8 +1131,8 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
           ],
         }
       : {
-          eyebrow: 'Start from zero',
-          title: "Why a slope field computes y' everywhere",
+          eyebrow: 'Notes',
+          title: 'Local directions across a slope field',
           summary: 'A slope field is a map of possible directions, not one single solution curve.',
           sections: [
             {
@@ -1162,7 +1162,7 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
   if (lessonId === 'phase-portraits') {
     return locale === 'zh'
       ? {
-          eyebrow: '从零开始',
+          eyebrow: '笔记',
           title: '相图不是普通坐标图',
           summary: '相图把系统的状态放在平面上；时间没有单独画成横轴，而是藏在轨迹前进方向里。',
           sections: [
@@ -1189,7 +1189,7 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
           ],
         }
       : {
-          eyebrow: 'Start from zero',
+          eyebrow: 'Notes',
           title: 'A phase portrait is not an ordinary coordinate plot',
           summary: 'A phase portrait places the system state in the plane. Time is not a separate horizontal axis; it is carried by the direction of motion.',
           sections: [
@@ -1220,8 +1220,8 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
   if (lessonId === 'pendulum') {
     return locale === 'zh'
       ? {
-          eyebrow: '从零开始',
-          title: '摆图里为什么有两个坐标',
+          eyebrow: '笔记',
+          title: '摆的状态平面',
           summary: '摆的真实位置只靠角度还不够；要预测下一刻，还必须知道它正在往哪边转、转得多快。',
           sections: [
             {
@@ -1247,8 +1247,8 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
           ],
         }
       : {
-          eyebrow: 'Start from zero',
-          title: 'Why the pendulum graph has two coordinates',
+          eyebrow: 'Notes',
+          title: 'The pendulum state plane',
           summary: 'Angle alone is not enough to predict a pendulum. You also need to know which way it is turning and how fast.',
           sections: [
             {
@@ -1278,8 +1278,8 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
   if (lessonId === 'population') {
     return locale === 'zh'
       ? {
-          eyebrow: '从零开始',
-          title: '猎物和捕食者为什么会绕圈',
+          eyebrow: '笔记',
+          title: '猎物与捕食者的反馈环',
           summary: '这个模型只保留一个反馈：猎物多会支持更多捕食者，捕食者多又会压低猎物。',
           sections: [
             {
@@ -1291,7 +1291,7 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
               ),
             },
             {
-              title: '参数怎么读',
+              title: '参数',
               items: [
                 'a：没有捕食者时，猎物自己增长的速度。',
                 'b：捕食强度，越大猎物被压低得越快。',
@@ -1310,8 +1310,8 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
           ],
         }
       : {
-          eyebrow: 'Start from zero',
-          title: 'Why prey and predators cycle',
+          eyebrow: 'Notes',
+          title: 'Predator–prey feedback loops',
           summary: 'This model keeps one feedback loop: more prey can support more predators, and more predators push prey down.',
           sections: [
             {
@@ -1346,7 +1346,7 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
   if (lessonId === 'heat-equation') {
     return locale === 'zh'
       ? {
-          eyebrow: '从零开始',
+          eyebrow: '笔记',
           title: '热方程在让曲线变平',
           summary: '这里是在看一根杆上的温度分布如何随时间扩散。',
           sections: [
@@ -1373,12 +1373,12 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
           ],
         }
       : {
-          eyebrow: 'Start from zero',
+          eyebrow: 'Notes',
           title: 'The heat equation smooths a curve',
           summary: 'This view is not an arrow trajectory. It shows how temperature along one rod diffuses over time.',
           sections: [
             {
-              title: 'What is on the graph',
+              title: 'Curves and heat strip',
               body: (
                 <>
                   The horizontal axis {formula('x')} is position on the rod, and curve height {formula('u(x,t)')} is temperature. Gray is the initial temperature, yellow is the current temperature, and the strip below is the same rod as a heat map.
@@ -1403,8 +1403,8 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
 
   return locale === 'zh'
     ? {
-        eyebrow: '从零开始',
-        title: '这个实验在看什么',
+        eyebrow: '笔记',
+        title: '局部规则与整体运动',
         summary: '这里的核心想法是：局部的变化规则会生成整体运动。',
         sections: [
           { title: '先看局部', body: "箭头或短线段告诉你当前位置的瞬时变化方向，也就是类似 x'、y' 或 y' 的导数信息。" },
@@ -1412,8 +1412,8 @@ function differentialBeginnerTopic(lessonId: string, locale: DifferentialLocale)
         ],
       }
     : {
-        eyebrow: 'Start from zero',
-        title: 'What this experiment is showing',
+        eyebrow: 'Notes',
+        title: 'Local rules and global motion',
         summary: 'The core idea is that local change rules generate global motion.',
         sections: [
           { title: 'Read the local rule first', body: "Arrows or small segments show the instantaneous direction of change, such as x', y', or y'." },
@@ -1426,23 +1426,23 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
   if (lessonId === 'numerical-methods') {
     return locale === 'zh'
       ? {
-          eyebrow: '图像说明',
-          title: '数值方法图像读法',
+          eyebrow: '视觉笔记',
+          title: '数值轨迹',
           summary: '这张图同时画出三种近似解，重点不是哪条线“好看”，而是哪条线在同样步数下更稳定。',
           sections: [
             { title: '颜色', items: ['紫色：Euler。', '绿色：中点法。', '黄色：RK4。'] },
             { title: '点和线', body: 'Euler 上的小点是它每一步落下的位置。步数越少，每一步越长，误差通常越明显。' },
-            { title: '你应该观察什么', body: '把步数降低时，三条曲线会分开；把步数提高时，它们会靠近。若 Euler 很快偏离，说明这个变化规则对步长更敏感。黄色 RK4 只是更可靠的数值参考，不是严格真答案。' },
+            { title: '变化线索', body: '步数降低时，三条数值轨迹会分开；步数提高时，它们通常会靠近。若 Euler 很快偏离，说明这个变化规则对步长更敏感。黄色 RK4 只是更可靠的数值参考，不是严格真答案。' },
           ],
         }
       : {
-          eyebrow: 'Graph notes',
-          title: 'How to read the numerical methods graph',
+          eyebrow: 'Visual notes',
+          title: 'Numerical trajectories',
           summary: 'The graph compares three approximate solutions. The key question is which path stays stable with the same number of steps.',
           sections: [
             { title: 'Colors', items: ['Purple: Euler.', 'Green: midpoint.', 'Yellow: RK4.'] },
             { title: 'Dots and lines', body: 'Small dots mark the points Euler lands on. Fewer steps mean longer steps, and errors usually become more visible.' },
-            { title: 'What to watch', body: 'Lower the step count to make the paths separate, then raise it to see them converge. Early Euler drift means the rule is sensitive to step size. Yellow RK4 is a better numerical reference here, not the exact truth.' },
+            { title: 'What changes', body: 'With fewer steps, the paths separate more visibly; with more steps, they tend to move closer together. Early Euler drift reveals step-size sensitivity. Yellow RK4 is a better numerical reference here, not the exact truth.' },
           ],
         }
   }
@@ -1450,22 +1450,22 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
   if (lessonId === 'slope-fields') {
     return locale === 'zh'
       ? {
-          eyebrow: '图像说明',
-          title: '斜率场图像读法',
+          eyebrow: '视觉笔记',
+          title: '斜率场',
           summary: "把这张图当作方向地图：每个短线段都在回答“如果解曲线经过这里，它应该往哪个方向走”。",
           sections: [
             { title: '灰色短线段', body: "表示该点的 y'。向上倾斜代表 y 正在增加，向下倾斜代表 y 正在减少，越陡表示变化越快。" },
-            { title: '黄色曲线', body: '这是从当前初值出发的解曲线。它不是随便画的，而是一路尽量贴着附近短线段的方向。' },
+            { title: '黄色曲线', body: '这是从当前初值出发计算出的数值轨迹，它一路沿着附近短线段给出的方向前进。' },
             { title: '黄色点', body: '这是初值点。移动 t0 或 y0，就相当于换一个起点，曲线会改走另一条路。' },
           ],
         }
       : {
-          eyebrow: 'Graph notes',
-          title: 'How to read a slope field',
+          eyebrow: 'Visual notes',
+          title: 'Slope field',
           summary: 'Treat the graph as a direction map: each segment says where a solution would head if it passed through that point.',
           sections: [
             { title: 'Gray segments', body: "Each segment shows y' at that point. Upward tilt means y is increasing; downward tilt means y is decreasing; steeper means faster change." },
-            { title: 'Yellow curve', body: 'This is the solution from the current initial value. It follows the nearby segment directions.' },
+            { title: 'Yellow curve', body: 'This numerical trajectory starts from the current initial value and follows the nearby segment directions.' },
             { title: 'Yellow point', body: 'This is the initial value. Moving t0 or y0 changes the starting point and selects a different solution.' },
           ],
         }
@@ -1474,8 +1474,8 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
   if (lessonId === 'phase-portraits') {
     return locale === 'zh'
       ? {
-          eyebrow: '图像说明',
-          title: '相图图像读法',
+          eyebrow: '视觉笔记',
+          title: '相图',
           summary: '横轴和纵轴都是状态变量，时间藏在轨迹的前进方向里。',
           sections: [
             { title: '点', body: '一个点代表系统当前状态 (x,y)。移动初始 x0、y0，就是把系统放到另一个初始状态。' },
@@ -1484,8 +1484,8 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
           ],
         }
       : {
-          eyebrow: 'Graph notes',
-          title: 'How to read a phase portrait',
+          eyebrow: 'Visual notes',
+          title: 'Phase portrait',
           summary: 'Both axes are state variables. Time is carried by the direction of travel along trajectories.',
           sections: [
             { title: 'Point', body: 'A point is the current state (x,y). Moving x0 or y0 places the system in a different initial state.' },
@@ -1498,8 +1498,8 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
   if (lessonId === 'pendulum') {
     return locale === 'zh'
       ? {
-          eyebrow: '图像说明',
-          title: '摆相图读法',
+          eyebrow: '视觉笔记',
+          title: '摆的相图',
           summary: '主图不是摆锤的真实空间路线，而是角度和角速度组成的状态图。',
           sections: [
             { title: '横轴和纵轴', body: '横轴 θ 表示摆偏离竖直方向的角度；纵轴 ω 表示角度变化有多快。ω 为正和为负代表转动方向相反。' },
@@ -1508,8 +1508,8 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
           ],
         }
       : {
-          eyebrow: 'Graph notes',
-          title: 'How to read the pendulum phase plot',
+          eyebrow: 'Visual notes',
+          title: 'Pendulum phase portrait',
           summary: 'The main plot is not the bob route in real space. It is a state plot of angle and angular velocity.',
           sections: [
             { title: 'Axes', body: 'Horizontal θ is angle away from vertical; vertical ω is how quickly the angle changes. Positive and negative ω mean opposite turning directions.' },
@@ -1522,8 +1522,8 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
   if (lessonId === 'population') {
     return locale === 'zh'
       ? {
-          eyebrow: '图像说明',
-          title: '种群相图读法',
+          eyebrow: '视觉笔记',
+          title: '种群相图',
           summary: '横轴是猎物，纵轴是捕食者；轨迹方向表示两个种群随时间怎样互相追赶。',
           sections: [
             { title: '黄色点和线', body: '黄色点是当前初始种群；黄色轨迹是从这个初始状态开始后，猎物和捕食者数量一起变化的路径。' },
@@ -1532,8 +1532,8 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
           ],
         }
       : {
-          eyebrow: 'Graph notes',
-          title: 'How to read the population phase plot',
+          eyebrow: 'Visual notes',
+          title: 'Population phase portrait',
           summary: 'The horizontal axis is prey; the vertical axis is predators. Trajectory direction shows how the two counts chase each other over time.',
           sections: [
             { title: 'Yellow point and path', body: 'The yellow point is the current initial population. The yellow path shows how prey and predators change together from that state.' },
@@ -1546,8 +1546,8 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
   if (lessonId === 'heat-equation') {
     return locale === 'zh'
       ? {
-          eyebrow: '图像说明',
-          title: '热方程图像读法',
+          eyebrow: '视觉笔记',
+          title: '热流',
           summary: '这里没有箭头或相轨迹；你看到的是同一根杆的温度曲线随时间变平。',
           sections: [
             { title: '曲线', body: '灰色曲线是初始温度。黄色曲线是当前温度。横轴是杆上的位置 x，曲线高度是温度 u。' },
@@ -1556,8 +1556,8 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
           ],
         }
       : {
-          eyebrow: 'Graph notes',
-          title: 'How to read the heat equation graph',
+          eyebrow: 'Visual notes',
+          title: 'Heat flow',
           summary: 'There are no arrows or phase trajectories here. You are watching one rod temperature curve smooth over time.',
           sections: [
             { title: 'Curves', body: 'Gray is the initial temperature. Yellow is the current temperature. The horizontal axis is position x, and curve height is temperature u.' },
@@ -1569,8 +1569,8 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
 
   return locale === 'zh'
     ? {
-        eyebrow: '图像说明',
-        title: '图像读法',
+        eyebrow: '视觉笔记',
+        title: '局部方向与轨迹',
         summary: '先看每个位置的局部方向，再看从初值出发形成的整体轨迹。',
         sections: [
           { title: '箭头', body: '箭头表示当前位置的瞬时变化方向。' },
@@ -1578,8 +1578,8 @@ function differentialGraphTopic(lessonId: string, locale: DifferentialLocale): H
         ],
       }
     : {
-        eyebrow: 'Graph notes',
-        title: 'How to read this graph',
+        eyebrow: 'Visual notes',
+        title: 'Local directions and trajectories',
         summary: 'Read the local direction first, then read the full trajectory selected by the initial condition.',
         sections: [
           { title: 'Arrows', body: 'Arrows show the instantaneous direction of change at each state.' },
@@ -1592,7 +1592,7 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
   const zh: Record<DifferentialTermId, HelpTopic> = {
     'y-prime': {
       eyebrow: '术语',
-      title: "y' 是什么",
+      title: "导数 y'",
       summary: "y' 通常读作 y 撇，表示 y 对输入变量的导数，也就是 y 的瞬时变化率。",
       sections: [
         { title: '在这里的意思', body: "如果横轴是 t，那么 y' 就是 dy/dt：t 增加一点点时，y 会以多快的速度变化。" },
@@ -1601,21 +1601,21 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
     },
     ode: {
       eyebrow: '术语',
-      title: 'ODE 是什么',
+      title: '常微分方程 ODE',
       summary: 'ODE 是 ordinary differential equation，中文是常微分方程。',
       sections: [{ title: '直觉理解', body: '它不直接告诉你 y 是多少，而是告诉你 y 如何变化。解微分方程，就是找一条处处遵守这个变化规则的曲线。' }],
     },
     'initial-value': {
       eyebrow: '术语',
-      title: '初值是什么',
+      title: '初值',
       summary: '初值就是解曲线的起点，例如 y(t0)=y0。',
       sections: [{ title: '说明', body: '同一个变化规则可以有很多条解曲线。初值会从这些可能性里选出其中一条。' }],
     },
     'slope-field': {
       eyebrow: '术语',
-      title: '斜率场是什么',
+      title: '斜率场',
       summary: '斜率场是在很多点画出局部斜率的一张方向地图。',
-      sections: [{ title: '怎么看', body: '短线段不是解本身，而是告诉你如果解曲线经过附近，应该朝哪个方向走。' }],
+      sections: [{ title: '局部方向', body: '短线段不是解本身，而是告诉你如果解曲线经过附近，应该朝哪个方向走。' }],
     },
     euler: {
       eyebrow: '术语',
@@ -1643,7 +1643,7 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
     },
     'heat-u': {
       eyebrow: '变量',
-      title: 'u 是什么',
+      title: '温度 u(x,t)',
       summary: 'u(x,t) 表示位置 x 在时间 t 的温度或热量强度。',
       sections: [
         { title: '在图里怎么看', body: '横轴位置 x 上的曲线高度就是 u。曲线越高，说明那里越热。' },
@@ -1652,7 +1652,7 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
     },
     'heat-alpha': {
       eyebrow: '变量',
-      title: 'α 是什么',
+      title: '扩散率 α',
       summary: 'α 是扩散率，控制热量从高处流向低处的快慢。',
       sections: [
         { title: '调大 α 会怎样', body: '曲线会更快变平，尖峰和边缘更快消失。' },
@@ -1661,13 +1661,13 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
     },
     'heat-ut': {
       eyebrow: '变量',
-      title: 'u_t 是什么',
+      title: '时间变化率 u_t',
       summary: 'u_t 表示温度对时间的变化率，也就是某个位置现在正在升温还是降温。',
       sections: [{ title: '和动画的关系', body: '如果某处 u_t 是负的，那里的温度正在下降；如果是正的，那里的温度正在上升。' }],
     },
     'heat-uxx': {
       eyebrow: '变量',
-      title: 'uₓₓ 是什么',
+      title: '局部曲率 uₓₓ',
       summary: 'uₓₓ 表示温度曲线对位置的二阶导数，可以理解成“这个点和附近平均温度的差”。',
       sections: [
         { title: '正负号', body: '如果一个点比邻居高很多，uₓₓ 通常为负，它会降温；如果一个点比邻居低，uₓₓ 通常为正，它会升温。' },
@@ -1685,7 +1685,7 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
     },
     'phase-state': {
       eyebrow: '术语',
-      title: '状态点是什么',
+      title: '状态点',
       summary: '状态点不是普通空间位置，而是一组变量当前的数值。',
       sections: [
         { title: '例子', body: '在摆模块里，一个点是 (角度, 角速度)。在种群模块里，一个点是 (猎物数量, 捕食者数量)。' },
@@ -1694,7 +1694,7 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
     },
     'phase-arrow': {
       eyebrow: '术语',
-      title: '相图箭头怎么读',
+      title: '相图箭头',
       summary: "箭头来自 x' 和 y'，表示当前状态下一瞬间往哪里走。",
       sections: [
         { title: '本图的约定', body: '箭头长度已归一化，所以不要用长度判断速度。箭头深浅会提示速度大小，方向仍然是最重要的信息。' },
@@ -1705,23 +1705,23 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
       eyebrow: '术语',
       title: '时间藏在哪里',
       summary: '相图里没有单独的时间轴，时间体现在轨迹的前进方向上。',
-      sections: [{ title: '怎么看', body: '从初始点开始，沿着箭头方向走，就是时间增加时系统状态的变化。图上不能直接读出“几点到达这里”，但能读出长期趋势。' }],
+      sections: [{ title: '时间方向', body: '从初始点沿箭头延伸的方向，就是时间增加时系统状态的变化。图上不能直接读出“几点到达这里”，但能读出长期趋势。' }],
     },
     'pendulum-theta': {
       eyebrow: '变量',
-      title: 'θ 是什么',
+      title: '角度 θ',
       summary: 'θ 是摆偏离竖直方向的角度。',
       sections: [{ title: '调 θ₀ 会怎样', body: 'θ₀ 越大，表示一开始把摆拉得越偏；初始能量也通常越大。' }],
     },
     'pendulum-omega': {
       eyebrow: '变量',
-      title: 'ω 是什么',
+      title: '角速度 ω',
       summary: 'ω 是角速度，表示角度正在变化得多快。',
       sections: [{ title: '调 ω₀ 会怎样', body: 'ω₀ 的绝对值越大，摆一开始转得越快；正负号表示起始转动方向。' }],
     },
     'pendulum-damping': {
       eyebrow: '参数',
-      title: '阻尼 c 是什么',
+      title: '阻尼 c',
       summary: 'c 表示摩擦或空气阻力这类能量损失。',
       sections: [
         { title: '调大 c', body: '能量流失更快，轨迹更快向稳定点收缩。' },
@@ -1730,7 +1730,7 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
     },
     'pendulum-gravity': {
       eyebrow: '参数',
-      title: '重力 g 是什么',
+      title: '重力 g',
       summary: 'g 控制摆被拉回竖直方向的强度。',
       sections: [{ title: '调大 g', body: '摆会更快被拉回中间，小幅摆动的节奏也会更快。' }],
     },
@@ -1772,7 +1772,7 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
   const en: Record<DifferentialTermId, HelpTopic> = {
     'y-prime': {
       eyebrow: 'Term',
-      title: "What y' means",
+      title: "Derivative y'",
       summary: "y' is the derivative of y, or the instantaneous rate of change of y.",
       sections: [
         { title: 'In this app', body: "If the horizontal axis is t, then y' means dy/dt: how quickly y changes when t moves a tiny amount." },
@@ -1781,7 +1781,7 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
     },
     ode: {
       eyebrow: 'Term',
-      title: 'What an ODE is',
+      title: 'Ordinary differential equation',
       summary: 'ODE means ordinary differential equation.',
       sections: [{ title: 'Intuition', body: 'It does not directly tell you y. It tells you how y changes. Solving it means finding a curve that obeys that change rule everywhere.' }],
     },
@@ -1795,7 +1795,7 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
       eyebrow: 'Term',
       title: 'Slope field',
       summary: 'A slope field draws local slopes at many points.',
-      sections: [{ title: 'How to read it', body: 'The segments are not the solution. They show which direction a solution should move if it passes nearby.' }],
+      sections: [{ title: 'Local direction', body: 'The segments are not the solution. They show which direction a solution should move if it passes nearby.' }],
     },
     euler: {
       eyebrow: 'Term',
@@ -1823,7 +1823,7 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
     },
     'heat-u': {
       eyebrow: 'Variable',
-      title: 'What u means',
+      title: 'Temperature u(x,t)',
       summary: 'u(x,t) is the temperature or heat intensity at position x and time t.',
       sections: [
         { title: 'On the graph', body: 'The curve height at a position x is u. Higher means hotter.' },
@@ -1832,7 +1832,7 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
     },
     'heat-alpha': {
       eyebrow: 'Variable',
-      title: 'What alpha means',
+      title: 'Diffusivity alpha',
       summary: 'Alpha is the diffusivity. It controls how quickly heat spreads from hot regions to cooler regions.',
       sections: [
         { title: 'Larger alpha', body: 'The curve smooths faster, so peaks and sharp edges disappear sooner.' },
@@ -1841,13 +1841,13 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
     },
     'heat-ut': {
       eyebrow: 'Variable',
-      title: 'What u_t means',
+      title: 'Time derivative u_t',
       summary: 'u_t is the rate of temperature change over time at one position.',
       sections: [{ title: 'In the animation', body: 'If u_t is negative, that point is cooling down. If it is positive, that point is warming up.' }],
     },
     'heat-uxx': {
       eyebrow: 'Variable',
-      title: 'What uₓₓ means',
+      title: 'Local curvature uₓₓ',
       summary: 'uₓₓ is the second derivative with respect to position. You can read it as how this point compares with the local average nearby.',
       sections: [
         { title: 'Sign', body: 'If a point is much hotter than its neighbors, uₓₓ is usually negative and it cools. If it is cooler than neighbors, uₓₓ is usually positive and it warms.' },
@@ -1868,13 +1868,13 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
       title: 'State point',
       summary: 'A state point is not a physical location. It is the current values of a set of variables.',
       sections: [
-        { title: 'Examples', body: 'In the pendulum explorer, a point is (angle, angular velocity). In the population explorer, a point is (prey count, predator count).' },
+        { title: 'Examples', body: 'In the pendulum module, a point is (angle, angular velocity). In the population module, a point is (prey count, predator count).' },
         { title: 'Why it helps', body: 'One point tells the current situation. Following a trajectory shows how that situation changes over time.' },
       ],
     },
     'phase-arrow': {
       eyebrow: 'Term',
-      title: 'How to read phase arrows',
+      title: 'Phase arrows',
       summary: "Arrows come from x' and y'. They show where the state moves next.",
       sections: [
         { title: 'This graph convention', body: 'Arrow length is normalized, so do not use length as speed. Opacity hints speed; direction is the main information.' },
@@ -1885,23 +1885,23 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
       eyebrow: 'Term',
       title: 'Where time is',
       summary: 'A phase portrait has no separate time axis. Time appears as direction along trajectories.',
-      sections: [{ title: 'How to read it', body: 'Start at the initial point and follow the arrows. That is how the state changes as time increases. You cannot read the exact arrival time directly, but you can read long-term behavior.' }],
+      sections: [{ title: 'Direction through time', body: 'The arrow direction extending from the initial point is the state change as time increases. Exact arrival time is not visible directly, but long-term behavior is.' }],
     },
     'pendulum-theta': {
       eyebrow: 'Variable',
-      title: 'What theta means',
+      title: 'Angle theta',
       summary: 'Theta is the angle away from vertical.',
       sections: [{ title: 'Changing theta0', body: 'Larger theta0 means the pendulum starts farther from center, usually with more initial energy.' }],
     },
     'pendulum-omega': {
       eyebrow: 'Variable',
-      title: 'What omega means',
+      title: 'Angular velocity omega',
       summary: 'Omega is angular velocity: how quickly the angle is changing.',
       sections: [{ title: 'Changing omega0', body: 'Larger absolute omega0 means the pendulum starts with more turning speed. The sign sets the starting direction.' }],
     },
     'pendulum-damping': {
       eyebrow: 'Parameter',
-      title: 'What damping c means',
+      title: 'Damping c',
       summary: 'c represents energy loss from friction or air resistance.',
       sections: [
         { title: 'Larger c', body: 'Energy drains faster, so the trajectory shrinks toward the stable point sooner.' },
@@ -1910,7 +1910,7 @@ function differentialTermTopic(term: DifferentialTermId, locale: DifferentialLoc
     },
     'pendulum-gravity': {
       eyebrow: 'Parameter',
-      title: 'What gravity g means',
+      title: 'Gravity g',
       summary: 'g controls how strongly the pendulum is pulled back toward vertical.',
       sections: [{ title: 'Larger g', body: 'The pendulum is pulled back faster, and small swings have a faster rhythm.' }],
     },
@@ -2004,6 +2004,12 @@ function drawSlopeFieldLesson(ctx: CanvasRenderingContext2D, viewport: GraphView
   const backward = integrateScalarOde(state.scalarFn, { t0: state.t0, y0: state.y0, step: -step, steps: state.steps, method: state.method })
   drawScalarPath(ctx, viewport, [...backward.slice().reverse(), ...forward.slice(1)], theme.warning, 2.6)
   drawPoint(ctx, viewport, state.t0, state.y0, theme.warning)
+  const current = forward.at(-1)
+  if (current) {
+    const slope = state.scalarFn(current.t, current.y)
+    if (typeof slope === 'number' && Number.isFinite(slope)) drawVectorArrow(ctx, viewport, current.t, current.y, 1, slope, theme.accent)
+    drawPoint(ctx, viewport, current.t, current.y, theme.accent)
+  }
 }
 
 function drawNumericalMethodsLesson(ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme, state: { scalarFn: ScalarOde; t0: number; y0: number; duration: number; steps: number }) {
@@ -2028,6 +2034,12 @@ function drawPhasePortraitLesson(ctx: CanvasRenderingContext2D, viewport: GraphV
   const selected = integrateSystem(system, { x0: initial.x, y0: initial.y, step: 0.04, steps: Math.round(duration * 25), bounds: viewport })
   drawPhasePath(ctx, viewport, selected, theme.warning, 2.5, 1)
   drawPoint(ctx, viewport, initial.x, initial.y, theme.warning)
+  const current = selected.at(-1)
+  if (current) {
+    const direction = system(current.x, current.y)
+    if (direction) drawVectorArrow(ctx, viewport, current.x, current.y, direction.dx, direction.dy, theme.accent)
+    drawPoint(ctx, viewport, current.x, current.y, theme.accent)
+  }
 }
 
 function drawPendulumLesson(ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme, state: { theta0: number; omega0: number; damping: number; gravity: number; duration: number }) {
@@ -2036,6 +2048,12 @@ function drawPendulumLesson(ctx: CanvasRenderingContext2D, viewport: GraphViewpo
   const points = simulatePendulum({ theta0: state.theta0, omega0: state.omega0, damping: state.damping, gravity: state.gravity, step: 0.035, steps: Math.round(state.duration / 0.035) })
   drawPhasePath(ctx, viewport, points.map((point) => ({ x: point.theta, y: point.omega })), theme.warning, 2.5, 1)
   drawPoint(ctx, viewport, state.theta0, state.omega0, theme.warning)
+  const current = points.at(-1)
+  if (current) {
+    const direction = system(current.theta, current.omega)
+    if (direction) drawVectorArrow(ctx, viewport, current.theta, current.omega, direction.dx, direction.dy, theme.accent)
+    drawPoint(ctx, viewport, current.theta, current.omega, theme.accent)
+  }
   drawPendulumInset(ctx, viewport, theme, points.at(-1)?.theta ?? state.theta0)
 }
 
@@ -2045,6 +2063,12 @@ function drawPopulationLesson(ctx: CanvasRenderingContext2D, viewport: GraphView
   const trajectory = simulatePopulation({ ...state, step: 0.035, steps: Math.round(state.duration / 0.035) })
   drawPhasePath(ctx, viewport, trajectory, theme.warning, 2.6, 1)
   drawPoint(ctx, viewport, state.prey0, state.predator0, theme.warning)
+  const current = trajectory.at(-1)
+  if (current) {
+    const direction = system(current.x, current.y)
+    if (direction) drawVectorArrow(ctx, viewport, current.x, current.y, direction.dx, direction.dy, theme.accent)
+    drawPoint(ctx, viewport, current.x, current.y, theme.accent)
+  }
   const equilibrium = { x: state.predatorDeath / state.conversion, y: state.preyGrowth / state.predation }
   if (Number.isFinite(equilibrium.x) && Number.isFinite(equilibrium.y)) drawPoint(ctx, viewport, equilibrium.x, equilibrium.y, theme.secondary)
 }
@@ -2403,6 +2427,12 @@ function legendRows(lessonId: string, locale: DifferentialLocale): { label: stri
     return [
       { label: locale === 'zh' ? '初始' : 'initial', color: '#a7b1bd' },
       { label: locale === 'zh' ? '当前' : 'current', color: '#c7dc8a' },
+    ]
+  }
+  if (lessonId === 'slope-fields' || lessonId === 'phase-portraits' || lessonId === 'pendulum' || lessonId === 'population') {
+    return [
+      { label: locale === 'zh' ? '数值轨迹' : 'numerical trajectory', color: '#c7dc8a' },
+      { label: locale === 'zh' ? '当前位置 / 方向' : 'current state / direction', color: '#7fd6c2' },
     ]
   }
   return []

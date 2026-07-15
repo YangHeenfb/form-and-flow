@@ -25,18 +25,18 @@ type LearningCopy = {
 
 export const matrixLearningCopy: Record<Locale, LearningCopy> = {
   en: {
-    entryTitle: 'Reference notes',
-    entryHint: 'Use short notes when a symbol or picture is unfamiliar.',
-    openOverview: 'Reference',
-    openGraph: 'Graph notes',
-    close: 'Close reference',
+    entryTitle: 'Notes',
+    entryHint: 'Short observations connecting the canvas, readout, and notation.',
+    openOverview: 'Notes',
+    openGraph: 'Visual notes',
+    close: 'Close notes',
   },
   zh: {
-    entryTitle: '参考',
-    entryHint: '遇到矩阵、基向量、行列式或秩这些概念时，可以打开简短参考。',
-    openOverview: '参考',
-    openGraph: '图像说明',
-    close: '关闭参考',
+    entryTitle: '笔记',
+    entryHint: '把画布、读数和符号联系起来的简短观察。',
+    openOverview: '笔记',
+    openGraph: '视觉笔记',
+    close: '关闭笔记',
   },
 }
 
@@ -56,8 +56,8 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
 
   return {
     overview: {
-      eyebrow: '矩阵模块',
-      title: '这个模块能观察什么？',
+      eyebrow: '笔记',
+      title: '矩阵作为空间运动',
       summary: (
         <>
           先把矩阵看成一台“移动空间的机器”：输入向量 <Formula tex="v" />，输出新向量 <Formula tex="Av" />。数字表是输入方式，空间怎么动是它的几何意义。
@@ -65,66 +65,51 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
       ),
       sections: [
         {
-          title: '画面元素',
+          title: '观察',
           items: [
             '网格、基向量、单位形状和你添加的向量，会按同一个矩阵一起移动。',
             '每一列告诉你一个基础方向会被送到哪里。',
-            '图像先给直觉，右侧数字帮你确认直觉。',
+            '图像呈现几何变化，右侧读数保留同一变化的代数描述。',
           ],
         },
         {
-          title: '读图顺序',
+          title: '结构关系',
           items: [
-            `先看 ${basisNames} 这些基向量去了哪里。`,
-            '再看单位方格或单位立方体有没有变大、压扁或翻面。',
-            '再看你添加的向量最后落在哪里。',
-            '最后看行列式、秩和零化度是否印证观察。',
-          ],
-        },
-        {
-          title: '试试看',
-          items: [
-            '只改第一列，观察 i 向量和网格怎样变化。',
-            '换一个投影或反射预设，再打开右侧数字对照。',
+            `${basisNames} 的落点就是矩阵的各列。`,
+            '单位形状显示面积或体积的伸缩与退化。',
+            '行列式、秩和零化度把这些几何变化压缩成数值。',
           ],
         },
       ],
     },
     graph: {
-      eyebrow: '图像阅读',
-      title: `${viewKind}里每个东西代表什么？`,
+      eyebrow: '视觉笔记',
+      title: `${viewKind}中的线性映射`,
       summary: `当前图像表示一个从 ${inputSpace} 到 ${outputSpace} 的线性映射。你看到的不是函数曲线，而是网格、基向量、单位形状和向量这些代表性对象的变化。`,
       sections: [
         {
-          title: '颜色和形状',
+          title: '视觉编码',
           items: [
             '灰色网格是原来的坐标空间；彩色/变形后的网格是矩阵作用后的空间。',
             `${basisNames} 是基向量，也就是坐标轴方向上的单位箭头。`,
             '单位方形或单位立方体会显示面积/体积如何被拉伸、压缩或翻转。',
             '你添加的向量会从变换前的位置移动到输出位置。',
-            '在 2D 视图中，轨迹会显示向量从起点到当前结果的大致路径。',
+            '在 2D 视图中，轨迹显示逐项插值所选择的动画路径；最终落点才是当前矩阵映射的结果。',
           ],
         },
         {
-          title: '怎么判断发生了什么',
+          title: '结构变化',
           items: [
-            '网格变密表示空间被压缩，变疏表示空间被放大。',
+            '网格间距和夹角共同显示各方向上的伸缩与错切。',
             '单位形状被压成线或点时，说明某些方向的信息丢失了。',
-            '如果方向顺序被翻过来，右侧通常会出现负的行列式提示。',
-          ],
-        },
-        {
-          title: '试试看',
-          items: [
-            '先关掉向量，只看网格和基向量。',
-            '再打开向量，检查具体点是否跟着同一套规则移动。',
+            '对非奇异方阵，方向顺序翻转对应负行列式。',
           ],
         },
       ],
     },
     matrix: {
       eyebrow: '术语',
-      title: '矩阵是什么？',
+      title: '矩阵',
       summary: (
         <>
           在这个模块里，矩阵 <Formula tex="A" /> 是一个数字表，用来定义规则 <Formula tex="v" /> ↦ <Formula tex="Av" />。数字表是输入方式，空间运动是它的几何意义。
@@ -132,7 +117,7 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
       ),
       sections: [
         {
-          title: '形状怎么读',
+          title: '形状与条目',
           items: [
             `${outputDim}×${inputDim} 表示行数 × 列数，也就是输出维度 × 输入维度。`,
             `它会把 ${inputSpace} 的向量映射到 ${outputSpace} 的向量。`,
@@ -163,17 +148,17 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           ),
         },
         {
-          title: '试试看',
+          title: '变化线索',
           items: [
-            '只改第一列，观察 i 向量和整张网格怎么变。',
-            '只改第一行，观察输出的第一个坐标怎么受影响。',
+            '第一列改变时，i 向量与整张网格会同步响应。',
+            '第一行改变时，每个输出向量的第一个坐标都会受到影响。',
           ],
         },
       ],
     },
     'linear-map': {
       eyebrow: '术语',
-      title: '线性映射是什么意思？',
+      title: '线性映射',
       summary: '线性映射是一种很规矩的变换：它可以拉伸、旋转、剪切、投影或压扁；直线仍会变成直线或被压成点；原点一定还在原点。它不会做整体平移。',
       sections: [
         {
@@ -184,10 +169,10 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           ],
         },
         {
-          title: '试试看',
+          title: '变化线索',
           items: [
-            '找一个投影预设，观察很多点被压到同一条线或平面。',
-            '尝试把图形整体右移：矩阵做不到，因为原点必须留在原点。',
+            '投影预设会让许多点同时压到一条线或一个平面。',
+            '矩阵不能把图形整体右移，因为原点必须留在原点。',
           ],
         },
       ],
@@ -210,10 +195,10 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           ),
         },
         {
-          title: '试试看',
+          title: '变化线索',
           items: [
-            '先剪切再旋转，然后交换顺序。',
-            '如果结果不一样，这就是矩阵乘法通常不能交换的原因。',
+            '剪切后旋转与旋转后剪切通常会到达不同结果。',
+            '这种顺序差异直接显示矩阵乘法通常不能交换。',
           ],
         },
       ],
@@ -236,7 +221,7 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
     },
     basis: {
       eyebrow: '术语',
-      title: '基向量是什么？为什么看它？',
+      title: '基向量',
       summary: `基向量是输入坐标系统的基础方向。当前输入是 ${inputSpace}，所以要看 ${basisNames}。`,
       sections: [
         {
@@ -248,21 +233,21 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           body: '任意向量都可以由基向量加权拼出来。只要知道基向量的新位置，任意向量的新位置也就确定了。',
         },
         {
-          title: '试试看',
+          title: '变化线索',
           items: [
-            '把第一列改大，观察 i 和所有含有 x 分量的向量。',
-            '把两列改成相同方向，观察单位形状是否被压扁。',
+            '第一列放大时，i 与所有含 x 分量的向量一起变化。',
+            '两列指向同一方向时，单位形状会向较低维度坍缩。',
           ],
         },
       ],
     },
     determinant: {
       eyebrow: '术语',
-      title: '行列式在图上代表什么？',
+      title: '图像中的行列式',
       summary: '行列式只适用于方阵，比如 R² → R² 或 R³ → R³。它同时告诉你大小缩放和方向有没有翻转。',
       sections: [
         {
-          title: '怎么读行列式',
+          title: '面积与方向',
           items: [
             '|det(A)|：面积或体积变成几倍。',
             'det(A) 的正负号：方向顺序有没有被翻过来。',
@@ -280,17 +265,17 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           ],
         },
         {
-          title: '试试看',
+          title: '变化线索',
           items: [
-            '把 2D 矩阵改成 [2 0; 0 1]，单位方格宽度翻倍，面积变成 2 倍。',
-            '把其中一列改成另一列的倍数，观察面积怎样接近 0。',
+            '矩阵 [2 0; 0 1] 让单位方格宽度翻倍，面积变为 2 倍。',
+            '一列逐渐成为另一列的倍数时，面积会接近 0。',
           ],
         },
       ],
     },
     'rank-nullity': {
       eyebrow: '术语',
-      title: '秩和零化度在说什么？',
+      title: '秩与零化度',
       summary: '秩：结果还能占住几个方向。零化度：有几个输入方向被矩阵完全抹掉。',
       sections: [
         {
@@ -318,17 +303,17 @@ function zhTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           ),
         },
         {
-          title: '试试看',
+          title: '变化线索',
           items: [
-            '选择投影预设，观察秩是否变小。',
-            '把所有列改成 0，观察零化度是否等于输入维度。',
+            '投影预设通常会降低秩，并让单位形状坍缩。',
+            '所有列都为 0 时，零化度等于输入维度。',
           ],
         },
       ],
     },
     vector: {
       eyebrow: '术语',
-      title: '向量在这个实验里是什么？',
+      title: '向量',
       summary: (
         <>
           向量可以看作一个箭头，也可以看作从原点出发的坐标。矩阵会把输入向量 <Formula tex="v" /> 变成输出向量 <Formula tex="Av" />。
@@ -360,8 +345,8 @@ function enTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
 
   return {
     overview: {
-      eyebrow: 'Matrix module',
-      title: 'What is this lab showing?',
+      eyebrow: 'Notes',
+      title: 'A matrix as motion of space',
       summary: (
         <>
           Treat a matrix as a machine that moves space: it takes a vector <Formula tex="v" /> and returns <Formula tex="Av" />. The table of numbers is how you enter the rule; the motion is its geometric meaning.
@@ -369,66 +354,51 @@ function enTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
       ),
       sections: [
         {
-          title: 'Notes',
+          title: 'Observation',
           items: [
             'The grid, basis vectors, unit shape, and custom vectors all move by the same matrix.',
             'Each column tells where one basic direction lands.',
-            'The picture gives intuition first; the numbers on the right help confirm it.',
+            'The picture carries the geometry; the readout keeps the same change in algebraic form.',
           ],
         },
         {
-          title: 'Reading order',
+          title: 'Structural relations',
           items: [
-            `First watch where ${basisNames} land.`,
-            'Then check whether the unit square or cube grows, collapses, or flips.',
-            'Then follow any custom vector you added.',
-            'Finally, use determinant, rank, and nullity to confirm your observation.',
-          ],
-        },
-        {
-          title: 'Try this',
-          items: [
-            'Change only the first column and watch the i vector and grid.',
-            'Switch to a projection or reflection preset, then compare the right-side numbers.',
+            `The destinations of ${basisNames} are the matrix columns.`,
+            'The unit shape records scaling, collapse, and orientation change.',
+            'Determinant, rank, and nullity compress those geometric changes into numbers.',
           ],
         },
       ],
     },
     graph: {
-      eyebrow: 'Reading the picture',
-      title: `What does the ${viewKind} mean?`,
+      eyebrow: 'Visual notes',
+      title: `The linear map in the ${viewKind}`,
       summary: `The current picture is a linear map from ${inputSpace} to ${outputSpace}. It is not a function curve; it shows representative objects such as the grid, basis vectors, unit shape, and vectors.`,
       sections: [
         {
-          title: 'Colors and shapes',
+          title: 'Visual encoding',
           items: [
             'The gray grid is the original coordinate space; the transformed grid shows where that space lands.',
             `${basisNames} are basis vectors: unit arrows along the coordinate directions.`,
             'The unit square or unit cube shows how area or volume changes.',
             'Custom vectors move from their input position to their output position.',
-            'In the 2D view, trails show the approximate path from the start to the current result.',
+            'In the 2D view, trails follow the chosen entrywise interpolation; the endpoint is the result of the current matrix map.',
           ],
         },
         {
-          title: 'What to look for',
+          title: 'Structural changes',
           items: [
-            'A denser grid means compression; a wider grid means expansion.',
+            'Grid spacing and angles together show directional stretching, compression, and shear.',
             'If the unit shape collapses into a line or point, some directions were lost.',
-            'If orientation flips, the determinant on the right is usually negative.',
-          ],
-        },
-        {
-          title: 'Try this',
-          items: [
-            'Hide vectors first and read only the grid and basis vectors.',
-            'Turn vectors back on and check that specific points follow the same rule.',
+            'For a nonsingular square map, an orientation flip corresponds to a negative determinant.',
           ],
         },
       ],
     },
     matrix: {
       eyebrow: 'Term',
-      title: 'What is a matrix?',
+      title: 'Matrix',
       summary: (
         <>
           In this module, a matrix <Formula tex="A" /> is a table of numbers defining the rule <Formula tex="v" /> ↦ <Formula tex="Av" />. The table is the input format; the space motion is the geometry.
@@ -467,17 +437,17 @@ function enTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           ),
         },
         {
-          title: 'Try this',
+          title: 'What changes',
           items: [
-            'Change only the first column and watch the i vector and whole grid.',
-            'Change only the first row and watch the first output coordinate.',
+            'Changing only the first column moves the i vector and the whole grid together.',
+            'Changing only the first row alters the first coordinate of every output vector.',
           ],
         },
       ],
     },
     'linear-map': {
       eyebrow: 'Term',
-      title: 'What is a linear map?',
+      title: 'Linear map',
       summary: 'A linear map is a disciplined transformation: it may stretch, rotate, shear, project, or collapse. Lines stay lines or collapse to points, and the origin stays fixed. It does not translate everything.',
       sections: [
         {
@@ -488,10 +458,10 @@ function enTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           ],
         },
         {
-          title: 'Try this',
+          title: 'What changes',
           items: [
-            'Choose a projection preset and watch many points collapse onto one line or plane.',
-            'Try to move the whole picture right: a matrix cannot do that because the origin must stay fixed.',
+            'A projection preset collapses many points onto one line or plane.',
+            'A matrix cannot translate the whole picture to the right because the origin must stay fixed.',
           ],
         },
       ],
@@ -514,10 +484,10 @@ function enTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           ),
         },
         {
-          title: 'Try this',
+          title: 'What changes',
           items: [
-            'Shear first and rotate second, then swap the order.',
-            'If the result changes, you are seeing why matrix multiplication usually does not commute.',
+            'Shear-then-rotate and rotate-then-shear usually end at different results.',
+            'That order dependence makes noncommutativity visible.',
           ],
         },
       ],
@@ -540,7 +510,7 @@ function enTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
     },
     basis: {
       eyebrow: 'Term',
-      title: 'What are basis vectors?',
+      title: 'Basis vectors',
       summary: `Basis vectors are the basic directions of the input coordinate system. The current input is ${inputSpace}, so watch ${basisNames}.`,
       sections: [
         {
@@ -552,21 +522,21 @@ function enTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           body: 'Any vector is built from weighted basis vectors. Once the new basis positions are known, every vector output is determined.',
         },
         {
-          title: 'Try this',
+          title: 'What changes',
           items: [
-            'Make the first column larger and watch i plus vectors with x components.',
-            'Make two columns point the same way and watch whether the unit shape collapses.',
+            'Enlarging the first column moves i and every vector with an x component.',
+            'When two columns point the same way, the unit shape collapses toward a lower dimension.',
           ],
         },
       ],
     },
     determinant: {
       eyebrow: 'Term',
-      title: 'What does determinant mean in the picture?',
+      title: 'Determinant in the picture',
       summary: 'Determinant only applies to square maps such as R² → R² or R³ → R³. It tells both size scale and whether orientation flips.',
       sections: [
         {
-          title: 'How to read it',
+          title: 'Interpretation',
           items: [
             '|det(A)| is how many times area or volume changes.',
             'The sign of det(A) says whether direction order flipped.',
@@ -584,17 +554,17 @@ function enTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           ],
         },
         {
-          title: 'Try this',
+          title: 'What changes',
           items: [
-            'Set a 2D matrix to [2 0; 0 1]. The unit square doubles in width and area.',
-            'Make one column a multiple of another and watch area move toward 0.',
+            'For [2 0; 0 1], the unit square doubles in width and area.',
+            'As one column becomes a multiple of another, area approaches 0.',
           ],
         },
       ],
     },
     'rank-nullity': {
       eyebrow: 'Term',
-      title: 'What do rank and nullity say?',
+      title: 'Rank and nullity',
       summary: 'Rank says how many directions the result can still occupy. Nullity says how many input directions the matrix completely erases.',
       sections: [
         {
@@ -606,7 +576,7 @@ function enTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           ],
         },
         {
-          title: 'How to see it',
+          title: 'Geometric reading',
           items: [
             'Rank 2 means the result still spreads across a plane.',
             'Rank 1 means the result is only a line.',
@@ -622,17 +592,17 @@ function enTopics(inputDim: SpaceDim, outputDim: SpaceDim, usesThree: boolean): 
           ),
         },
         {
-          title: 'Try this',
+          title: 'What changes',
           items: [
-            'Choose a projection preset and watch whether rank decreases.',
-            'Set every column to 0 and check that nullity equals the input dimension.',
+            'Projection presets usually reduce rank and collapse the unit shape.',
+            'When every column is 0, nullity equals the input dimension.',
           ],
         },
       ],
     },
     vector: {
       eyebrow: 'Term',
-      title: 'What is a vector here?',
+      title: 'Vector in this view',
       summary: (
         <>
           A vector is an arrow or a coordinate from the origin. A matrix turns an input vector <Formula tex="v" /> into an output vector <Formula tex="Av" />.

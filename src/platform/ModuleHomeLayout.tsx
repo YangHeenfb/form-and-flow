@@ -38,15 +38,11 @@ export function ModuleHomeLayout({
               <h2>{explorer.title}</h2>
               <p>{explorer.description}</p>
             </div>
-            <div className="lesson-card-try">
-              <strong>{copy.thingsToTry}</strong>
-              <ul>
-                {explorer.thingsToTry.slice(0, 2).map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
+            <div className="lesson-card-observation">
+              <strong>{copy.observation}</strong>
+              <p>{explorer.observation ?? explorer.description}</p>
             </div>
-            <span className="open-explorer-link">{copy.openExplorer}</span>
+            <span className="open-explorer-link">{copy.openModule}</span>
           </a>
         ))}
       </div>

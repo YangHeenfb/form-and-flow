@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useLayoutEffect, useRef } from 'react'
 import { usePlatformSurfaceMode } from '../../../platform/platformLocale.tsx'
 import { readProbabilityTheme, type ProbabilityTheme } from './probabilityThemeAdapter.ts'
 
@@ -17,33 +17,37 @@ type Props = {
 export function ProbabilityCanvas({ ariaLabel, className, draw }: Props) {
   const { surfaceMode } = usePlatformSurfaceMode()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const drawRef = useRef(draw)
 
-  useEffect(() => {
+  const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    let frame = 0
-    const render = () => {
-      const rect = canvas.getBoundingClientRect()
-      const dpr = window.devicePixelRatio || 1
-      canvas.width = Math.max(1, Math.floor(rect.width * dpr))
-      canvas.height = Math.max(1, Math.floor(rect.height * dpr))
-      const ctx = canvas.getContext('2d')
-      if (!ctx) return
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      draw(ctx, { width: rect.width, height: rect.height, devicePixelRatio: dpr }, readProbabilityTheme(canvas))
-    }
-    const schedule = () => {
-      cancelAnimationFrame(frame)
-      frame = requestAnimationFrame(render)
-    }
-    schedule()
-    const observer = new ResizeObserver(schedule)
+    const rect = canvas.getBoundingClientRect()
+    const dpr = window.devicePixelRatio || 1
+    const pixelWidth = Math.max(1, Math.floor(rect.width * dpr))
+    const pixelHeight = Math.max(1, Math.floor(rect.height * dpr))
+    if (canvas.width !== pixelWidth) canvas.width = pixelWidth
+    if (canvas.height !== pixelHeight) canvas.height = pixelHeight
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    drawRef.current(ctx, { width: rect.width, height: rect.height, devicePixelRatio: dpr }, readProbabilityTheme(canvas))
+  }, [])
+
+  useLayoutEffect(() => {
+    drawRef.current = draw
+    renderCanvas()
+  }, [draw, renderCanvas, surfaceMode])
+
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const observer = new ResizeObserver(renderCanvas)
     observer.observe(canvas)
     return () => {
-      cancelAnimationFrame(frame)
       observer.disconnect()
     }
-  }, [draw, surfaceMode])
+  }, [renderCanvas])
 
   return <canvas ref={canvasRef} className={`graph-canvas probability-canvas probability-main-canvas${className ? ` ${className}` : ''}`} aria-label={ariaLabel} />
 }

@@ -34,7 +34,11 @@ export type ExplorerDefinition = {
   description: string
   route: string
   status: ExplorerStatus
-  thingsToTry: string[]
+  thingsToTry?: string[]
+  observation?: string
+  whatChanges?: string
+  notes?: string
+  connections?: string[]
   loadComponent?: ModuleComponentLoader
   relatedConcepts?: string[]
 }

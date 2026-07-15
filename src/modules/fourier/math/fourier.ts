@@ -63,6 +63,21 @@ export function computeWindingPoints(samples: number[], frequency: number): Wind
   })
 }
 
+export function interpolateWindingPoint(points: WindingPoint[], progress: number): Complex | undefined {
+  if (points.length === 0) return undefined
+  const wrappedProgress = ((progress % 1) + 1) % 1
+  const position = wrappedProgress * points.length
+  const lowerIndex = Math.floor(position) % points.length
+  const upperIndex = (lowerIndex + 1) % points.length
+  const mix = position - Math.floor(position)
+  const lower = points[lowerIndex].point
+  const upper = points[upperIndex].point
+  return complex(
+    lower.re + (upper.re - lower.re) * mix,
+    lower.im + (upper.im - lower.im) * mix,
+  )
+}
+
 export function computeCenterOfMass(samples: number[], frequency: number): Complex {
   return computeCoefficientAtFrequency(samples, frequency).value
 }

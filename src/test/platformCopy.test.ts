@@ -11,11 +11,11 @@ describe('platform localization', () => {
     expect(matrix.title).toBe('矩阵与线性变换')
     expect(matrix.shortTitle).toBe('矩阵')
     expect(matrix.explorers[0].title).toBe('矩阵变换')
-    expect(matrix.explorers[0].thingsToTry).toContain('组合矩阵变换')
+    expect(matrix.explorers[0].observation).toContain('基向量')
 
     expect(calculus.title).toBe('微积分')
     expect(calculus.explorers.find((explorer) => explorer.id === 'taylor')?.title).toBe('泰勒多项式')
-    expect(calculus.explorers.find((explorer) => explorer.id === 'taylor')?.description).toBe('围绕一个中心构造局部多项式近似。')
+    expect(calculus.explorers.find((explorer) => explorer.id === 'taylor')?.description).toBe('用一个中心点的局部信息构造多项式。')
   })
 
   it('keeps English metadata as the source fallback', () => {

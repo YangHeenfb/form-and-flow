@@ -100,14 +100,14 @@ const calculusCopy: Record<CalculusLocale, {
       pause: 'Pause',
       reset: 'Reset animation',
       resetView: 'Reset view',
-      lesson: 'Explorer',
+      lesson: 'Module',
       exportPng: 'Export PNG',
       playbackProgress: 'Playback progress',
-      seeing: 'Notes',
+      seeing: 'Observation',
       why: 'Notes',
-      formula: 'Formula used',
+      formula: 'Formula',
       values: 'Readout',
-      watch: 'Assumptions / Caveats',
+      watch: 'Notes',
       graphInstructions: 'Drag to pan, scroll to zoom.',
       invalidExpression: 'Invalid expression.',
       undefinedValue: 'undefined',
@@ -128,15 +128,15 @@ const calculusCopy: Record<CalculusLocale, {
     lessons: {
       derivative: {
         title: 'Derivative',
-        what: 'Start with the average change between two points. As the second point moves closer, the secant line can settle into the tangent direction.',
+        what: 'The average change between two points becomes increasingly local as the second point approaches the first, and the secant line can settle into the tangent direction.',
         why: 'The derivative is the stable slope you get only when the left and right approaches agree.',
         formula: 'm_h=(f(x0+h)-f(x0))/h',
         formulaTex: 'm_h=\\frac{f(x_0+h)-f(x_0)}{h}',
         watch: 'At corners or jumps, the derivative is undefined when left and right slopes disagree.',
       },
       integral: {
-        title: 'Integral / Riemann Sums',
-        what: 'Each small rectangle or trapezoid represents a contribution from one slice of the interval.',
+        title: 'Integral / Area Approximation',
+        what: 'Rectangle modes form Riemann sums; trapezoid mode connects the two endpoint heights. Each shape contributes one slice of signed area.',
         why: 'A definite integral adds those signed contributions: above the axis counts positive, below counts negative.',
         formula: '∫[a,b] f(x) dx',
         formulaTex: '\\int_a^b f(x)\\,dx',
@@ -146,8 +146,8 @@ const calculusCopy: Record<CalculusLocale, {
         title: 'Fundamental Theorem Connector',
         what: 'The highlighted area in the upper graph is what creates the current point on A(x) below.',
         why: 'When x moves a tiny step, the new area is about current height times that tiny width, so A(x) changes at rate f(x).',
-        formula: "A(x)=∫[a,x] f(t)dt, A'(x)≈f(x)",
-        formulaTex: "A(x)=\\int_a^x f(t)\\,dt,\\quad A'(x)\\approx f(x)",
+        formula: "A(x)=∫[a,x] f(t)dt, A'(x)=f(x)",
+        formulaTex: "A(x)=\\int_a^x f(t)\\,dt,\\quad A'(x)=f(x)",
         watch: 'This is a numerical demonstration, not a formal proof.',
       },
       taylor: {
@@ -173,14 +173,14 @@ const calculusCopy: Record<CalculusLocale, {
       pause: '暂停',
       reset: '重置动画',
       resetView: '重置视图',
-      lesson: '探索器',
+      lesson: '模块',
       exportPng: '导出 PNG',
       playbackProgress: '播放进度',
-      seeing: '说明',
+      seeing: '观察',
       why: '说明',
-      formula: '使用公式',
+      formula: '公式',
       values: '读数',
-      watch: '假设 / 限制',
+      watch: '笔记',
       graphInstructions: '拖动可平移，滚轮可缩放。',
       invalidExpression: '表达式无效。',
       undefinedValue: '未定义',
@@ -201,15 +201,15 @@ const calculusCopy: Record<CalculusLocale, {
     lessons: {
       derivative: {
         title: '导数',
-        what: '先看两个点之间的平均变化率；当第二个点靠近第一个点，割线可能稳定到切线方向。',
+        what: '两个点之间的平均变化率会随着第二个点靠近而变得越来越局部，割线也可能稳定到切线方向。',
         why: '只有从左边和右边靠近时斜率稳定到同一个值，这个值才是导数。',
         formula: 'm_h=(f(x0+h)-f(x0))/h',
         formulaTex: 'm_h=\\frac{f(x_0+h)-f(x_0)}{h}',
         watch: '在尖角或跳跃处，如果左右斜率不一样，导数不存在。',
       },
       integral: {
-        title: '积分 / 黎曼和',
-        what: '每个小矩形或小梯形代表区间里一小段贡献：上方算正，下方算负。',
+        title: '积分 / 面积近似',
+        what: '矩形模式构成黎曼和，梯形模式连接每段的两个端点高度；每个小形状贡献一段有符号面积。',
         why: '定积分是在把一段区间里的很多小贡献加起来，得到净的有符号面积。',
         formula: '∫[a,b] f(x) dx',
         formulaTex: '\\int_a^b f(x)\\,dx',
@@ -219,8 +219,8 @@ const calculusCopy: Record<CalculusLocale, {
         title: '微积分基本定理',
         what: '上图高亮的累积面积，正在生成下图 A(x) 上的当前点。',
         why: '当 x 往右挪一小步，新增加的面积大约是“当前高度 f(x) × 那一小步宽度”，所以 A(x) 的变化速度就是 f(x)。',
-        formula: "A(x)=∫[a,x] f(t)dt, A'(x)≈f(x)",
-        formulaTex: "A(x)=\\int_a^x f(t)\\,dt,\\quad A'(x)\\approx f(x)",
+        formula: "A(x)=∫[a,x] f(t)dt, A'(x)=f(x)",
+        formulaTex: "A(x)=\\int_a^x f(t)\\,dt,\\quad A'(x)=f(x)",
         watch: '这里是数值演示，不是严格证明。',
       },
       taylor: {
@@ -653,9 +653,61 @@ function drawCalculusScene(
     return
   }
   drawFunction(ctx, viewport, state.fn, theme.primary, 2)
-  if (state.lessonId === 'derivative') drawDerivative(ctx, viewport, theme, state)
-  if (state.lessonId === 'integral') drawIntegral(ctx, viewport, theme, state)
-  if (state.lessonId === 'taylor') drawTaylor(ctx, viewport, theme, state)
+  if (state.lessonId === 'derivative') {
+    drawDerivative(ctx, viewport, theme, state)
+    drawCalculusLegend(ctx, theme, state.locale, [
+      { labelEn: 'f(x)', labelZh: 'f(x)', color: theme.primary },
+      { labelEn: 'secant m_h', labelZh: '割线 m_h', color: theme.secondary, dashed: true },
+      { labelEn: "tangent f'(x₀)", labelZh: "切线 f'(x₀)", color: theme.warning },
+    ])
+  }
+  if (state.lessonId === 'integral') {
+    drawIntegral(ctx, viewport, theme, state)
+    drawCalculusLegend(ctx, theme, state.locale, [
+      { labelEn: 'f(x)', labelZh: 'f(x)', color: theme.primary },
+      { labelEn: 'signed area pieces', labelZh: '有符号面积分块', color: theme.accent },
+    ])
+  }
+  if (state.lessonId === 'taylor') {
+    drawTaylor(ctx, viewport, theme, state)
+    drawCalculusLegend(ctx, theme, state.locale, [
+      { labelEn: 'f(x)', labelZh: 'f(x)', color: theme.primary },
+      { labelEn: 'Pₙ(x)', labelZh: 'Pₙ(x)', color: theme.warning },
+    ])
+  }
+}
+
+function drawCalculusLegend(
+  ctx: CanvasRenderingContext2D,
+  theme: GraphTheme,
+  locale: CalculusLocale,
+  items: Array<{ labelEn: string; labelZh: string; color: string; dashed?: boolean }>,
+) {
+  ctx.save()
+  ctx.font = '11px Inter, system-ui, sans-serif'
+  const labels = items.map((item) => locale === 'zh' ? item.labelZh : item.labelEn)
+  const width = Math.max(...labels.map((label) => ctx.measureText(label).width)) + 48
+  const height = items.length * 20 + 12
+  ctx.globalAlpha = 0.9
+  ctx.fillStyle = theme.background
+  ctx.fillRect(10, 10, width, height)
+  ctx.globalAlpha = 1
+  ctx.strokeStyle = theme.gridMajor
+  ctx.strokeRect(10, 10, width, height)
+  items.forEach((item, index) => {
+    const y = 22 + index * 20
+    ctx.strokeStyle = item.color
+    ctx.lineWidth = 2
+    ctx.setLineDash(item.dashed ? [5, 3] : [])
+    ctx.beginPath()
+    ctx.moveTo(20, y)
+    ctx.lineTo(38, y)
+    ctx.stroke()
+    ctx.setLineDash([])
+    ctx.fillStyle = theme.text
+    ctx.fillText(labels[index], 44, y + 4)
+  })
+  ctx.restore()
 }
 
 function drawFunction(ctx: CanvasRenderingContext2D, viewport: GraphViewport, fn: RealFunction, color: string, width: number) {

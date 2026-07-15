@@ -740,7 +740,7 @@ function LessonFrame({
       isFocusMode={isFocusMode}
       autoHideToggle={autoHideToggle}
       onFocusPanelActiveChange={onFocusPanelActiveChange}
-      eyebrow={locale === 'zh' ? '探索器' : 'Explorer'}
+      eyebrow={locale === 'zh' ? '模块' : 'Module'}
       title={copy.title}
       inspectorAction={(
         <HelpTrigger onClick={() => setHelpMode({ kind: 'beginner' })} ariaLabel={helpLabels.beginner}>
@@ -917,8 +917,8 @@ function renderConvolutionWhat(lessonId: ConvolutionLessonId, locale: Locale, fa
 
 function getConvolutionHelpLabels(locale: Locale): { beginner: string; graph: string; close: string } {
   return locale === 'zh'
-    ? { beginner: '参考', graph: '图像说明', close: '关闭参考' }
-    : { beginner: 'Reference', graph: 'Graph notes', close: 'Close reference' }
+    ? { beginner: '笔记', graph: '视觉笔记', close: '关闭笔记' }
+    : { beginner: 'Notes', graph: 'Visual notes', close: 'Close notes' }
 }
 
 function getConvolutionHelpTopic(mode: ConvolutionHelpMode, lessonId: ConvolutionLessonId, locale: Locale): HelpTopic {
@@ -931,12 +931,12 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
   if (lessonId === 'discrete') {
     return locale === 'zh'
       ? {
-          eyebrow: '从零开始',
-          title: '离散卷积到底在做什么',
+          eyebrow: '笔记',
+          title: '离散卷积的五个动作',
           summary: '卷积可以先记成五个动作：翻转、平移、找重叠、逐项相乘、把乘积加起来。',
           sections: [
             {
-              title: 'a 和 b 分别是什么',
+              title: '序列 a 与 b',
               body: (
                 <>
                   {formula('a[i]')} 和 {formula('b[j]')} 都是一排数字。a 通常当作输入或参考序列，b 常常当作卷积核，也就是拿来测量、平滑、加权或匹配 a 的小模板。
@@ -944,7 +944,7 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
               ),
             },
             {
-              title: '索引是什么',
+              title: '输出索引 k',
               body: (
                 <>
                   索引就是数字在序列里的位置。{formula('a[0]')} 是 a 的第 0 个数，{formula('a[1]')} 是下一个。输出 {formula('y[k]')} 的 k 表示“当前算的是输出序列里的第几个位置”。
@@ -952,7 +952,7 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
               ),
             },
             {
-              title: '为什么要翻转 b',
+              title: '公式中的翻转',
               body: (
                 <>
                   公式 {formula('y[k]=\\sum_i a[i]b[k-i]')} 里，当 i 往右走时，{formula('k-i')} 会往左走，所以 b 的读取方向是反的。把 b 先翻转再滑动，就是把这个公式画出来。
@@ -960,18 +960,18 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
               ),
             },
             {
-              title: '怎么探索',
-              items: ['先选“非对称卷积核”，看卷积和相关的结果不同。', '再选“对称卷积核”，看翻转前后没有区别。', '移动 k，观察中间“重叠乘积”如何变成下方的一个输出柱。'],
+              title: '变化线索',
+              items: ['非对称卷积核会把卷积和相关的差别显示出来。', '对称卷积核翻转后不变，因此两种操作得到相同结果。', 'k 移动时，中间的重叠乘积会连续汇入下方对应的输出柱。'],
             },
           ],
         }
       : {
-          eyebrow: 'Start from zero',
-          title: 'What discrete convolution is doing',
+          eyebrow: 'Notes',
+          title: 'Discrete convolution in five moves',
           summary: 'Convolution is five moves: flip, shift, overlap, multiply, and sum.',
           sections: [
             {
-              title: 'What a and b mean',
+              title: 'Sequences a and b',
               body: (
                 <>
                   {formula('a[i]')} and {formula('b[j]')} are two sequences of numbers. a is usually the input or reference sequence; b is often the kernel, a small template used to measure, smooth, weight, or match a.
@@ -979,7 +979,7 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
               ),
             },
             {
-              title: 'What index means',
+              title: 'Output index k',
               body: (
                 <>
                   An index is a position in a sequence. {formula('a[0]')} is the first value of a, {formula('a[1]')} is the next. The k in {formula('y[k]')} means “which output position are we computing?”
@@ -987,7 +987,7 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
               ),
             },
             {
-              title: 'Why b is flipped',
+              title: 'The flip in the formula',
               body: (
                 <>
                   In {formula('y[k]=\\sum_i a[i]b[k-i]')}, as i moves right, {formula('k-i')} moves left, so b is read in the opposite direction. Flipping b before sliding is the visual version of that formula.
@@ -995,8 +995,8 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
               ),
             },
             {
-              title: 'How to explore',
-              items: ['Choose an asymmetric kernel and compare convolution with correlation.', 'Choose a symmetric kernel and notice that flipping changes nothing.', 'Move k and watch the overlap products become one output bar.'],
+              title: 'What changes',
+              items: ['An asymmetric kernel makes the difference between convolution and correlation visible.', 'A symmetric kernel is unchanged by the flip, so the two operations agree.', 'As k moves, the overlap products flow into the corresponding output bar below.'],
             },
           ],
         }
@@ -1005,25 +1005,25 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
   if (lessonId === 'image-kernel') {
     return locale === 'zh'
       ? {
-          eyebrow: '从零开始',
-          title: '图像卷积核是什么',
+          eyebrow: '笔记',
+          title: '图像卷积核',
           summary: '图像卷积核是一个小矩阵，用来告诉每个像素应该怎样参考周围像素。',
           sections: [
-            { title: '一个像素怎么变成新像素', body: '把卷积核放在一个像素周围，每个格子的数字乘以对应邻居像素的颜色，最后相加，就得到输出图像里的新像素。' },
+            { title: '像素邻域', body: '把卷积核放在一个像素周围，每个格子的数字乘以对应邻居像素的颜色，最后相加，就得到输出图像里的新像素。' },
             { title: '常见效果', items: ['平均型卷积核会模糊，因为它把周围颜色混在一起。', '锐化卷积核会强调中心像素和邻居的差别。', '边缘检测卷积核会让变化剧烈的位置变亮。'] },
             { title: '边界模式', body: '图像边缘没有完整邻居，所以需要决定缺失部分怎么处理：补零、钳制到边缘，或从另一边环绕。' },
-            { title: '怎么探索', items: ['选择 emboss 或 Sobel X 这类非对称卷积核。', '在卷积和相关之间切换。', '看“实际使用的卷积核”是否翻转，以及输出图像如何变化。'] },
+            { title: '变化线索', items: ['emboss 或 Sobel X 这类非对称卷积核会显示翻转带来的方向变化。', '卷积和相关之间的切换会同步改变“实际使用的卷积核”和输出图像。', 'RGB 读数保留带符号的原始加权和，显示图像则会取整并限制到 [0,255]。'] },
           ],
         }
       : {
-          eyebrow: 'Start from zero',
-          title: 'What an image kernel is',
+          eyebrow: 'Notes',
+          title: 'Image kernel',
           summary: 'An image kernel is a small matrix that tells each pixel how to combine nearby pixels.',
           sections: [
-            { title: 'How one pixel becomes a new pixel', body: 'Place the kernel over a pixel neighborhood, multiply each kernel weight by the matching neighbor color, then sum the results.' },
+            { title: 'Pixel neighborhood', body: 'The kernel covers a pixel neighborhood; each weight multiplies the matching neighbor color, and the products sum into one new pixel.' },
             { title: 'Common effects', items: ['Averaging kernels blur by mixing nearby colors.', 'Sharpening kernels emphasize the center pixel against its neighbors.', 'Edge kernels brighten places where the image changes abruptly.'] },
             { title: 'Boundary modes', body: 'At image edges, some neighbors are missing, so the app must decide whether to use zeros, clamp to the edge, or wrap around.' },
-            { title: 'How to explore', items: ['Choose an asymmetric kernel such as emboss or Sobel X.', 'Switch between convolution and correlation.', 'Watch the applied kernel flip and compare the output image.'] },
+            { title: 'What changes', items: ['Asymmetric kernels such as emboss or Sobel X expose the directional effect of flipping.', 'Switching between convolution and correlation changes both the applied-kernel preview and the output image.', 'The RGB readout keeps the raw signed weighted sum; the displayed image rounds and clamps it to [0,255].'] },
           ],
         }
   }
@@ -1031,23 +1031,23 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
   if (lessonId === 'signal') {
     return locale === 'zh'
       ? {
-          eyebrow: '从零开始',
-          title: '卷积为什么能做信号滤波',
+          eyebrow: '笔记',
+          title: '卷积作为信号滤波',
           summary: '卷积核是一个小的加权窗口。窗口怎么加权，就决定保留或削弱信号里的什么特征。',
           sections: [
             { title: '平滑', body: '移动平均或高斯卷积核会把附近点混合起来，所以随机噪声会被压低，但尖锐变化也可能变钝。' },
             { title: '检测变化', body: '差分或边缘卷积核会比较相邻点，所以信号突然跳变的位置会变得明显。' },
-            { title: '怎么探索', items: ['选择 noisy sine，再选择 moving average 或 gaussian。', '拖动卷积核位置，看紫色权重怎样贴到输入信号上。', '切到 difference，看跳变处如何被放大。'] },
+            { title: '变化线索', items: ['noisy sine 经过 moving average 或 gaussian 后，高频抖动会减弱。', '卷积核位置移动时，紫色权重会沿输入信号滑动，并生成对应输出点。', 'difference 会压低平坦区域并放大跳变。'] },
           ],
         }
       : {
-          eyebrow: 'Start from zero',
-          title: 'Why convolution filters signals',
+          eyebrow: 'Notes',
+          title: 'Convolution as a signal filter',
           summary: 'A kernel is a small weighted window. Its weights decide which features are kept or reduced.',
           sections: [
             { title: 'Smoothing', body: 'Moving-average or Gaussian kernels mix nearby samples, reducing random noise but also softening sharp changes.' },
             { title: 'Detecting change', body: 'Difference or edge kernels compare neighboring samples, making sudden changes stand out.' },
-            { title: 'How to explore', items: ['Choose noisy sine, then use moving average or Gaussian.', 'Drag kernel position and watch the purple weights sit on the input signal.', 'Switch to difference and notice how jumps become larger.'] },
+            { title: 'What changes', items: ['Moving-average and Gaussian kernels reduce the high-frequency wobble in noisy sine.', 'As the kernel position moves, the purple weights slide across the input and generate the matching output point.', 'A difference kernel suppresses flat regions and amplifies jumps.'] },
           ],
         }
   }
@@ -1055,23 +1055,23 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
   if (lessonId === 'probability') {
     return locale === 'zh'
       ? {
-          eyebrow: '从零开始',
-          title: '为什么概率相加会用卷积',
+          eyebrow: '笔记',
+          title: '概率和与卷积',
           summary: '两个独立随机变量相加时，每个可能的和都会收集所有能产生它的组合，并把这些组合的概率加起来。',
           sections: [
             { title: '为什么 7 比 2 更常见', body: '两个公平骰子掷出 7 的组合有 1+6、2+5、3+4、4+3、5+2、6+1；掷出 2 只有 1+1。组合越多，总概率通常越大。' },
-            { title: '偏置时怎么算', body: <>{formula('x+y=s')} 的每个组合不是同样重要。组合 {formula('(x,y)')} 的贡献是 {formula('P_X(x)P_Y(y)')}。把所有贡献加起来，就是 {formula('P(S=s)')}。</> },
-            { title: '怎么探索', items: ['先看公平六面骰 + 公平六面骰，观察 7 的组合最多。', '再看偏置硬币，注意每个组合下面的概率贡献不同。', '拖动和 s，看当前计算如何把多个概率乘积加起来。'] },
+            { title: '带权配对', body: <>{formula('x+y=s')} 的每个组合不是同样重要。组合 {formula('(x,y)')} 的贡献是 {formula('P_X(x)P_Y(y)')}。把所有贡献加起来，就是 {formula('P(S=s)')}。</> },
+            { title: '变化线索', items: ['两个公平六面骰的中间和拥有最多组合。', '偏置硬币让不同组合具有不同的概率权重。', 's 移动时，被收集的配对沿网格对角线变化，并汇入对应的输出柱。'] },
           ],
         }
       : {
-          eyebrow: 'Start from zero',
-          title: 'Why probability sums use convolution',
+          eyebrow: 'Notes',
+          title: 'Probability sums and convolution',
           summary: 'When two independent random variables are added, each possible sum collects every pair that can make it, then adds the pair probabilities.',
           sections: [
             { title: 'Why 7 beats 2 for dice', body: 'Two fair dice can make 7 as 1+6, 2+5, 3+4, 4+3, 5+2, and 6+1. They can make 2 only as 1+1. More contributing pairs usually means more probability.' },
             { title: 'How biased pairs count', body: <>Pairs are not always equally important. A pair {formula('(x,y)')} with {formula('x+y=s')} contributes {formula('P_X(x)P_Y(y)')}. Adding all such contributions gives {formula('P(S=s)')}.</> },
-            { title: 'How to explore', items: ['Start with fair d6 + fair d6 and watch the center sums collect more pairs.', 'Switch to biased coins and notice that pair contributions have different sizes.', 'Drag sum s and read the current probability product calculation.'] },
+            { title: 'What changes', items: ['For two fair dice, the middle sums collect the most pairs.', 'Biased coins give different probability weights to different pairs.', 'As s moves, the collected diagonal changes and flows into the corresponding output bar.'] },
           ],
         }
   }
@@ -1079,23 +1079,23 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
   if (lessonId === 'polynomial') {
     return locale === 'zh'
       ? {
-          eyebrow: '从零开始',
-          title: '多项式乘法为什么像卷积',
+          eyebrow: '笔记',
+          title: '多项式系数卷积',
           summary: '每个系数可以看成序列里的一个数。相乘时，次数相加后相同的项会被收集到同一个输出系数。',
           sections: [
-            { title: '系数怎么读', body: '升幂排列 [1, 2, 3] 表示 1 + 2x + 3x^2。第 0 个数是常数项，第 1 个数是 x 的系数。' },
+            { title: '系数顺序', body: '升幂排列 [1, 2, 3] 表示 1 + 2x + 3x^2。第 0 个数是常数项，第 1 个数是 x 的系数。' },
             { title: '同一个 k 收集什么', body: <>{formula('c[k]')} 收集所有满足 {formula('i+j=k')} 的乘积 {formula('a_i b_j')}。这和离散卷积的“同一个输出位置收集多项乘积”是同一种结构。</> },
-            { title: '怎么探索', items: ['选择 (1+x)(1+x)，看 x 的系数为什么是 2。', '拖动 k，看网格中哪条对角线被选中。', '选择 asymmetric polynomials，观察负系数和不同长度如何进入同一个 c[k]。'] },
+            { title: '变化线索', items: ['在 (1+x)(1+x) 中，网格的一条对角线包含两个贡献，因此 x 的系数是 2。', 'k 移动时，被选中的网格对角线与下方 c[k] 同步变化。', '负系数和不同长度仍按同一个 i+j=k 规则汇入输出。'] },
           ],
         }
       : {
-          eyebrow: 'Start from zero',
-          title: 'Why polynomial multiplication looks like convolution',
+          eyebrow: 'Notes',
+          title: 'Polynomial coefficient convolution',
           summary: 'Coefficients can be read as a sequence. During multiplication, products with the same final power are collected into the same output coefficient.',
           sections: [
             { title: 'How coefficients are read', body: 'Ascending powers [1, 2, 3] means 1 + 2x + 3x^2. The 0th number is the constant term; the 1st number is the coefficient of x.' },
             { title: 'What one k collects', body: <>{formula('c[k]')} collects every product {formula('a_i b_j')} where {formula('i+j=k')}. This is the same structure as discrete convolution collecting products into one output position.</> },
-            { title: 'How to explore', items: ['Choose (1+x)(1+x) and see why the coefficient of x is 2.', 'Drag k and watch which diagonal of the grid is selected.', 'Try asymmetric polynomials and see how negative coefficients and unequal lengths enter one c[k].'] },
+            { title: 'What changes', items: ['For (1+x)(1+x), one grid diagonal contains two contributions, so the coefficient of x is 2.', 'As k moves, the selected diagonal and the matching c[k] bar change together.', 'Negative coefficients and unequal lengths still flow into the output through the same i+j=k rule.'] },
           ],
         }
   }
@@ -1103,23 +1103,23 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
   if (lessonId === 'continuous') {
     return locale === 'zh'
       ? {
-          eyebrow: '从零开始',
-          title: '连续卷积在做什么',
+          eyebrow: '笔记',
+          title: '连续卷积',
           summary: '离散卷积是一格一格相乘再相加。连续卷积做同一类事，只是格子变成曲线：每一点相乘，再把乘积下面的面积加起来。',
           sections: [
             { title: 'τ 和 t 的角色', body: <>{formula('\\tau')} 是沿着横轴扫过的变量。{formula('t')} 是当前平移量；你拖动 t，就是移动紫色函数，重新测量重叠面积。</> },
             { title: '为什么是积分', body: '离散版把有限个乘积加起来；连续版有无穷多个点，所以用积分来表示“把整段面积加起来”。' },
-            { title: '怎么探索', items: ['选择 rectangle 和 gaussian。', '拖动 t，观察重叠面积最大时，上方输出曲线也接近最大。', '增加积分采样数，看曲线近似是否更平滑。'] },
+            { title: '变化线索', items: ['rectangle 与 gaussian 的重叠形状会直接出现在乘积面积中。', 't 移动到重叠最强的位置时，上方输出曲线也接近峰值。', '积分采样数增加后，有限窗口内的数值近似通常更平滑。'] },
           ],
         }
       : {
-          eyebrow: 'Start from zero',
-          title: 'What continuous convolution is doing',
+          eyebrow: 'Notes',
+          title: 'Continuous convolution',
           summary: 'Discrete convolution multiplies entries and adds them. Continuous convolution does the same kind of thing with curves: multiply values point by point, then add the product area.',
           sections: [
             { title: 'What tau and t do', body: <>{formula('\\tau')} is the variable sweeping along the horizontal axis. {formula('t')} is the current shift; dragging t moves the purple function and recomputes the overlap area.</> },
             { title: 'Why it uses an integral', body: 'The discrete version adds finitely many products. The continuous version has infinitely many points, so an integral represents adding the whole area.' },
-            { title: 'How to explore', items: ['Choose rectangle and Gaussian.', 'Drag t and watch the output curve peak near the strongest overlap.', 'Increase integration samples and see the numerical approximation become smoother.'] },
+            { title: 'What changes', items: ['Rectangle and Gaussian overlap appears directly in the product area.', 'As t reaches the strongest overlap, the upper output curve approaches its peak.', 'With more integration samples, the numerical approximation over the finite window usually becomes smoother.'] },
           ],
         }
   }
@@ -1127,8 +1127,8 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
   if (lessonId === 'probability') {
     return locale === 'zh'
       ? {
-          eyebrow: '图像说明',
-          title: '概率和图像读法',
+          eyebrow: '视觉笔记',
+          title: '概率和',
           summary: '从上到下读：上方是 X 和 Y 的原始分布，中间是当前和的组合，下方是 X+Y 的分布。',
           sections: [
             { title: '上方分布', body: '青色柱是 X 的概率，紫色柱是 Y 的概率。柱越高，那个结果越可能出现。' },
@@ -1137,8 +1137,8 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
           ],
         }
       : {
-          eyebrow: 'Graph notes',
-          title: 'How to read probability sums',
+          eyebrow: 'Visual notes',
+          title: 'Probability sums',
           summary: 'Read top to bottom: original distributions for X and Y, pairs for the current sum, then the distribution of X+Y.',
           sections: [
             { title: 'Source distributions', body: 'Teal bars show probabilities for X; purple bars show probabilities for Y. Taller bars are more likely outcomes.' },
@@ -1151,8 +1151,8 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
   if (lessonId === 'polynomial') {
     return locale === 'zh'
       ? {
-          eyebrow: '图像说明',
-          title: '多项式乘法图像读法',
+          eyebrow: '视觉笔记',
+          title: '多项式乘法',
           summary: '上方网格显示每一项乘每一项；下方柱状图显示乘积多项式的系数。',
           sections: [
             { title: '乘法网格', body: '第 i 行来自 A 的 x^i 项，第 j 列来自 B 的 x^j 项。格子里的数字是这两个系数的乘积。' },
@@ -1161,8 +1161,8 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
           ],
         }
       : {
-          eyebrow: 'Graph notes',
-          title: 'How to read polynomial multiplication',
+          eyebrow: 'Visual notes',
+          title: 'Polynomial multiplication',
           summary: 'The grid shows every term times every term; the lower bars show the coefficients of the product polynomial.',
           sections: [
             { title: 'Multiplication grid', body: 'Row i comes from the x^i term of A; column j comes from the x^j term of B. The cell value is the product of those two coefficients.' },
@@ -1175,8 +1175,8 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
   if (lessonId === 'continuous') {
     return locale === 'zh'
       ? {
-          eyebrow: '图像说明',
-          title: '连续卷积图像读法',
+          eyebrow: '视觉笔记',
+          title: '连续卷积',
           summary: '青色曲线是 f(τ)，紫色曲线是翻转并平移后的 g(t−τ)，浅色阴影是两者相乘后的面积，上方曲线是输出。',
           sections: [
             { title: '输入曲线', body: '青色 f(τ) 固定不动。紫色 g(t−τ) 会随 t 移动；它已经包含卷积里的翻转和平移。' },
@@ -1185,8 +1185,8 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
           ],
         }
       : {
-          eyebrow: 'Graph notes',
-          title: 'How to read continuous convolution',
+          eyebrow: 'Visual notes',
+          title: 'Continuous convolution',
           summary: 'Teal is f(tau), purple is flipped-and-shifted g(t-tau), the pale fill is product area, and the upper curve is the output.',
           sections: [
             { title: 'Input curves', body: 'Teal f(tau) stays fixed. Purple g(t-tau) moves with t and already includes the convolution flip and shift.' },
@@ -1198,20 +1198,20 @@ function convolutionBeginnerTopic(lessonId: ConvolutionLessonId, locale: Locale)
 
   return locale === 'zh'
     ? {
-        eyebrow: '从零开始',
+        eyebrow: '笔记',
         title: '卷积的共同模式',
         summary: '不管对象是概率、信号、图像、多项式还是函数，卷积都在做同一件事：滑动一个对象，计算重叠有多强。',
         sections: [
-          { title: '核心动作', items: ['把一个对象移动到某个位置。', '找出它和另一个对象重叠的部分。', '把重叠位置逐项相乘。', '把乘积加起来，得到当前位置的输出。'] },
+          { title: '核心动作', items: ['一个对象移动到当前输出位置。', '只有与另一个对象重叠的部分参与计算。', '重叠位置逐项相乘。', '所有乘积相加，形成当前位置的输出。'] },
           { title: '为什么有用', body: '它把“局部关系”变成一整排输出：哪里重叠强，输出就大；哪里重叠弱，输出就小。' },
         ],
       }
     : {
-        eyebrow: 'Start from zero',
+        eyebrow: 'Notes',
         title: 'The shared convolution pattern',
         summary: 'Whether the objects are probabilities, signals, images, polynomials, or functions, convolution slides one object and measures overlap strength.',
         sections: [
-          { title: 'Core moves', items: ['Move one object to a position.', 'Find the part that overlaps the other object.', 'Multiply matching overlapping parts.', 'Sum the products to get the output at that position.'] },
+          { title: 'Core moves', items: ['One object shifts to the current output position.', 'Only the region overlapping the other object contributes.', 'Matching overlap values multiply point by point.', 'Their sum becomes the output at that position.'] },
           { title: 'Why it helps', body: 'It turns local matching into a whole output: strong overlap gives a large output; weak overlap gives a small output.' },
         ],
       }
@@ -1221,8 +1221,8 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
   if (lessonId === 'discrete') {
     return locale === 'zh'
       ? {
-          eyebrow: '图像说明',
-          title: '离散卷积图像读法',
+          eyebrow: '视觉笔记',
+          title: '离散卷积',
           summary: '从上到下读：上方看 a 和 b 的相对位置，中间看当前重叠项的乘积，下方看输出序列 y。',
           sections: [
             { title: '上方', body: '青色柱是 a，紫色柱是 b。当前重叠项会变亮，但不会改变 a / b 的颜色。卷积模式下，紫色 b 已经先被翻转，再随着 k 平移。' },
@@ -1231,8 +1231,8 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
           ],
         }
       : {
-          eyebrow: 'Graph notes',
-          title: 'How to read discrete convolution',
+          eyebrow: 'Visual notes',
+          title: 'Discrete convolution',
           summary: 'Read top to bottom: relative positions of a and b, current overlap products, then output y.',
           sections: [
             { title: 'Top', body: 'Teal bars are a and purple bars are b. Current overlaps become brighter, but a and b keep their colors. In convolution mode, b is flipped before it slides with k.' },
@@ -1245,8 +1245,8 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
   if (lessonId === 'image-kernel') {
     return locale === 'zh'
       ? {
-          eyebrow: '图像说明',
-          title: '图像卷积核读法',
+          eyebrow: '视觉笔记',
+          title: '图像卷积核',
           summary: '左边是输入图，右边是应用卷积核后的输出图。点击像素可以看同一个位置如何被改写。',
           sections: [
             { title: '输入图', body: '这是被处理的原图。选中的小圆点表示当前检查的像素位置。' },
@@ -1255,8 +1255,8 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
           ],
         }
       : {
-          eyebrow: 'Graph notes',
-          title: 'How to read the image kernel view',
+          eyebrow: 'Visual notes',
+          title: 'Image kernel',
           summary: 'The left image is input; the right image is the output after applying the kernel. Click a pixel to inspect the matching location.',
           sections: [
             { title: 'Input image', body: 'This is the original image. The marker shows the pixel currently being inspected.' },
@@ -1269,8 +1269,8 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
   if (lessonId === 'signal') {
     return locale === 'zh'
       ? {
-          eyebrow: '图像说明',
-          title: '信号滤波图像读法',
+          eyebrow: '视觉笔记',
+          title: '信号滤波',
           summary: '上方是输入信号，中间是当前卷积核，下方是滤波后的输出。',
           sections: [
             { title: '窗口框', body: '虚线框表示当前卷积核覆盖的输入范围。移动卷积核位置时，框会沿信号滑动。' },
@@ -1278,8 +1278,8 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
           ],
         }
       : {
-          eyebrow: 'Graph notes',
-          title: 'How to read signal filtering',
+          eyebrow: 'Visual notes',
+          title: 'Signal filtering',
           summary: 'The top is the input signal, the middle is the current kernel, and the bottom is the filtered output.',
           sections: [
             { title: 'Window', body: 'The dashed box marks which input samples the kernel covers. Moving the kernel position slides this window.' },
@@ -1290,8 +1290,8 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
 
   return locale === 'zh'
     ? {
-        eyebrow: '图像说明',
-        title: '卷积图像读法',
+        eyebrow: '视觉笔记',
+        title: '卷积的视觉结构',
         summary: '先看输入对象，再看当前重叠或组合，最后看输出。',
         sections: [
           { title: '输入', body: '图中青色和紫色通常表示两个被组合的对象。' },
@@ -1300,8 +1300,8 @@ function convolutionGraphTopic(lessonId: ConvolutionLessonId, locale: Locale): H
         ],
       }
     : {
-        eyebrow: 'Graph notes',
-        title: 'How to read convolution views',
+        eyebrow: 'Visual notes',
+        title: 'Visual structure of convolution',
         summary: 'Read the inputs first, then the current overlap or pairing, then the output.',
         sections: [
           { title: 'Inputs', body: 'Teal and purple usually represent the two objects being combined.' },
@@ -1315,13 +1315,13 @@ function convolutionTermTopic(term: ConvolutionTermId, locale: Locale): HelpTopi
   const zh: Record<ConvolutionTermId, HelpTopic> = {
     'sequence-a': {
       eyebrow: '术语',
-      title: 'a 是什么',
+      title: '序列 a',
       summary: 'a 是第一个离散序列，也就是一排按位置排列的数字。',
       sections: [{ title: '在离散卷积里', body: '你可以把 a 当成输入信号或参考对象。b 会沿着它移动，检查每个位置的重叠情况。' }],
     },
     'sequence-b': {
       eyebrow: '术语',
-      title: 'b 是什么',
+      title: '序列 b',
       summary: 'b 是第二个序列，很多场景下也叫卷积核。',
       sections: [{ title: '在图里', body: 'b 是紫色柱。卷积会先翻转 b，再让它沿 a 滑动；相关则不翻转。' }],
     },
@@ -1365,7 +1365,7 @@ function convolutionTermTopic(term: ConvolutionTermId, locale: Locale): HelpTopi
       eyebrow: '术语',
       title: '相关',
       summary: '相关和卷积很像，但不会先翻转卷积核。',
-      sections: [{ title: '怎么比较', body: '如果卷积核对称，卷积和相关结果相同；如果卷积核不对称，两者通常不同。' }],
+      sections: [{ title: '对比', body: '如果卷积核对称，卷积和相关结果相同；如果卷积核不对称，两者通常不同。' }],
     },
     boundary: {
       eyebrow: '术语',
@@ -1512,7 +1512,7 @@ function convolutionTermTopic(term: ConvolutionTermId, locale: Locale): HelpTopi
       eyebrow: 'Term',
       title: 'Correlation',
       summary: 'Correlation is like convolution, but it does not flip the kernel first.',
-      sections: [{ title: 'How to compare', body: 'For symmetric kernels, convolution and correlation match. For asymmetric kernels, they usually differ.' }],
+      sections: [{ title: 'Comparison', body: 'For symmetric kernels, convolution and correlation match. For asymmetric kernels, they usually differ.' }],
     },
     boundary: {
       eyebrow: 'Term',

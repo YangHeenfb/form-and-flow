@@ -31,18 +31,18 @@ type LearningCopy = {
 
 export const calculusLearningCopy: Record<Locale, LearningCopy> = {
   en: {
-    entryTitle: 'Reference notes',
-    entryHint: 'Use short notes when the graph, formula, or slider names are unfamiliar.',
-    openOverview: 'Reference',
-    openGraph: 'Graph notes',
-    close: 'Close reference',
+    entryTitle: 'Notes',
+    entryHint: 'Short observations connecting the graph, formula, and controls.',
+    openOverview: 'Notes',
+    openGraph: 'Visual notes',
+    close: 'Close notes',
   },
   zh: {
-    entryTitle: '参考',
-    entryHint: '遇到导数、积分、黎曼和、泰勒这些概念时，可以随时打开解释。',
-    openOverview: '参考',
-    openGraph: '图像说明',
-    close: '关闭参考',
+    entryTitle: '笔记',
+    entryHint: '把图像、公式和控制参数联系起来的简短观察。',
+    openOverview: '笔记',
+    openGraph: '视觉笔记',
+    close: '关闭笔记',
   },
 }
 
@@ -62,25 +62,25 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
 
   return {
     overview: {
-      eyebrow: 'Calculus',
-      title: '这个模块在探索什么？',
-      summary: '微积分关心两件核心事情：量怎样变化，以及很多很小的量加起来会怎样。这里的图像和滑杆就是把这些抽象概念变成可观察的运动。',
+      eyebrow: '笔记',
+      title: '变化与累积',
+      summary: '四个画面围绕同一组关系展开：局部变化、连续累积、两者的连接，以及用局部信息重建函数形状。',
       sections: [
         {
-          title: '先建立直觉',
+          title: '观察',
           items: [
-            '导数看“某一点附近变化得多快”。',
-            '积分看“从一段区间里累积了多少面积或总量”。',
-            '微积分基本定理把“累积量”和“瞬时变化率”连起来。',
-            '泰勒多项式用一个简单多项式去模仿复杂函数在某点附近的形状。',
+            '导数把曲线在一点附近压缩成一个局部线性模型。',
+            '积分把连续分布的小贡献累积成一个总量。',
+            '基本定理把累积曲线的斜率重新连回原函数高度。',
+            '泰勒多项式把同一点的导数信息逐阶编码进多项式。',
           ],
         },
         {
-          title: '建议的探索方式',
+          title: '变化关系',
           items: [
-            '先用预设函数，不急着输入自己的公式。',
-            '拖动一个滑杆，只观察图中哪一部分跟着变。',
-            '看懂图像变化后，再打开公式解释，把符号和图像对应起来。',
+            '位置参数移动正在被局部观察或累积到的点。',
+            '步长、分块数和阶数控制近似所保留的尺度或信息量。',
+            '图像中的运动与右侧公式使用同一组变量。',
           ],
         },
       ],
@@ -88,7 +88,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     graph: graphTopic,
     function: {
       eyebrow: '术语',
-      title: '函数 f(x) 是什么？',
+      title: '函数 f(x)',
       summary: (
         <>
           函数可以先理解成“输入一个 <Formula tex="x" />，输出一个高度 <Formula tex="f(x)" />”的规则。图上的曲线就是所有这些输入和输出连成的形状。
@@ -107,10 +107,10 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     },
     derivative: {
       eyebrow: '术语',
-      title: '导数是什么？',
+      title: '导数',
       summary: (
         <>
-          导数 <Formula tex="f'(x)" /> 描述函数在某一点附近变化得多快。图上可以把它看成曲线在那个点的“瞬时斜率”。
+          在可导点附近，函数可以由一段线性变化来近似；导数 <Formula tex="f'(x)" /> 就是这段局部线性的斜率。
         </>
       ),
       sections: [
@@ -120,14 +120,14 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
             '直线的斜率表示“往右走 1，往上或往下走多少”。',
             '曲线每一点的方向都可能不同，所以我们看那一点附近的切线斜率。',
             '如果切线很陡，函数变化快；如果切线接近水平，函数变化慢。',
-            '导数不是一条新规则，而是曲线在局部看起来越来越像一条直线。',
+            '把每一点的局部线性变化收集起来，会得到新的函数 f′(x)。',
           ],
         },
       ],
     },
     'secant-slope': {
       eyebrow: '符号',
-      title: 'm_h 是什么？',
+      title: '割线斜率 m_h',
       summary: (
         <>
           <Formula tex="m_h" /> 是当前步长 <Formula tex="h" /> 下的割线斜率，也就是两个点之间的平均变化率。
@@ -152,7 +152,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     },
     'derivative-notation': {
       eyebrow: '符号',
-      title: "f'(x0) 是什么？",
+      title: "瞬时斜率 f'(x0)",
       summary: (
         <>
           <Formula tex="f'(x_0)" /> 表示函数在 <Formula tex="x_0" /> 这个点的导数，也就是这一点附近的瞬时斜率。
@@ -177,7 +177,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     },
     'secant-tangent': {
       eyebrow: '术语',
-      title: '割线和切线是什么？',
+      title: '割线与切线',
       summary: '割线穿过曲线上的两个点；切线只描述某一点附近的局部方向。',
       sections: [
         {
@@ -197,17 +197,17 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
           ),
         },
         {
-          title: '你可以试试',
+          title: '变化线索',
           items: [
-            '把 h 从 1 拖到 0.05，看割线怎样靠近切线方向。',
-            '把函数改成 abs(x)，并把 x0 拖到 0，观察导数为什么显示不存在。',
+            'h 从 1 缩小到 0.05 时，割线会逐渐靠近切线方向。',
+            '对 abs(x) 而言，x0 到达 0 时左右斜率不一致，因此导数显示为不存在。',
           ],
         },
       ],
     },
     limit: {
       eyebrow: '术语',
-      title: '极限在这里是什么意思？',
+      title: '极限',
       summary: '极限不是“直接到达”，而是“当某个量不断靠近某个状态时，结果越来越接近什么”。',
       sections: [
         {
@@ -221,7 +221,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     },
     integral: {
       eyebrow: '术语',
-      title: '积分是什么？',
+      title: '积分',
       summary: (
         <>
           定积分 <Formula tex="\int_a^b f(x)\,dx" /> 可以先理解成从 <Formula tex="a" /> 到 <Formula tex="b" /> 这段区间里，曲线下方累积的有符号面积。
@@ -241,23 +241,23 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     },
     'riemann-sum': {
       eyebrow: '术语',
-      title: '黎曼和在干什么？',
-      summary: '黎曼和用很多小矩形或小梯形去拼曲线下方的面积。',
+      title: '黎曼和与梯形法',
+      summary: '左端点、右端点和中点模式使用矩形黎曼和；梯形模式用相邻端点之间的线性连接近似面积。',
       sections: [
         {
           title: '为什么矩形越多越准',
           items: [
             '每个小矩形只近似一小段曲线下的面积。',
             '矩形越窄，每一小段的误差通常越小。',
-            '左端点、右端点、中点是选一个高度；梯形法是连接两端高度。',
-            '把 n 从 4 拖到 60，可以观察有符号面积估计怎样靠近参考积分。',
+            '左端点、右端点和中点模式各自选择一个矩形高度；梯形法连接两端高度。',
+            '当 n 从 4 增加到 60，带符号面积估计通常会逐渐稳定在参考积分附近。',
           ],
         },
       ],
     },
     'signed-area': {
       eyebrow: '术语',
-      title: '有符号面积是什么意思？',
+      title: '有符号面积',
       summary: 'x 轴上方的面积算正，x 轴下方的面积算负。积分关心的是这些正负贡献相加后的净结果。',
       sections: [
         {
@@ -268,7 +268,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     },
     'fundamental-theorem': {
       eyebrow: '术语',
-      title: '微积分基本定理在说什么？',
+      title: '微积分基本定理',
       summary: (
         <>
           它把积分和导数连起来：如果 <Formula tex="A(x)=\int_a^x f(t)\,dt" /> 表示从起点累积到 <Formula tex="x" /> 的面积，那么 <Formula tex="A'(x)=f(x)" />。
@@ -276,7 +276,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
       ),
       sections: [
         {
-          title: '怎么读这个连接',
+          title: '两幅图的连接',
           items: [
             '上方函数 f(x) 给出当前位置的高度。',
             '下方 A(x) 记录从起点到当前位置累积了多少面积。',
@@ -288,7 +288,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     },
     accumulation: {
       eyebrow: '术语',
-      title: '累积函数 A(x) 是什么？',
+      title: '累积函数 A(x)',
       summary: 'A(x) 不是一个固定面积，而是“从起点累积到当前 x 为止”的面积，所以 x 改变时 A(x) 也会改变。',
       sections: [
         {
@@ -299,7 +299,7 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     },
     taylor: {
       eyebrow: '术语',
-      title: '泰勒多项式是什么？',
+      title: '泰勒多项式',
       summary: '泰勒多项式用多项式去模仿一个函数在某个中心点附近的行为。它不是全局复制函数，而是做局部近似。',
       sections: [
         {
@@ -308,14 +308,14 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
             '泰勒多项式会尽量匹配函数在中心点的高度、斜率、弯曲程度等局部信息。',
             '离中心越远，这些局部信息越不够用，误差可能变大。',
             '提高阶数通常能改善中心附近的贴合，但不保证所有地方都好。',
-            '先固定中心 c，再逐渐增加阶数；然后缩小或放大视野，看它从哪里开始失效。',
+            '固定中心 c 时，提高阶数会扩展中心附近的贴合范围；离中心较远处仍可能逐渐分开。',
           ],
         },
       ],
     },
     approximation: {
       eyebrow: '术语',
-      title: '近似是什么意思？',
+      title: '近似',
       summary: '近似不是“随便猜”，而是用更容易计算或观察的对象去接近真实对象。',
       sections: [
         {
@@ -331,14 +331,14 @@ function zhTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     formula: zhFormulaTopic(lessonId),
     values: {
       eyebrow: '数值',
-      title: '当前数值在帮你看什么？',
+      title: '当前数值',
       summary: '右侧数值把图像中的关键状态显示出来，例如当前点、步长、面积近似、导数估计或误差。',
       sections: [
         {
-          title: '怎么用这些数',
+          title: '数值对应',
           items: [
-            '拖动滑杆后，看哪个数明显变化。',
-            '把数值变化和图像变化对应起来，比单独看公式更容易建立直觉。',
+            '参数变化会反映在与它相关的数值上。',
+            '相应的图像运动给出这次数值变化的几何含义。',
             '如果出现未定义，通常表示函数在当前位置没有可计算的值。',
           ],
         },
@@ -351,7 +351,7 @@ function zhFormulaTopic(lessonId: string): HelpTopic {
   if (lessonId === 'integral') {
     return {
       eyebrow: '公式',
-      title: '积分公式怎么对应图像？',
+      title: '积分公式与图像',
       summary: (
         <>
           <Formula tex="\int_a^b f(x)\,dx" /> 表示从 <Formula tex="a" /> 到 <Formula tex="b" /> 把每个位置的小贡献累积起来。
@@ -380,7 +380,7 @@ function zhFormulaTopic(lessonId: string): HelpTopic {
   if (lessonId === 'fundamental-theorem') {
     return {
       eyebrow: '公式',
-      title: 'A(x) 公式怎么读？',
+      title: 'A(x) 与图像',
       summary: (
         <>
           <Formula tex="A(x)=\int_a^x f(t)\,dt" /> 表示“从起点 <Formula tex="a" /> 累积到当前 <Formula tex="x" /> 的面积”。
@@ -405,7 +405,7 @@ function zhFormulaTopic(lessonId: string): HelpTopic {
   if (lessonId === 'taylor') {
     return {
       eyebrow: '公式',
-      title: 'Taylor 公式怎么读？',
+      title: 'Taylor 公式与图像',
       summary: (
         <>
           <Formula tex="P_n(x)" /> 是围绕中心 <Formula tex="c" /> 构造的多项式，用有限层局部信息近似原函数。
@@ -433,7 +433,7 @@ function zhFormulaTopic(lessonId: string): HelpTopic {
   }
   return {
     eyebrow: '公式',
-    title: '导数公式怎么对应图像？',
+    title: '导数公式与图像',
     summary: (
       <>
         <Formula tex="\frac{f(x_0+h)-f(x_0)}{h}" /> 是两个点之间的平均斜率。让 <Formula tex="h" /> 变小，是在看这个平均斜率能不能稳定成当前点的瞬时斜率。
@@ -466,12 +466,12 @@ function zhFormulaTopic(lessonId: string): HelpTopic {
 function zhGraphTopic(lessonId: string): HelpTopic {
   if (lessonId === 'integral') {
     return {
-      eyebrow: '图像阅读',
-      title: '积分图像怎么看？',
+      eyebrow: '视觉笔记',
+      title: '积分视图',
       summary: '曲线下面的彩色矩形或梯形是在近似面积；矩形越多，每一块越窄，通常越接近真实积分。',
       sections: [
         {
-          title: '看哪些东西',
+          title: '变化关系',
           items: [
             '曲线 f(x) 是被累积的函数高度。',
             'a 和 b 是积分区间的左右端点。',
@@ -484,16 +484,16 @@ function zhGraphTopic(lessonId: string): HelpTopic {
   }
   if (lessonId === 'fundamental-theorem') {
     return {
-      eyebrow: '图像阅读',
-      title: '基本定理图像怎么看？',
+      eyebrow: '视觉笔记',
+      title: '基本定理视图',
       summary: '上半部分是原函数 f(x)，下半部分是累积面积 A(x)。两张图连在一起展示“高度”和“累计变化”之间的关系。',
       sections: [
         {
-          title: '看当前位置',
+          title: '当前位置',
           items: [
             '上图的当前高度 f(x) 决定下图 A(x) 当前增长得多快。',
             '如果 f(x) 为正，A(x) 往上增长；如果 f(x) 为负，A(x) 往下变化。',
-            'A(x) 的斜率会接近 f(x) 的高度。',
+            '在基本定理适用时，A(x) 的斜率等于 f(x) 的高度；画面中的读数是这一关系的数值近似。',
           ],
         },
       ],
@@ -501,12 +501,12 @@ function zhGraphTopic(lessonId: string): HelpTopic {
   }
   if (lessonId === 'taylor') {
     return {
-      eyebrow: '图像阅读',
-      title: '泰勒图像怎么看？',
+      eyebrow: '视觉笔记',
+      title: '泰勒视图',
       summary: '一条曲线是真实函数，另一条曲线是泰勒多项式。中心点附近越贴合，说明局部近似越好。',
       sections: [
         {
-          title: '看哪些变化',
+          title: '变化关系',
           items: [
             'c 是近似的中心，泰勒多项式围绕这个点匹配函数。',
             '阶数 n 越高，多项式使用的局部信息越多。',
@@ -517,12 +517,12 @@ function zhGraphTopic(lessonId: string): HelpTopic {
     }
   }
   return {
-    eyebrow: '图像阅读',
-    title: '导数图像怎么看？',
+    eyebrow: '视觉笔记',
+    title: '导数视图',
     summary: '曲线上的两个点决定割线；当步长 h 变小，第二个点靠近第一个点，割线逐渐变成切线方向。',
     sections: [
       {
-        title: '看哪些东西',
+        title: '变化关系',
         items: [
           'x0 是你正在研究的点。',
           'h 是两个点之间的水平距离。',
@@ -539,25 +539,25 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
 
   return {
     overview: {
-      eyebrow: 'Calculus',
-      title: 'What is this module exploring?',
-      summary: 'Calculus is mainly about two ideas: how quantities change, and what happens when many tiny pieces accumulate. The graph and sliders turn those ideas into visible motion.',
+      eyebrow: 'Notes',
+      title: 'Change and accumulation',
+      summary: 'The four views share one thread: local change, continuous accumulation, the bridge between them, and the recovery of shape from local data.',
       sections: [
         {
-          title: 'Start with intuition',
+          title: 'Observation',
           items: [
-            'Derivative asks how fast something changes near one point.',
-            'Integral asks how much area or total quantity accumulates across an interval.',
-            'The fundamental theorem connects accumulated quantity with instantaneous rate.',
-            'Taylor polynomials use simple polynomials to imitate a function near a center point.',
+            'A derivative compresses the curve near one point into a local linear model.',
+            'An integral accumulates continuously distributed contributions into a total.',
+            'The fundamental theorem reconnects the slope of an accumulation curve to the original height.',
+            'A Taylor polynomial encodes successive derivatives at one center into a polynomial.',
           ],
         },
         {
-          title: 'A useful exploration order',
+          title: 'What changes',
           items: [
-            'Start with presets before typing your own formula.',
-            'Move one slider at a time and watch which part of the graph changes.',
-            'After the picture makes sense, open the formula explanation and match symbols back to the graph.',
+            'Position parameters move the point being inspected or the endpoint of accumulation.',
+            'Step size, partition count, and degree control the scale or amount of information retained by the approximation.',
+            'The moving geometry and the formula use the same variables.',
           ],
         },
       ],
@@ -565,7 +565,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     graph: graphTopic,
     function: {
       eyebrow: 'Term',
-      title: 'What is f(x)?',
+      title: 'Function f(x)',
       summary: (
         <>
           A function is a rule: put in <Formula tex="x" />, get out a height <Formula tex="f(x)" />. The curve is the shape made by all those input-output pairs.
@@ -584,10 +584,10 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     },
     derivative: {
       eyebrow: 'Term',
-      title: 'What is a derivative?',
+      title: 'Derivative',
       summary: (
         <>
-          The derivative <Formula tex="f'(x)" /> describes how fast the function changes near one point. On the graph, it is the instantaneous slope there.
+          Near a differentiable point, a function is locally approximated by a linear change; the derivative <Formula tex="f'(x)" /> is the slope of that local linear model.
         </>
       ),
       sections: [
@@ -597,14 +597,14 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
             'A line slope says how much y changes when x moves by 1.',
             'A curve can have a different direction at each point, so we use the tangent slope near that point.',
             'A steep tangent means fast change; a nearly flat tangent means slow change.',
-            'A derivative is not a separate new rule; it is the curve becoming locally line-like.',
+            "Collecting the local linear change at each point gives a new function, f'(x).",
           ],
         },
       ],
     },
     'secant-slope': {
       eyebrow: 'Symbol',
-      title: 'What is m_h?',
+      title: 'Secant slope m_h',
       summary: (
         <>
           <Formula tex="m_h" /> is the secant slope for the current step size <Formula tex="h" />. It is the average rate of change between two visible points.
@@ -629,7 +629,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     },
     'derivative-notation': {
       eyebrow: 'Symbol',
-      title: "What is f'(x0)?",
+      title: "Instantaneous slope f'(x0)",
       summary: (
         <>
           <Formula tex="f'(x_0)" /> means the derivative at <Formula tex="x_0" />: the instantaneous slope near that point.
@@ -654,7 +654,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     },
     'secant-tangent': {
       eyebrow: 'Term',
-      title: 'What are secant and tangent lines?',
+      title: 'Secant and tangent lines',
       summary: 'A secant line passes through two points on the curve. A tangent line describes the local direction near one point.',
       sections: [
         {
@@ -674,17 +674,17 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
           ),
         },
         {
-          title: 'Try this',
+          title: 'What changes',
           items: [
-            'Drag h from 1 down to 0.05 and watch the secant approach the tangent direction.',
-            'Switch to abs(x), move x0 to 0, and watch why the derivative becomes undefined.',
+            'As h shrinks from 1 to 0.05, the secant approaches the tangent direction.',
+            'For abs(x), moving x0 to 0 reveals the mismatch between left and right slopes, so the derivative becomes undefined.',
           ],
         },
       ],
     },
     limit: {
       eyebrow: 'Term',
-      title: 'What does limit mean here?',
+      title: 'Limit',
       summary: 'A limit asks what value a process approaches as some quantity gets closer and closer to a target state.',
       sections: [
         {
@@ -698,7 +698,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     },
     integral: {
       eyebrow: 'Term',
-      title: 'What is an integral?',
+      title: 'Integral',
       summary: (
         <>
           A definite integral <Formula tex="\int_a^b f(x)\,dx" /> can be read as signed area accumulated under the curve from <Formula tex="a" /> to <Formula tex="b" />.
@@ -718,23 +718,23 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     },
     'riemann-sum': {
       eyebrow: 'Term',
-      title: 'What is a Riemann sum doing?',
-      summary: 'A Riemann sum uses many small rectangles or trapezoids to approximate area under a curve.',
+      title: 'Riemann sums and the trapezoidal rule',
+      summary: 'Left, right, and midpoint modes are rectangular Riemann sums; trapezoid mode linearly connects the two endpoint heights.',
       sections: [
         {
           title: 'Why more pieces usually helps',
           items: [
             'Each small shape approximates one small slice of area.',
             'Narrower slices usually reduce the error in each slice.',
-            'Left, right, and midpoint choose one height; trapezoid connects the two endpoint heights.',
-            'Drag n from 4 to 60 and compare the signed area estimate with the reference integral.',
+            'Left, right, and midpoint choose one rectangle height; the trapezoidal rule connects the two endpoint heights.',
+            'As n increases from 4 to 60, the signed-area estimate usually settles toward the reference integral.',
           ],
         },
       ],
     },
     'signed-area': {
       eyebrow: 'Term',
-      title: 'What is signed area?',
+      title: 'Signed area',
       summary: 'Area above the x-axis counts positive; area below counts negative. The integral adds those positive and negative contributions.',
       sections: [
         {
@@ -745,7 +745,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     },
     'fundamental-theorem': {
       eyebrow: 'Term',
-      title: 'What does the fundamental theorem say?',
+      title: 'Fundamental theorem of calculus',
       summary: (
         <>
           It connects integrals and derivatives: if <Formula tex="A(x)=\int_a^x f(t)\,dt" /> is accumulated area up to <Formula tex="x" />, then <Formula tex="A'(x)=f(x)" />.
@@ -753,7 +753,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
       ),
       sections: [
         {
-          title: 'How to read the connection',
+          title: 'Connection between the graphs',
           items: [
             'The upper graph f(x) gives the current height.',
             'The lower graph A(x) records accumulated area so far.',
@@ -765,7 +765,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     },
     accumulation: {
       eyebrow: 'Term',
-      title: 'What is the accumulation function A(x)?',
+      title: 'Accumulation function A(x)',
       summary: 'A(x) is not one fixed area. It means the area accumulated from the start point up to the current x, so it changes as x changes.',
       sections: [
         {
@@ -776,7 +776,7 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     },
     taylor: {
       eyebrow: 'Term',
-      title: 'What is a Taylor polynomial?',
+      title: 'Taylor polynomial',
       summary: 'A Taylor polynomial uses a polynomial to imitate a function near one center point. It is a local approximation, not a full copy everywhere.',
       sections: [
         {
@@ -785,14 +785,14 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
             'It tries to match the function height, slope, curvature, and other local information at the center.',
             'Farther from the center, that local information may no longer be enough.',
             'Higher degree often helps near the center, but it does not guarantee a good fit everywhere.',
-            'Keep c fixed, raise the degree, then zoom out to see where the approximation starts failing.',
+            'With c fixed, increasing the degree extends the close match near the center; farther away the curves can still separate.',
           ],
         },
       ],
     },
     approximation: {
       eyebrow: 'Term',
-      title: 'What does approximation mean?',
+      title: 'Approximation',
       summary: 'Approximation means using something easier to compute or see to get close to a more exact object.',
       sections: [
         {
@@ -808,14 +808,14 @@ function enTopics(lessonId: string): Record<CalculusHelpTopicId, HelpTopic> {
     formula: enFormulaTopic(lessonId),
     values: {
       eyebrow: 'Values',
-      title: 'What are the current values for?',
+      title: 'Current values',
       summary: 'The values panel exposes important graph state, such as current point, step size, area estimate, derivative estimate, or approximation error.',
       sections: [
         {
-          title: 'How to use them',
+          title: 'Reading the values',
           items: [
-            'Move a slider and watch which value changes.',
-            'Connect the value change with the graph change to build intuition.',
+            'A parameter change is reflected in the values that depend on it.',
+            'The corresponding graph motion shows the geometric meaning of that numerical change.',
             'If a value is undefined, the function usually cannot be evaluated at the current position.',
           ],
         },
@@ -828,7 +828,7 @@ function enFormulaTopic(lessonId: string): HelpTopic {
   if (lessonId === 'integral') {
     return {
       eyebrow: 'Formula',
-      title: 'How does the integral formula match the graph?',
+      title: 'Integral formula and graph',
       summary: (
         <>
           <Formula tex="\int_a^b f(x)\,dx" /> means accumulate small contributions from <Formula tex="a" /> to <Formula tex="b" />.
@@ -857,7 +857,7 @@ function enFormulaTopic(lessonId: string): HelpTopic {
   if (lessonId === 'fundamental-theorem') {
     return {
       eyebrow: 'Formula',
-      title: 'How should I read A(x)?',
+      title: 'A(x) and the graph',
       summary: (
         <>
           <Formula tex="A(x)=\int_a^x f(t)\,dt" /> means “accumulated signed area from the start <Formula tex="a" /> up to the current <Formula tex="x" />.”
@@ -882,7 +882,7 @@ function enFormulaTopic(lessonId: string): HelpTopic {
   if (lessonId === 'taylor') {
     return {
       eyebrow: 'Formula',
-      title: 'How should I read the Taylor formula?',
+      title: 'Taylor formula and graph',
       summary: (
         <>
           <Formula tex="P_n(x)" /> is a polynomial built around the center <Formula tex="c" /> from a finite amount of local information.
@@ -910,7 +910,7 @@ function enFormulaTopic(lessonId: string): HelpTopic {
   }
   return {
     eyebrow: 'Formula',
-    title: 'How does the derivative formula match the graph?',
+    title: 'Derivative formula and graph',
     summary: (
       <>
         <Formula tex="\frac{f(x_0+h)-f(x_0)}{h}" /> is the average slope between two points. Shrinking <Formula tex="h" /> checks whether that average slope settles into an instantaneous slope.
@@ -943,12 +943,12 @@ function enFormulaTopic(lessonId: string): HelpTopic {
 function enGraphTopic(lessonId: string): HelpTopic {
   if (lessonId === 'integral') {
     return {
-      eyebrow: 'Reading the graph',
-      title: 'How do I read the integral graph?',
+      eyebrow: 'Visual notes',
+      title: 'Integral view',
       summary: 'The colored rectangles or trapezoids under the curve approximate area. More pieces make each piece narrower and usually closer to the true integral.',
       sections: [
         {
-          title: 'What to watch',
+          title: 'What changes',
           items: [
             'The curve f(x) is the height being accumulated.',
             'a and b are the left and right endpoints of the interval.',
@@ -961,16 +961,16 @@ function enGraphTopic(lessonId: string): HelpTopic {
   }
   if (lessonId === 'fundamental-theorem') {
     return {
-      eyebrow: 'Reading the graph',
-      title: 'How do I read the fundamental theorem graph?',
+      eyebrow: 'Visual notes',
+      title: 'Fundamental theorem view',
       summary: 'The top pane is f(x). The bottom pane is accumulated area A(x). Together they show the relationship between height and accumulated change.',
       sections: [
         {
-          title: 'Watch the current position',
+          title: 'Current position',
           items: [
             'The top height f(x) controls how fast the bottom graph A(x) changes.',
             'When f(x) is positive, A(x) grows upward; when f(x) is negative, A(x) moves downward.',
-            'The slope of A(x) is close to the height of f(x).',
+            'Where the theorem applies, the slope of A(x) equals the height of f(x); the displayed readout estimates that relation numerically.',
           ],
         },
       ],
@@ -978,8 +978,8 @@ function enGraphTopic(lessonId: string): HelpTopic {
   }
   if (lessonId === 'taylor') {
     return {
-      eyebrow: 'Reading the graph',
-      title: 'How do I read the Taylor graph?',
+      eyebrow: 'Visual notes',
+      title: 'Taylor view',
       summary: 'One curve is the original function and the other is the Taylor polynomial. The closer they are near the center, the better the local approximation.',
       sections: [
         {
@@ -994,12 +994,12 @@ function enGraphTopic(lessonId: string): HelpTopic {
     }
   }
   return {
-    eyebrow: 'Reading the graph',
-    title: 'How do I read the derivative graph?',
+    eyebrow: 'Visual notes',
+    title: 'Derivative view',
     summary: 'Two points on the curve determine a secant line. As h shrinks, the second point moves toward the first and the secant direction approaches the tangent direction.',
     sections: [
       {
-        title: 'What to watch',
+        title: 'What changes',
         items: [
           'x0 is the point being studied.',
           'h is the horizontal distance between the two points.',

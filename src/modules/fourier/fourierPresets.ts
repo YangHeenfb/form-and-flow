@@ -91,14 +91,14 @@ export function getFourierPreset(id: string): SignalPreset {
   return fourierPresets.find((preset) => preset.id === id) ?? fourierPresets[1]
 }
 
-export function sampleFourierPreset(presetId: string, sampleCount: number, normalize = true): number[] {
+export function sampleFourierPreset(presetId: string, sampleCount: number, normalize = false): number[] {
   const preset = getFourierPreset(presetId)
   const samples = generateTimeValues(sampleCount).map((t, index) => preset.sample(t, index, sampleCount))
   const clean = clampSamples(samples, -2.5, 2.5)
   return normalize ? normalizeSamples(clean) : clean
 }
 
-export function sampleFourierExpression(expression: string, sampleCount: number, normalize = true): number[] {
+export function sampleFourierExpression(expression: string, sampleCount: number, normalize = false): number[] {
   const compiled = compileFourierExpression(expression)
   const samples = generateTimeValues(sampleCount).map((t) => compiled.evaluate({ t }) ?? 0)
   const clean = clampSamples(samples, -3, 3)
