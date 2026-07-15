@@ -24,7 +24,6 @@ export function VectorPanel({ copy, vectors, requiredDim, onAdd, onUpdate, onDel
           {copy.vectorPanel.add}
         </button>
       </div>
-      <p className="muted compact">{copy.vectorPanel.help(requiredDim)}</p>
       {mismatched.length > 0 && (
         <div className="warning-box">
           {mismatched.map((vector) => (

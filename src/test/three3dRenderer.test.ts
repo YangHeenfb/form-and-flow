@@ -1,7 +1,12 @@
 import * as THREE from 'three'
 import { describe, expect, it } from 'vitest'
 import type { ThreeRenderPayload } from '../render/RendererAdapter.ts'
-import { threeSceneStructureSignature, updateLineSegments } from '../render/three3d/Three3DRenderer.ts'
+import {
+  resolveProjectedLabelLayout,
+  threeSceneStructureSignature,
+  updateLineSegments,
+  type ProjectedLabel,
+} from '../render/three3d/Three3DRenderer.ts'
 import { neutralLightTheme } from '../state/useThemeState.ts'
 
 function payload(): ThreeRenderPayload {
@@ -42,5 +47,27 @@ describe('Three3DRenderer incremental scene contract', () => {
 
     expect(secondAttribute).toBe(firstAttribute)
     expect(Array.from(secondAttribute.array)).toEqual([0, 0, 0, 2, 0, 0])
+  })
+
+  it('prioritizes user-vector labels and hides a basis label when no collision-free placement exists', () => {
+    const labels: ProjectedLabel[] = [
+      { id: 'basis-i', role: 'basis', anchorX: 50, anchorY: 50, width: 82, height: 28, order: 1 },
+      { id: 'vector-v1', role: 'user-vector', anchorX: 50, anchorY: 50, width: 82, height: 28, order: 0 },
+    ]
+    const first = resolveProjectedLabelLayout(labels, 112, 74)
+    const second = resolveProjectedLabelLayout(labels, 112, 74)
+
+    expect(first).toEqual(second)
+    expect(first.find((label) => label.id === 'vector-v1')?.visible).toBe(true)
+    expect(first.find((label) => label.id === 'basis-i')?.visible).toBe(false)
+  })
+
+  it('keeps separated user-vector and basis labels visible', () => {
+    const labels: ProjectedLabel[] = [
+      { id: 'vector-v1', role: 'user-vector', anchorX: 90, anchorY: 90, width: 60, height: 24, order: 0 },
+      { id: 'basis-i', role: 'basis', anchorX: 250, anchorY: 180, width: 52, height: 20, order: 1 },
+    ]
+    const placements = resolveProjectedLabelLayout(labels, 360, 260)
+    expect(placements.every((label) => label.visible)).toBe(true)
   })
 })

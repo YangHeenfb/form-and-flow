@@ -30,7 +30,6 @@ export function MatrixSequencePanel({ copy, locale, maps, validation, onAdd, onA
           {copy.matrixSequence.add}
         </button>
       </div>
-      <p className="muted compact">{copy.matrixSequence.help}</p>
 
       <div className="stack">
         {maps.map((map, index) => (
@@ -38,7 +37,6 @@ export function MatrixSequencePanel({ copy, locale, maps, validation, onAdd, onA
             key={map.id}
             copy={copy.matrixInput}
             map={map}
-            index={index}
             canMoveUp={index > 0}
             canMoveDown={index < maps.length - 1}
             onChange={(next) => onUpdate(map.id, () => next)}
@@ -62,7 +60,6 @@ export function MatrixSequencePanel({ copy, locale, maps, validation, onAdd, onA
             <Sparkles size={16} />
             {copy.matrixSequence.presetTitle}
           </span>
-          <span className="summary-copy">{copy.matrixSequence.presetSummary}</span>
           <ChevronDown className="summary-chevron" size={17} />
         </summary>
         <div className="preset-grid">

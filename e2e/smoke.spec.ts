@@ -178,6 +178,37 @@ test('Matrix mobile workbench keeps controls collapsed below visualization and t
   expect(accessibility.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([])
 })
 
+test('Matrix mobile transport stays compact and progressively discloses display options', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 900 })
+  await page.goto('/modules/matrix/transformations')
+  await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+  await expect(page.locator('.platform-shell')).toHaveAttribute('data-surface-mode', 'dark')
+
+  const transport = page.locator('.transport')
+  const transportBox = await transport.boundingBox()
+  expect(transportBox).toBeTruthy()
+  expect(transportBox!.height).toBeLessThanOrEqual(300)
+
+  const resetAnimation = page.getByRole('button', { name: 'Reset animation', exact: true })
+  const resetView = page.getByRole('button', { name: 'Reset view', exact: true })
+  for (const button of [resetAnimation, resetView]) {
+    const box = await button.boundingBox()
+    expect(box).toBeTruthy()
+    expect(box!.width).toBeGreaterThanOrEqual(44)
+    expect(box!.height).toBeGreaterThanOrEqual(44)
+  }
+
+  const disclosure = page.locator('.view-options-disclosure')
+  await expect(disclosure).not.toHaveAttribute('open', '')
+  await expect(disclosure.locator('.view-toggles-mobile input')).toHaveCount(5)
+  await expect(disclosure.locator('.view-toggles-mobile input').first()).toBeHidden()
+  await disclosure.locator('summary').click()
+  await expect(disclosure).toHaveAttribute('open', '')
+  await expect(disclosure.locator('.view-toggles-mobile input').first()).toBeVisible()
+  await expect(page.locator('.view-toggles-desktop')).toBeHidden()
+  await expectNoHorizontalOverflow(page)
+})
+
 test('tablet layouts keep the canvas first and collapse parameters and readout', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 900 })
   await page.goto('/modules/calculus/derivative')
@@ -248,7 +279,6 @@ test('custom explorer selector supports keyboard focus and selection', async ({ 
 test('surface theme updates canvas colors and keeps the stored preference', async ({ page }) => {
   await page.goto('/modules/calculus/derivative')
   await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
-  await page.getByRole('button', { name: 'Dark mode' }).click()
   await expect(page.getByRole('button', { name: 'Light mode' })).toBeVisible()
 
   const background = await page.locator('.calculus-canvas').evaluate((canvas: HTMLCanvasElement) =>
@@ -256,15 +286,17 @@ test('surface theme updates canvas colors and keeps the stored preference', asyn
   )
   expect(background).toEqual([17, 23, 27])
 
+  await page.getByRole('button', { name: 'Light mode' }).click()
+  await expect(page.getByRole('button', { name: 'Dark mode' })).toBeVisible()
+
   await page.reload()
   await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
-  await expect(page.getByRole('button', { name: 'Light mode' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Dark mode' })).toBeVisible()
 })
 
 test('Matrix follows the platform surface mode with a safe dark canvas palette', async ({ page }) => {
   await page.goto('/modules/matrix/transformations')
   await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
-  await page.getByRole('button', { name: 'Dark mode' }).click()
   await expect(page.getByRole('button', { name: 'Light mode' })).toBeVisible()
 
   const background = await page.locator('.canvas-2d').evaluate((canvas: HTMLCanvasElement) =>

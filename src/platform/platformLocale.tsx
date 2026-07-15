@@ -40,7 +40,7 @@ export const PlatformLocaleContext = createContext<PlatformLocaleContextValue>({
 
 const PlatformSurfaceModeContext = createContext<PlatformSurfaceModeContextValue | null>(null)
 const fallbackSurfaceModeContext: PlatformSurfaceModeContextValue = {
-  surfaceMode: 'light',
+  surfaceMode: 'dark',
   setSurfaceMode: noopSetSurfaceMode,
 }
 
@@ -84,7 +84,7 @@ export function readStoredSurfaceModeValue(): string | null {
       const parsed = JSON.parse(raw) as { surfaceMode?: unknown }
       if (parsed.surfaceMode === 'dark' || parsed.surfaceMode === 'light') return parsed.surfaceMode
     } catch {
-      // Ignore stale or malformed legacy preferences and keep the safe light default.
+      // Ignore stale or malformed legacy preferences and keep the safe dark default.
     }
   }
   return null
@@ -97,7 +97,8 @@ export function loadStoredPlatformLocale(): Locale {
 }
 
 export function loadStoredSurfaceMode(): PlatformSurfaceMode {
-  if (typeof window === 'undefined') return 'light'
+  if (typeof window === 'undefined') return 'dark'
   const storedSurfaceMode = readStoredSurfaceModeValue()
-  return storedSurfaceMode === 'dark' ? 'dark' : 'light'
+  if (storedSurfaceMode === 'light') return 'light'
+  return 'dark'
 }

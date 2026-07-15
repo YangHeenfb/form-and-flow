@@ -471,12 +471,6 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
 
   const matrixPanel = (
     <>
-      <section className="panel-section matrix-learning-entry learning-help-entry">
-        <HelpTrigger ariaLabel={learningCopy.openOverview} onClick={() => openHelpTopic('overview')}>
-          {learningCopy.openOverview}
-        </HelpTrigger>
-      </section>
-
       <MatrixSequencePanel
         copy={copy}
         locale={locale}
@@ -666,6 +660,11 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
         rightPanel={explanationPanel}
         transport={transport}
         overlayPanels={overlayPanels}
+        inspectorAction={(
+          <HelpTrigger ariaLabel={learningCopy.openOverview} onClick={() => openHelpTopic('overview')}>
+            {learningCopy.openOverview}
+          </HelpTrigger>
+        )}
         stageRef={centerStageRef}
         shortcutActions={shortcutActions}
         onStatusChange={setWorkbenchStatus}

@@ -42,6 +42,7 @@ type VisualizationWorkbenchProps = {
   rightPanel: ReactNode
   transport: ReactNode
   overlayPanels: OverlayPanelDefinition[]
+  inspectorAction?: ReactNode
   stageRef?: Ref<HTMLElement>
   shortcutActions?: {
     togglePlay?: () => void
@@ -62,6 +63,7 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
       rightPanel,
       transport,
       overlayPanels,
+      inspectorAction,
       stageRef,
       shortcutActions,
       onStatusChange,
@@ -264,18 +266,22 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
             <header className="visualization-inspector-header">
               <SlidersHorizontal size={16} aria-hidden="true" />
               <span>{labels.controls ?? 'Controls'}</span>
+              {inspectorAction && <div className="visualization-inspector-action">{inspectorAction}</div>}
             </header>
-            <button
-              type="button"
-              className="visualization-mobile-section-toggle"
-              aria-expanded={mobileControlsOpen}
-              aria-controls={mobileControlsId}
-              onClick={() => setMobileControlsOpen((open) => !open)}
-            >
-              <SlidersHorizontal size={17} />
-              <span>{labels.controls ?? 'Controls'}</span>
-              <ChevronDown className="visualization-mobile-section-chevron" size={17} aria-hidden="true" />
-            </button>
+            <div className="visualization-mobile-inspector-header">
+              <button
+                type="button"
+                className="visualization-mobile-section-toggle"
+                aria-expanded={mobileControlsOpen}
+                aria-controls={mobileControlsId}
+                onClick={() => setMobileControlsOpen((open) => !open)}
+              >
+                <SlidersHorizontal size={17} />
+                <span>{labels.controls ?? 'Controls'}</span>
+                <ChevronDown className="visualization-mobile-section-chevron" size={17} aria-hidden="true" />
+              </button>
+              {inspectorAction && <div className="visualization-mobile-inspector-action">{inspectorAction}</div>}
+            </div>
             <div className="visualization-mobile-section-content" id={mobileControlsId}>{leftPanel}</div>
           </aside>
           <div className="visualization-center-column">

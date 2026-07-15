@@ -5,13 +5,33 @@ import type { Matrix, ThemeSurfaceMode, ThreeCameraView } from '../../math/types
 import type { ThreeRenderPayload } from '../RendererAdapter.ts'
 
 type Point3 = [number, number, number]
+export type ThreeLabelRole = 'basis' | 'user-vector'
+
+export type ProjectedLabel = {
+  id: string
+  role: ThreeLabelRole
+  anchorX: number
+  anchorY: number
+  width: number
+  height: number
+  order: number
+}
+
+export type ProjectedLabelPlacement = ProjectedLabel & {
+  visible: boolean
+  centerX: number
+  centerY: number
+}
 
 type MutableArrow = {
+  id: string
+  role: ThreeLabelRole
   group: THREE.Group
   helper: THREE.ArrowHelper
   zeroDot: THREE.Mesh | null
   endpoint: THREE.Mesh | null
   label: THREE.Sprite
+  labelAnchor: THREE.Vector3
   headLength: number
   headWidth: number
 }
@@ -71,7 +91,10 @@ export class Three3DRenderer {
     this.controls.enableDamping = true
     this.controls.enableZoom = false
     this.handleControlsChange = () => {
-      if (!this.suppressControlsRender) this.renderer.render(this.scene, this.camera)
+      if (!this.suppressControlsRender) {
+        this.layoutLabels()
+        this.renderer.render(this.scene, this.camera)
+      }
     }
     this.controls.addEventListener('change', this.handleControlsChange)
   }
@@ -93,6 +116,7 @@ export class Three3DRenderer {
     this.suppressControlsRender = true
     this.controls.update()
     this.suppressControlsRender = false
+    this.layoutLabels()
     this.renderer.render(this.scene, this.camera)
   }
 
@@ -113,6 +137,7 @@ export class Three3DRenderer {
     this.suppressControlsRender = false
     this.camera.lookAt(0, 0, 0)
     this.camera.updateProjectionMatrix()
+    this.layoutLabels()
     this.renderer.render(this.scene, this.camera)
   }
 
@@ -173,6 +198,8 @@ export class Three3DRenderer {
     const basisColors = [payload.theme.colors.vectorI, payload.theme.colors.vectorJ, payload.theme.colors.vectorK]
     const basis = Array.from({ length: payload.inputDim }, (_, index) => {
       const mutable = createMutableArrow({
+        id: `basis-${index}`,
+        role: 'basis',
         color: basisColors[index],
         label: `T(${basisLabel(index)})`,
         surfaceMode: payload.theme.surfaceMode,
@@ -188,6 +215,8 @@ export class Three3DRenderer {
       .filter((vector) => vector.dim === payload.inputDim)
       .map((vector) => {
         const mutable = createMutableArrow({
+          id: `vector-${vector.id}`,
+          role: 'user-vector',
           color: vector.color ?? payload.theme.colors.inputVector,
           label: `T(${vector.name})`,
           surfaceMode: payload.theme.surfaceMode,
@@ -225,6 +254,46 @@ export class Three3DRenderer {
     this.parts.vectors.forEach((item, index) => {
       const output = applyMatrixToVector(payload.visualMatrix, visibleVectors[index].values) as Point3
       updateMutableArrow(item, [output[0] ?? 0, output[1] ?? 0, output[2] ?? 0])
+    })
+  }
+
+  private layoutLabels(): void {
+    if (!this.parts || this.width <= 1 || this.height <= 1) return
+    const arrows = [...this.parts.vectors, ...this.parts.basis].filter((arrow) => arrow.group.visible)
+    const projectedLabels: ProjectedLabel[] = []
+    const projectedAnchors = new Map<string, THREE.Vector3>()
+
+    arrows.forEach((arrow, order) => {
+      const projected = arrow.labelAnchor.clone().project(this.camera)
+      if (!Number.isFinite(projected.x) || !Number.isFinite(projected.y) || projected.z < -1 || projected.z > 1) {
+        arrow.label.visible = false
+        return
+      }
+      const anchorX = (projected.x * 0.5 + 0.5) * this.width
+      const anchorY = (-projected.y * 0.5 + 0.5) * this.height
+      const size = projectedLabelSize(arrow, this.camera, this.height)
+      projectedLabels.push({
+        id: arrow.id,
+        role: arrow.role,
+        anchorX,
+        anchorY,
+        width: size.width,
+        height: size.height,
+        order,
+      })
+      projectedAnchors.set(arrow.id, projected)
+    })
+
+    const placements = resolveProjectedLabelLayout(projectedLabels, this.width, this.height)
+    const placementById = new Map(placements.map((placement) => [placement.id, placement]))
+    arrows.forEach((arrow) => {
+      const placement = placementById.get(arrow.id)
+      const projected = projectedAnchors.get(arrow.id)
+      arrow.label.visible = Boolean(placement?.visible && projected)
+      if (!placement?.visible || !projected) return
+      projected.x = (placement.centerX / this.width) * 2 - 1
+      projected.y = -((placement.centerY / this.height) * 2 - 1)
+      arrow.label.position.copy(projected.unproject(this.camera))
     })
   }
 
@@ -302,6 +371,8 @@ function transformPoint(matrix: Matrix, values: number[], inputDim: number): Poi
 }
 
 function createMutableArrow({
+  id,
+  role,
   color,
   label,
   surfaceMode,
@@ -309,6 +380,8 @@ function createMutableArrow({
   headLength,
   headWidth,
 }: {
+  id: string
+  role: ThreeLabelRole
   color: string
   label: string
   surfaceMode: ThemeSurfaceMode
@@ -343,12 +416,23 @@ function createMutableArrow({
     group.add(endpoint)
   }
 
-  const labelSprite = vectorLabel(label, color, surfaceMode)
+  const labelSprite = vectorLabel(label, color, surfaceMode, role)
   labelSprite.renderOrder = emphasized ? 22 : 20
   group.add(labelSprite)
   if (emphasized) keepVisible(group)
 
-  return { group, helper, zeroDot, endpoint, label: labelSprite, headLength, headWidth }
+  return {
+    id,
+    role,
+    group,
+    helper,
+    zeroDot,
+    endpoint,
+    label: labelSprite,
+    labelAnchor: new THREE.Vector3(),
+    headLength,
+    headWidth,
+  }
 }
 
 function updateMutableArrow(arrow: MutableArrow, end: Point3): void {
@@ -362,29 +446,33 @@ function updateMutableArrow(arrow: MutableArrow, end: Point3): void {
   }
   if (arrow.zeroDot) arrow.zeroDot.visible = !hasLength
   if (arrow.endpoint) arrow.endpoint.position.copy(vector)
-  arrow.label.position.copy(labelPosition(vector))
+  arrow.labelAnchor.copy(labelAnchorPosition(vector))
+  arrow.label.position.copy(arrow.labelAnchor)
 }
 
-function vectorLabel(text: string, color: string, surfaceMode: ThemeSurfaceMode): THREE.Sprite {
-  const paddingX = 18
-  const font = '600 28px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+function vectorLabel(text: string, color: string, surfaceMode: ThemeSurfaceMode, role: ThreeLabelRole): THREE.Sprite {
+  const isUserVector = role === 'user-vector'
+  const paddingX = isUserVector ? 18 : 14
+  const font = `${isUserVector ? 600 : 550} ${isUserVector ? 28 : 24}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
   const canvas = document.createElement('canvas')
   const context = canvas.getContext('2d')
   if (!context) return new THREE.Sprite()
   context.font = font
   const metrics = context.measureText(text)
   const width = Math.ceil(metrics.width + paddingX * 2)
-  const height = 48
+  const height = isUserVector ? 48 : 42
   canvas.width = width
   canvas.height = height
   context.font = font
   context.textBaseline = 'middle'
-  context.fillStyle = surfaceMode === 'dark' ? 'rgba(13, 20, 28, 0.82)' : 'rgba(248, 250, 252, 0.86)'
+  context.fillStyle = surfaceMode === 'dark'
+    ? `rgba(13, 20, 28, ${isUserVector ? 0.84 : 0.68})`
+    : `rgba(248, 250, 252, ${isUserVector ? 0.88 : 0.72})`
   drawRoundedRect(context, 0, 0, width, height, 12)
   context.fill()
   context.strokeStyle = color
-  context.globalAlpha = 0.72
-  context.lineWidth = 3
+  context.globalAlpha = isUserVector ? 0.76 : 0.48
+  context.lineWidth = isUserVector ? 3 : 2
   drawRoundedRect(context, 1.5, 1.5, width - 3, height - 3, 10)
   context.stroke()
   context.globalAlpha = 1
@@ -396,20 +484,152 @@ function vectorLabel(text: string, color: string, surfaceMode: ThemeSurfaceMode)
   const material = new THREE.SpriteMaterial({
     map: texture,
     transparent: true,
+    opacity: isUserVector ? 1 : 0.84,
     depthTest: false,
     depthWrite: false,
   })
   const sprite = new THREE.Sprite(material)
-  const labelHeight = 0.28
+  const labelHeight = isUserVector ? 0.28 : 0.22
   sprite.scale.set((labelHeight * width) / height, labelHeight, 1)
   sprite.renderOrder = 20
   return sprite
 }
 
-function labelPosition(vector: THREE.Vector3): THREE.Vector3 {
-  if (vector.length() < 1e-6) return new THREE.Vector3(0.22, 0.24, 0.18)
+function labelAnchorPosition(vector: THREE.Vector3): THREE.Vector3 {
+  if (vector.length() < 1e-6) return new THREE.Vector3(0.08, 0.08, 0.08)
   const direction = vector.clone().normalize()
-  return vector.clone().add(direction.multiplyScalar(0.2)).add(new THREE.Vector3(0.08, 0.1, 0.08))
+  return vector.clone().add(direction.multiplyScalar(0.12))
+}
+
+function projectedLabelSize(arrow: MutableArrow, camera: THREE.PerspectiveCamera, viewportHeight: number): { width: number; height: number } {
+  const distance = Math.max(0.5, camera.position.distanceTo(arrow.labelAnchor))
+  const fovRadians = THREE.MathUtils.degToRad(camera.fov)
+  const projectedHeight = (arrow.label.scale.y * viewportHeight * camera.zoom) / (2 * Math.tan(fovRadians / 2) * distance)
+  const minHeight = arrow.role === 'user-vector' ? 24 : 19
+  const maxHeight = arrow.role === 'user-vector' ? 42 : 32
+  const height = Math.max(minHeight, Math.min(maxHeight, projectedHeight))
+  const aspect = arrow.label.scale.y > 0 ? arrow.label.scale.x / arrow.label.scale.y : 2
+  return { width: height * aspect, height }
+}
+
+export function resolveProjectedLabelLayout(
+  labels: ProjectedLabel[],
+  viewportWidth: number,
+  viewportHeight: number,
+): ProjectedLabelPlacement[] {
+  const viewportPadding = 6
+  const collisionPadding = 4
+  const placedBoxes: LabelBox[] = []
+  const placements = new Map<string, ProjectedLabelPlacement>()
+  const sorted = [...labels].sort((left, right) => {
+    if (left.role !== right.role) return left.role === 'user-vector' ? -1 : 1
+    return left.order - right.order
+  })
+
+  sorted.forEach((label) => {
+    const candidates = labelPlacementCandidates(label)
+    const validCandidates = candidates
+      .map(({ centerX, centerY }) => labelBox(label, centerX, centerY))
+      .filter((box) => isInsideViewport(box, viewportWidth, viewportHeight, viewportPadding))
+    const collisionFree = validCandidates.find((box) => placedBoxes.every((placed) => !boxesOverlap(box, placed, collisionPadding)))
+    const bestUserFallback = label.role === 'user-vector'
+      ? validCandidates.reduce<LabelBox | null>((best, box) => {
+          if (!best) return box
+          return overlapArea(box, placedBoxes) < overlapArea(best, placedBoxes) ? box : best
+        }, null) ?? clampLabelBox(
+          labelBox(label, candidates[0].centerX, candidates[0].centerY),
+          viewportWidth,
+          viewportHeight,
+          viewportPadding,
+        )
+      : null
+    const selected = collisionFree ?? bestUserFallback
+    if (!selected) {
+      placements.set(label.id, { ...label, visible: false, centerX: label.anchorX, centerY: label.anchorY })
+      return
+    }
+    placedBoxes.push(selected)
+    placements.set(label.id, { ...label, visible: true, centerX: selected.centerX, centerY: selected.centerY })
+  })
+
+  return labels.map((label) => placements.get(label.id) ?? {
+    ...label,
+    visible: false,
+    centerX: label.anchorX,
+    centerY: label.anchorY,
+  })
+}
+
+type LabelBox = {
+  centerX: number
+  centerY: number
+  left: number
+  right: number
+  top: number
+  bottom: number
+}
+
+function labelPlacementCandidates(label: ProjectedLabel): Array<{ centerX: number; centerY: number }> {
+  const gap = label.role === 'user-vector' ? 11 : 8
+  const horizontal = label.width / 2 + gap
+  const vertical = label.height / 2 + gap
+  const candidates = [
+    { centerX: label.anchorX + horizontal, centerY: label.anchorY - vertical },
+    { centerX: label.anchorX + horizontal, centerY: label.anchorY + vertical },
+    { centerX: label.anchorX - horizontal, centerY: label.anchorY - vertical },
+    { centerX: label.anchorX - horizontal, centerY: label.anchorY + vertical },
+    { centerX: label.anchorX, centerY: label.anchorY - vertical },
+    { centerX: label.anchorX, centerY: label.anchorY + vertical },
+  ]
+  const rotation = Math.abs(label.order) % candidates.length
+  return [...candidates.slice(rotation), ...candidates.slice(0, rotation)]
+}
+
+function labelBox(label: ProjectedLabel, centerX: number, centerY: number): LabelBox {
+  return {
+    centerX,
+    centerY,
+    left: centerX - label.width / 2,
+    right: centerX + label.width / 2,
+    top: centerY - label.height / 2,
+    bottom: centerY + label.height / 2,
+  }
+}
+
+function isInsideViewport(box: LabelBox, width: number, height: number, padding: number): boolean {
+  return box.left >= padding && box.right <= width - padding && box.top >= padding && box.bottom <= height - padding
+}
+
+function clampLabelBox(box: LabelBox, width: number, height: number, padding: number): LabelBox {
+  const boxWidth = box.right - box.left
+  const boxHeight = box.bottom - box.top
+  const centerX = Math.max(padding + boxWidth / 2, Math.min(width - padding - boxWidth / 2, box.centerX))
+  const centerY = Math.max(padding + boxHeight / 2, Math.min(height - padding - boxHeight / 2, box.centerY))
+  return {
+    centerX,
+    centerY,
+    left: centerX - boxWidth / 2,
+    right: centerX + boxWidth / 2,
+    top: centerY - boxHeight / 2,
+    bottom: centerY + boxHeight / 2,
+  }
+}
+
+function boxesOverlap(left: LabelBox, right: LabelBox, padding: number): boolean {
+  return !(
+    left.right + padding <= right.left
+    || left.left >= right.right + padding
+    || left.bottom + padding <= right.top
+    || left.top >= right.bottom + padding
+  )
+}
+
+function overlapArea(box: LabelBox, placedBoxes: LabelBox[]): number {
+  return placedBoxes.reduce((total, placed) => {
+    const width = Math.max(0, Math.min(box.right, placed.right) - Math.max(box.left, placed.left))
+    const height = Math.max(0, Math.min(box.bottom, placed.bottom) - Math.max(box.top, placed.top))
+    return total + width * height
+  }, 0)
 }
 
 function drawRoundedRect(

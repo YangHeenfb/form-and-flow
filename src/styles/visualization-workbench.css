@@ -43,7 +43,8 @@
   z-index: 3;
   top: 0;
   min-height: 46px;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 9px;
   border-bottom: 1px solid var(--panel-border);
@@ -55,7 +56,23 @@
   backdrop-filter: blur(8px);
 }
 
+.visualization-inspector-action {
+  min-width: 0;
+}
+
+.visualization-inspector-action .learning-help-trigger {
+  min-height: 34px;
+  border-color: transparent;
+  color: var(--text-muted);
+  background: transparent;
+  padding-inline: 8px;
+}
+
 .visualization-mobile-section-toggle {
+  display: none;
+}
+
+.visualization-mobile-inspector-header {
   display: none;
 }
 
@@ -75,18 +92,6 @@
 .visualization-standard-left .panel-section + .panel-section,
 .visualization-standard-left .panel-section + .matrix-appearance-disclosure {
   border-top: 1px solid color-mix(in srgb, var(--panel-border) 78%, transparent);
-}
-
-.visualization-standard-left .matrix-learning-entry {
-  min-height: 42px;
-  padding-block: 8px;
-}
-
-.visualization-standard-left .matrix-learning-entry .learning-help-trigger {
-  min-height: 36px;
-  color: var(--text-muted);
-  border-color: transparent;
-  background: transparent;
 }
 
 .matrix-appearance-disclosure {
@@ -254,6 +259,13 @@
     display: none;
   }
 
+  .visualization-mobile-inspector-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: stretch;
+    border-bottom: 1px solid var(--panel-border);
+  }
+
   .visualization-mobile-section-toggle {
     width: 100%;
     min-height: 48px;
@@ -266,6 +278,21 @@
     border-radius: 0;
     background: transparent;
     text-align: left;
+  }
+
+  .visualization-mobile-inspector-action {
+    display: flex;
+    align-items: center;
+    border-left: 1px solid var(--panel-border);
+  }
+
+  .visualization-mobile-inspector-action .learning-help-trigger {
+    min-height: 48px;
+    border: 0;
+    border-radius: 0;
+    color: var(--text-muted);
+    background: transparent;
+    padding-inline: 12px;
   }
 
   .visualization-mobile-section-toggle span {

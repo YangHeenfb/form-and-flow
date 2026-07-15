@@ -45,9 +45,7 @@ export type AppCopy = {
   matrixSequence: {
     title: string
     add: string
-    help: string
     presetTitle: string
-    presetSummary: string
     presetNames: Record<string, string>
   }
   matrixInput: {
@@ -57,12 +55,10 @@ export type AppCopy = {
     moveDown: (name: string) => string
     deleteMap: (name: string) => string
     entryTooltip: (row: number, col: number) => string
-    stepNote: (step: number) => string
   }
   vectorPanel: {
     title: string
     add: string
-    help: (dim: SpaceDim) => string
     mismatch: (name: string, vectorDim: SpaceDim, requiredDim: SpaceDim) => string
   }
   vectorInput: {
@@ -91,6 +87,7 @@ export type AppCopy = {
     combinedHelp: string
     step: string
     stepHelp: string
+    display: string
     viewLabels: Record<ViewOptionKey, string>
   }
   threeView: {
@@ -220,9 +217,7 @@ export const appCopy: Record<Locale, AppCopy> = {
     matrixSequence: {
       title: 'Matrix Sequence',
       add: 'Add',
-      help: 'User order [A₁, A₂, A₃] means first A₁, then A₂, then A₃. In multiplication the vector sits on the right, so the composed matrix is A₃A₂A₁.',
       presetTitle: 'Preset Library',
-      presetSummary: 'Expand to apply common maps',
       presetNames: identityPresetNames,
     },
     matrixInput: {
@@ -237,12 +232,10 @@ export const appCopy: Record<Locale, AppCopy> = {
         const outputCoordinate = coordinateNames[row] ?? `output ${row + 1}`
         return `a${row + 1}${col + 1}: the transformed ${basis} vector's ${outputCoordinate} coordinate. Also: original ${inputCoordinate} contributes this much to output ${outputCoordinate}.`
       },
-      stepNote: (step) => `Step ${step}: this map acts after all maps above it.`,
     },
     vectorPanel: {
       title: 'Vectors',
       add: 'Add',
-      help: (dim) => `Enter the vector before the matrix acts. It must live in ${spacePlain(dim)}, and the right panel shows where Av lands.`,
       mismatch: (name, vectorDim, requiredDim) => `${name} was ${spacePlain(vectorDim)}; editing it here will resize it to ${spacePlain(requiredDim)}.`,
     },
     vectorInput: {
@@ -282,6 +275,7 @@ export const appCopy: Record<Locale, AppCopy> = {
       combinedHelp: 'Combined: show the final effect of the whole sequence at once.',
       step: 'Step',
       stepHelp: 'Step: play each matrix after the previous result, one map at a time.',
+      display: 'Display',
       viewLabels: {
         showGrid: 'Grid',
         showBasis: 'Basis',
@@ -396,9 +390,7 @@ export const appCopy: Record<Locale, AppCopy> = {
     matrixSequence: {
       title: '矩阵序列',
       add: '添加',
-      help: '用户顺序 [A₁, A₂, A₃] 表示先作用 A₁，再作用 A₂，再作用 A₃。写乘法时向量在最右边，所以合成矩阵是 A₃A₂A₁。',
       presetTitle: '预设库',
-      presetSummary: '展开后应用常见映射',
       presetNames: presetNameZh,
     },
     matrixInput: {
@@ -413,12 +405,10 @@ export const appCopy: Record<Locale, AppCopy> = {
         const outputCoordinate = coordinateNames[row] ?? `第 ${row + 1} 个输出坐标`
         return `a${row + 1}${col + 1}：${basis} 向量变换后的 ${outputCoordinate} 坐标。也可以理解为：原来的 ${inputCoordinate} 方向，会给输出 ${outputCoordinate} 贡献多少。`
       },
-      stepNote: (step) => `第 ${step} 步：这个映射会在上方所有映射之后作用。`,
     },
     vectorPanel: {
       title: '向量',
       add: '添加',
-      help: (dim) => `这里填的是向量变换前的位置。它必须属于 ${spacePlain(dim)}；右侧会显示矩阵作用后的 Av。`,
       mismatch: (name, vectorDim, requiredDim) => `${name} 原本是 ${spacePlain(vectorDim)}；在这里编辑会把它调整为 ${spacePlain(requiredDim)}。`,
     },
     vectorInput: {
@@ -458,6 +448,7 @@ export const appCopy: Record<Locale, AppCopy> = {
       combinedHelp: '合成：直接看整个矩阵序列的最终效果。',
       step: '分步',
       stepHelp: '分步：一步一步看每个矩阵接着前面的结果继续作用。',
+      display: '显示',
       viewLabels: {
         showGrid: '网格',
         showBasis: '基向量',

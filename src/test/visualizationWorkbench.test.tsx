@@ -2,6 +2,8 @@ import { act, useRef, type ReactElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { AnimationControls } from '../components/AnimationControls.tsx'
+import { appCopy } from '../i18n.ts'
 import { identityMatrix } from '../math/matrix.ts'
 import { MatrixMotionLab } from '../modules/matrix/MatrixMotionLab.tsx'
 import { useResizeObserver } from '../platform/useElementSize.ts'
@@ -45,6 +47,20 @@ describe('VisualizationWorkbench', () => {
     expect(container.querySelector('.visualization-stage-toolbar')).toBeNull()
     pressKey(document, 'f')
     expect(container.querySelector('.visualization-stage-toolbar')).toBeTruthy()
+
+    unmount()
+  })
+
+  it('places an optional inspector action in the desktop and mobile headers', async () => {
+    const onReference = vi.fn()
+    const { container, unmount } = render(<WorkbenchHarness inspectorAction={<button type="button" onClick={onReference}>Reference</button>} />)
+    const actions = Array.from(container.querySelectorAll<HTMLButtonElement>('button')).filter((button) => button.textContent === 'Reference')
+
+    expect(actions).toHaveLength(2)
+    actions[0].focus()
+    expect(document.activeElement).toBe(actions[0])
+    await click(actions[0])
+    expect(onReference).toHaveBeenCalledOnce()
 
     unmount()
   })
@@ -136,6 +152,33 @@ describe('useResizeObserver', () => {
 })
 
 describe('MatrixMotionLab workbench integration', () => {
+  it('keeps mobile display options in a collapsed disclosure without removing desktop controls', () => {
+    const { container, unmount } = render(
+      <AnimationControls
+        copy={appCopy.en.controls}
+        animation={{ playing: false, progress: 0, speed: 1, mode: 'combined', stepIndex: 0 }}
+        viewOptions={{ showGrid: true, showBasis: true, showUnitShape: true, showVectors: true, showTrails: true }}
+        onPlay={vi.fn()}
+        onPause={vi.fn()}
+        onReset={vi.fn()}
+        onResetView={vi.fn()}
+        onSeek={vi.fn()}
+        onSpeedChange={vi.fn()}
+        onModeChange={vi.fn()}
+        onViewOptionChange={vi.fn()}
+      />,
+    )
+    const disclosure = container.querySelector<HTMLDetailsElement>('.view-options-disclosure')
+
+    expect(disclosure?.open).toBe(false)
+    expect(disclosure?.querySelector('summary')?.textContent).toContain('Display')
+    expect(container.querySelectorAll('.view-toggles-mobile input')).toHaveLength(5)
+    expect(container.querySelectorAll('.view-toggles-desktop input')).toHaveLength(5)
+    expect(container.querySelector('[aria-label="Reset animation"]')?.getAttribute('title')).toBe('Reset animation')
+
+    unmount()
+  })
+
   it('renders one focus entry point in the graph header and no fullscreen entry point', () => {
     const html = renderToStaticMarkup(<MatrixMotionLab embedded />)
 
@@ -164,7 +207,13 @@ describe('MatrixMotionLab workbench integration', () => {
   })
 })
 
-function WorkbenchHarness({ onTogglePlay = vi.fn() }: { onTogglePlay?: () => void }) {
+function WorkbenchHarness({
+  onTogglePlay = vi.fn(),
+  inspectorAction,
+}: {
+  onTogglePlay?: () => void
+  inspectorAction?: ReactElement
+}) {
   const panels: OverlayPanelDefinition[] = [
     { id: 'matrices', title: 'Matrices', content: <p>Matrix Panel</p>, side: 'left' },
     { id: 'vectors', title: 'Vectors', content: <p>Vector Panel</p>, side: 'left' },
@@ -180,6 +229,7 @@ function WorkbenchHarness({ onTogglePlay = vi.fn() }: { onTogglePlay?: () => voi
       rightPanel={<p>Right Panel</p>}
       transport={<button type="button">Transport</button>}
       overlayPanels={panels}
+      inspectorAction={inspectorAction}
       shortcutActions={{ togglePlay: onTogglePlay }}
     />
   )

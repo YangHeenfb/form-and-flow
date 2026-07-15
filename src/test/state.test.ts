@@ -9,6 +9,14 @@ import {
 } from '../state/useThemeState.ts'
 
 describe('theme state', () => {
+  it('defaults new users to dark while preserving an explicit light preference', () => {
+    localStorage.clear()
+    expect(loadStoredSurfaceMode()).toBe('dark')
+
+    localStorage.setItem(platformSurfaceStorageKey, 'light')
+    expect(loadStoredSurfaceMode()).toBe('light')
+  })
+
   it('saves and restores color settings', () => {
     localStorage.clear()
     const theme = {

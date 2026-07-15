@@ -9,7 +9,6 @@ import type { LinearMap, SpaceDim } from '../math/types.ts'
 type Props = {
   copy: AppCopy['matrixInput']
   map: LinearMap
-  index: number
   canMoveUp: boolean
   canMoveDown: boolean
   onChange: (map: LinearMap) => void
@@ -24,7 +23,7 @@ const dimensionOptions = dims.map((dim) => ({
   label: <Formula tex={spaceTex(dim)} />,
 }))
 
-export function MatrixInput({ copy, map, index, canMoveUp, canMoveDown, onChange, onDelete, onMove }: Props) {
+export function MatrixInput({ copy, map, canMoveUp, canMoveDown, onChange, onDelete, onMove }: Props) {
   const setEntry = (row: number, col: number, value: number) => {
     onChange({
       ...map,
@@ -104,7 +103,6 @@ export function MatrixInput({ copy, map, index, canMoveUp, canMoveDown, onChange
           )),
         )}
       </div>
-      <p className="muted compact">{copy.stepNote(index + 1)}</p>
     </article>
   )
 }
