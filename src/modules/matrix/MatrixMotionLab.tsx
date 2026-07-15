@@ -37,6 +37,12 @@ import { useAppState } from '../../state/useAppState.ts'
 import { useThemeState } from '../../state/useThemeState.ts'
 import { getMatrixHelpTopics, matrixLearningCopy } from './learningHelp.tsx'
 import type { MatrixHelpTopicId } from './learningHelp.tsx'
+import {
+  advanceMatrixPlaybackProgress,
+  resolveMatrixPlaybackBoundary,
+  resolveMatrixTimelinePosition,
+  shouldSyncMatrixPlaybackUi,
+} from './playback.ts'
 
 const initialAnimation: AnimationState = {
   playing: false,
@@ -48,7 +54,6 @@ const initialAnimation: AnimationState = {
 
 const LazyThree3DView = lazy(() => import('../../components/Three3DView.tsx').then(({ Three3DView }) => ({ default: Three3DView })))
 
-const basePlaybackSpeed = 0.75
 const minViewZoom = 0.25
 const maxViewZoom = 2.5
 const matrixLocaleStorageKey = 'form-and-flow-matrix-locale'
@@ -85,6 +90,11 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
   const animationRef = useRef<AnimationState>(initialAnimation)
   const animationProgressRef = useRef(initialAnimation.progress)
   const frameRenderersRef = useRef(new Set<(frame: MatrixAnimationFrame) => void>())
+  const buildAnimationFrameRef = useRef<(progress: number) => MatrixAnimationFrame>(() => ({
+    matrix: canonicalBridgeMatrix(2, 2),
+    visualMatrix: canonicalBridgeMatrix(2, 2),
+    progress: 0,
+  }))
   const copy = appCopy[locale]
   const learningCopy = matrixLearningCopy[locale]
   const prefersReducedMotion = usePrefersReducedMotion()
@@ -121,9 +131,13 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
       return
     }
     animationProgressRef.current = 0
-    setAnimation((current) =>
-      current.playing || current.progress !== 0 || current.stepIndex !== 0 ? { ...current, playing: false, progress: 0, stepIndex: 0 } : current,
-    )
+    setAnimation((current) => {
+      const next = current.playing || current.progress !== 0 || current.stepIndex !== 0
+        ? { ...current, playing: false, progress: 0, stepIndex: 0 }
+        : current
+      animationRef.current = next
+      return next
+    })
   }, [hasUnplayedMatrixEdit])
 
   useEffect(() => {
@@ -152,10 +166,14 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
   }, [appState.maps, appState.validation.valid])
 
   useEffect(() => {
-    setAnimation((current) => ({
-      ...current,
-      stepIndex: Math.min(current.stepIndex, Math.max(0, stepMaps.length - 1)),
-    }))
+    setAnimation((current) => {
+      const next = {
+        ...current,
+        stepIndex: Math.min(current.stepIndex, Math.max(0, stepMaps.length - 1)),
+      }
+      animationRef.current = next
+      return next
+    })
   }, [stepMaps.length])
 
   const activeTarget = displayedAnimation.mode === 'step' ? stepMaps[displayedAnimation.stepIndex] ?? composedMap : composedMap
@@ -222,14 +240,12 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
     },
     [activeInputDim, activeOutputDim, activeTarget, animationStartMatrix, currentMatrix, previousStep?.matrix],
   )
+  buildAnimationFrameRef.current = buildAnimationFrame
 
-  const emitAnimationFrame = useCallback(
-    (progress: number) => {
-      const frame = buildAnimationFrame(progress)
-      frameRenderersRef.current.forEach((renderer) => renderer(frame))
-    },
-    [buildAnimationFrame],
-  )
+  const emitAnimationFrame = useCallback((progress: number) => {
+    const frame = buildAnimationFrameRef.current(progress)
+    frameRenderersRef.current.forEach((renderer) => renderer(frame))
+  }, [])
 
   const registerFrameRenderer = useCallback((renderer: (frame: MatrixAnimationFrame) => void) => {
     frameRenderersRef.current.add(renderer)
@@ -244,6 +260,7 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
     }
     let frame = 0
     let previous = performance.now()
+    let lastUiSync = previous
     const tick = (now: number) => {
       const current = animationRef.current
       if (!current.playing) {
@@ -251,22 +268,34 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
       }
       const delta = now - previous
       previous = now
-      const nextProgress = animationProgressRef.current + (delta / 1400) * current.speed * basePlaybackSpeed
+      const nextProgress = advanceMatrixPlaybackProgress(animationProgressRef.current, delta, current.speed)
       if (nextProgress < 1) {
         animationProgressRef.current = nextProgress
         emitAnimationFrame(nextProgress)
-        setAnimation((latest) => (latest.playing ? { ...latest, progress: nextProgress } : latest))
+        if (shouldSyncMatrixPlaybackUi(now, lastUiSync)) {
+          lastUiSync = now
+          setAnimation((latest) => {
+            if (!latest.playing) return latest
+            const next = { ...latest, progress: nextProgress }
+            animationRef.current = next
+            return next
+          })
+        }
         frame = requestAnimationFrame(tick)
         return
       }
-      if (current.mode === 'step' && current.stepIndex < Math.max(0, stepMaps.length - 1)) {
-        animationProgressRef.current = 0
-        setAnimation((latest) => ({ ...latest, progress: 0, stepIndex: latest.stepIndex + 1 }))
+      emitAnimationFrame(1)
+      const boundary = resolveMatrixPlaybackBoundary(current, stepMaps.length)
+      const next = boundary.next
+      animationProgressRef.current = next.progress
+      animationRef.current = next
+      setAnimation(next)
+      if (boundary.continues) {
+        previous = now
+        lastUiSync = now
+        frame = requestAnimationFrame(tick)
         return
       }
-      animationProgressRef.current = 1
-      emitAnimationFrame(1)
-      setAnimation((latest) => ({ ...latest, progress: 1, playing: false }))
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
@@ -289,7 +318,11 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
 
   const setPlaybackMode = useCallback((mode: PlaybackMode) => {
     animationProgressRef.current = 0
-    setAnimation((current) => ({ ...current, mode, progress: 0, stepIndex: 0 }))
+    setAnimation((current) => {
+      const next = { ...current, mode, progress: 0, stepIndex: 0 }
+      animationRef.current = next
+      return next
+    })
   }, [])
 
   const playAnimation = useCallback(() => {
@@ -297,32 +330,46 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
     if (prefersReducedMotion) {
       animationProgressRef.current = 1
       emitAnimationFrame(1)
-      setAnimation((current) => ({ ...current, playing: false, progress: 1 }))
+      setAnimation((current) => {
+        const next = { ...current, playing: false, progress: 1 }
+        animationRef.current = next
+        return next
+      })
       return
     }
     setAnimation((current) => {
       const shouldRestart = hasUnplayedMatrixEdit || animationProgressRef.current >= 1
       const progress = shouldRestart ? 0 : animationProgressRef.current
       animationProgressRef.current = progress
-      return {
+      const next = {
         ...current,
         playing: true,
         progress,
         stepIndex: shouldRestart ? 0 : current.stepIndex,
       }
+      animationRef.current = next
+      return next
     })
   }, [emitAnimationFrame, hasUnplayedMatrixEdit, matrixDraftSignature, prefersReducedMotion])
 
   const pauseAnimation = useCallback(() => {
     const progress = hasUnplayedMatrixEdit ? 0 : animationProgressRef.current
     emitAnimationFrame(progress)
-    setAnimation((current) => ({ ...current, playing: false, progress }))
+    setAnimation((current) => {
+      const next = { ...current, playing: false, progress }
+      animationRef.current = next
+      return next
+    })
   }, [emitAnimationFrame, hasUnplayedMatrixEdit])
 
   const resetAnimation = useCallback(() => {
     setPlaybackSignature(matrixDraftSignature)
     animationProgressRef.current = 0
-    setAnimation((current) => ({ ...current, playing: false, progress: 0, stepIndex: 0 }))
+    setAnimation((current) => {
+      const next = { ...current, playing: false, progress: 0, stepIndex: 0 }
+      animationRef.current = next
+      return next
+    })
   }, [matrixDraftSignature])
 
   const seekAnimation = useCallback(
@@ -332,18 +379,19 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
       setAnimation((current) => {
         if (current.mode !== 'step') {
           animationProgressRef.current = progress
-          return { ...current, progress }
+          const next = { ...current, progress }
+          animationRef.current = next
+          return next
         }
-        const stepCount = Math.max(1, stepMaps.length)
-        const scaledProgress = progress * stepCount
-        const stepIndex = Math.min(stepCount - 1, Math.floor(scaledProgress))
-        const stepProgress = stepIndex === stepCount - 1 && progress === 1 ? 1 : scaledProgress - stepIndex
-        animationProgressRef.current = stepProgress
-        return {
+        const position = resolveMatrixTimelinePosition(progress, current.mode, stepMaps.length)
+        animationProgressRef.current = position.progress
+        const next = {
           ...current,
-          progress: stepProgress,
-          stepIndex,
+          progress: position.progress,
+          stepIndex: position.stepIndex,
         }
+        animationRef.current = next
+        return next
       })
     },
     [matrixDraftSignature, stepMaps.length],
@@ -499,6 +547,7 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
               copy={copy.threeView}
               title={copy.views.title(activeInputDim, activeOutputDim)}
               subtitle={copy.views.subtitle(activeInputDim, activeOutputDim)}
+              isAnimating={displayedAnimation.playing}
               cameraView={threeCameraView}
               onCameraViewChange={setThreeCameraView}
               viewResetKey={viewResetKey}
@@ -512,6 +561,7 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
               {...renderPayload}
               title={copy.views.trueR2Title}
               subtitle={copy.views.trueR2Subtitle}
+              isAnimating={displayedAnimation.playing}
               onViewPanChange={setViewPan}
               registerExporter={() => undefined}
               registerFrameRenderer={registerFrameRenderer}
@@ -523,6 +573,7 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
           {...renderPayload}
           title={copy.views.canvas2dTitle}
           subtitle={copy.views.canvas2dSubtitle}
+          isAnimating={displayedAnimation.playing}
           onViewPanChange={setViewPan}
           registerExporter={registerExporter}
           registerFrameRenderer={registerFrameRenderer}
@@ -542,7 +593,11 @@ function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
       onReset={resetAnimation}
       onResetView={resetView}
       onSeek={seekAnimation}
-      onSpeedChange={(speed) => setAnimation((current) => ({ ...current, speed }))}
+      onSpeedChange={(speed) => setAnimation((current) => {
+        const next = { ...current, speed }
+        animationRef.current = next
+        return next
+      })}
       onModeChange={setPlaybackMode}
       onViewOptionChange={setViewOption}
       stepCount={stepMaps.length}

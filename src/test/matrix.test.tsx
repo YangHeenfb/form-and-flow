@@ -19,6 +19,12 @@ import {
 } from '../math/matrix.ts'
 import { presetsR3ToR2 } from '../math/presets3d.ts'
 import type { LinearMap } from '../math/types.ts'
+import {
+  advanceMatrixPlaybackProgress,
+  resolveMatrixPlaybackBoundary,
+  resolveMatrixTimelinePosition,
+  shouldSyncMatrixPlaybackUi,
+} from '../modules/matrix/playback.ts'
 
 describe('matrix math', () => {
   it('identity matrix does not change a vector', () => {
@@ -124,6 +130,40 @@ describe('matrix math', () => {
       [1, 2],
       [2, 4],
     ])).toBeNull()
+  })
+})
+
+describe('matrix playback', () => {
+  it('advances monotonically from elapsed time and respects speed', () => {
+    const normal = advanceMatrixPlaybackProgress(0, 700, 1)
+    const fast = advanceMatrixPlaybackProgress(0, 700, 2)
+    expect(normal).toBeCloseTo(0.375)
+    expect(fast).toBeCloseTo(0.75)
+    expect(advanceMatrixPlaybackProgress(normal, 10_000, 1)).toBe(1)
+    expect(advanceMatrixPlaybackProgress(normal, -50, 1)).toBe(normal)
+  })
+
+  it('caps React progress synchronization at thirty updates per second', () => {
+    expect(shouldSyncMatrixPlaybackUi(20, 0)).toBe(false)
+    expect(shouldSyncMatrixPlaybackUi(34, 0)).toBe(true)
+  })
+
+  it('continues through step boundaries and stops after the final map', () => {
+    const current = { playing: true, progress: 0.9, speed: 1, mode: 'step' as const, stepIndex: 0 }
+    expect(resolveMatrixPlaybackBoundary(current, 2)).toEqual({
+      next: { ...current, progress: 0, stepIndex: 1 },
+      continues: true,
+    })
+    expect(resolveMatrixPlaybackBoundary({ ...current, stepIndex: 1 }, 2)).toEqual({
+      next: { ...current, playing: false, progress: 1, stepIndex: 1 },
+      continues: false,
+    })
+  })
+
+  it('maps a combined or stepped timeline to the correct local progress', () => {
+    expect(resolveMatrixTimelinePosition(0.6, 'combined', 3)).toEqual({ progress: 0.6, stepIndex: 0 })
+    expect(resolveMatrixTimelinePosition(0.5, 'step', 2)).toEqual({ progress: 0, stepIndex: 1 })
+    expect(resolveMatrixTimelinePosition(1, 'step', 2)).toEqual({ progress: 1, stepIndex: 1 })
   })
 })
 

@@ -6,15 +6,57 @@ import type { ThreeRenderPayload } from '../RendererAdapter.ts'
 
 type Point3 = [number, number, number]
 
+type MutableArrow = {
+  group: THREE.Group
+  helper: THREE.ArrowHelper
+  zeroDot: THREE.Mesh | null
+  endpoint: THREE.Mesh | null
+  label: THREE.Sprite
+  headLength: number
+  headWidth: number
+}
+
+type SceneParts = {
+  referenceGrid: THREE.GridHelper
+  transformedGrid: THREE.LineSegments
+  axes: THREE.LineSegments
+  unitShape: THREE.LineSegments
+  basis: MutableArrow[]
+  vectors: MutableArrow[]
+  outputPlane: THREE.Mesh | null
+}
+
+export function threeSceneStructureSignature(payload: ThreeRenderPayload): string {
+  return JSON.stringify({
+    inputDim: payload.inputDim,
+    outputDim: payload.outputDim,
+    surfaceMode: payload.theme.surfaceMode,
+    colorPreset: payload.theme.colorPreset,
+    colors: payload.theme.colors,
+    vectors: payload.vectors
+      .filter((vector) => vector.dim === payload.inputDim)
+      .map((vector) => ({ id: vector.id, name: vector.name, dim: vector.dim, color: vector.color })),
+  })
+}
+
 export class Three3DRenderer {
   private readonly renderer: THREE.WebGLRenderer
   private readonly scene = new THREE.Scene()
   private readonly camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100)
   private readonly controls: OrbitControls
   private readonly container: HTMLElement
+  private readonly staticGroup = new THREE.Group()
+  private readonly dynamicGroup = new THREE.Group()
+  private readonly directionalLight = new THREE.DirectionalLight(0xffffff, 1.5)
+  private readonly ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
+  private readonly handleControlsChange: () => void
   private width = 1
   private height = 1
   private cameraView: ThreeCameraView = 'free'
+  private structureSignature = ''
+  private parts: SceneParts | null = null
+  private latestPayload: ThreeRenderPayload | null = null
+  private suppressControlsRender = false
 
   constructor(container: HTMLElement) {
     this.container = container
@@ -23,50 +65,39 @@ export class Three3DRenderer {
     this.container.appendChild(this.renderer.domElement)
     this.camera.position.set(5, 4, 6)
     this.camera.lookAt(0, 0, 0)
+    this.directionalLight.position.set(5, 6, 7)
+    this.scene.add(this.directionalLight, this.ambientLight, this.staticGroup, this.dynamicGroup)
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
     this.controls.enableDamping = true
     this.controls.enableZoom = false
-    this.controls.addEventListener('change', () => this.renderer.render(this.scene, this.camera))
+    this.handleControlsChange = () => {
+      if (!this.suppressControlsRender) this.renderer.render(this.scene, this.camera)
+    }
+    this.controls.addEventListener('change', this.handleControlsChange)
   }
 
   render(payload: ThreeRenderPayload, cameraView: ThreeCameraView = 'free'): void {
+    this.latestPayload = payload
     this.resize()
     this.applyCameraView(cameraView)
     this.applyViewZoom(payload.viewZoom)
-    this.clearScene()
-    this.scene.background = new THREE.Color(payload.theme.colors.background)
 
-    const light = new THREE.DirectionalLight(0xffffff, payload.theme.surfaceMode === 'dark' ? 1.2 : 1.5)
-    light.position.set(5, 6, 7)
-    this.scene.add(light)
-    this.scene.add(new THREE.AmbientLight(0xffffff, payload.theme.surfaceMode === 'dark' ? 0.35 : 0.6))
-
-    if (payload.options.showGrid) {
-      this.addReferenceGrid(payload)
-      this.addTransformedGrid(payload)
+    const nextSignature = threeSceneStructureSignature(payload)
+    if (nextSignature !== this.structureSignature || !this.parts) {
+      this.rebuildScene(payload)
+      this.structureSignature = nextSignature
     }
 
-    this.addAxes(payload)
-
-    if (payload.options.showUnitShape) {
-      this.addUnitShape(payload)
-    }
-    if (payload.options.showBasis) {
-      this.addBasis(payload)
-    }
-    if (payload.options.showVectors) {
-      this.addVectors(payload)
-    }
-
-    if (payload.inputDim === 3 && payload.outputDim === 2) {
-      this.addOutputPlane(payload)
-    }
-
+    this.updateVisibility(payload)
+    this.updateDynamicGeometry(payload)
+    this.suppressControlsRender = true
     this.controls.update()
+    this.suppressControlsRender = false
     this.renderer.render(this.scene, this.camera)
   }
 
   exportPng(): string {
+    if (this.latestPayload) this.render(this.latestPayload, this.cameraView)
     return this.renderer.domElement.toDataURL('image/png')
   }
 
@@ -77,25 +108,131 @@ export class Three3DRenderer {
     this.camera.up.set(0, 1, 0)
     this.camera.zoom = 1
     this.controls.target.set(0, 0, 0)
+    this.suppressControlsRender = true
     this.controls.update()
+    this.suppressControlsRender = false
     this.camera.lookAt(0, 0, 0)
     this.camera.updateProjectionMatrix()
     this.renderer.render(this.scene, this.camera)
   }
 
   dispose(): void {
+    this.controls.removeEventListener('change', this.handleControlsChange)
     this.controls.dispose()
+    disposeGroup(this.staticGroup)
+    disposeGroup(this.dynamicGroup)
     this.renderer.dispose()
     this.renderer.domElement.remove()
+  }
+
+  private rebuildScene(payload: ThreeRenderPayload): void {
+    disposeGroup(this.staticGroup)
+    disposeGroup(this.dynamicGroup)
+
+    this.scene.background = new THREE.Color(payload.theme.colors.background)
+    this.directionalLight.intensity = payload.theme.surfaceMode === 'dark' ? 1.2 : 1.5
+    this.ambientLight.intensity = payload.theme.surfaceMode === 'dark' ? 0.35 : 0.6
+
+    const referenceGrid = new THREE.GridHelper(10, 10, payload.theme.colors.grid, payload.theme.colors.grid)
+    referenceGrid.material.transparent = true
+    referenceGrid.material.opacity = 0.45
+    this.staticGroup.add(referenceGrid)
+
+    const axes = lineSegments(
+      [
+        [-5, 0, 0],
+        [5, 0, 0],
+        [0, -5, 0],
+        [0, 5, 0],
+        [0, 0, -5],
+        [0, 0, 5],
+      ],
+      payload.theme.colors.axis,
+      0.9,
+    )
+    this.staticGroup.add(axes)
+
+    let outputPlane: THREE.Mesh | null = null
+    if (payload.inputDim === 3 && payload.outputDim === 2) {
+      outputPlane = new THREE.Mesh(
+        new THREE.PlaneGeometry(6, 6),
+        new THREE.MeshBasicMaterial({
+          color: payload.theme.colors.unitShape,
+          transparent: true,
+          opacity: 0.08,
+          side: THREE.DoubleSide,
+        }),
+      )
+      this.staticGroup.add(outputPlane)
+    }
+
+    const transformedGrid = lineSegments([], payload.theme.colors.transformedGrid, 0.5)
+    const unitShape = lineSegments([], payload.theme.colors.unitShape, 0.95, 2)
+    this.dynamicGroup.add(transformedGrid, unitShape)
+
+    const basisColors = [payload.theme.colors.vectorI, payload.theme.colors.vectorJ, payload.theme.colors.vectorK]
+    const basis = Array.from({ length: payload.inputDim }, (_, index) => {
+      const mutable = createMutableArrow({
+        color: basisColors[index],
+        label: `T(${basisLabel(index)})`,
+        surfaceMode: payload.theme.surfaceMode,
+        emphasized: false,
+        headLength: 0.18,
+        headWidth: 0.1,
+      })
+      this.dynamicGroup.add(mutable.group)
+      return mutable
+    })
+
+    const vectors = payload.vectors
+      .filter((vector) => vector.dim === payload.inputDim)
+      .map((vector) => {
+        const mutable = createMutableArrow({
+          color: vector.color ?? payload.theme.colors.inputVector,
+          label: `T(${vector.name})`,
+          surfaceMode: payload.theme.surfaceMode,
+          emphasized: true,
+          headLength: 0.28,
+          headWidth: 0.16,
+        })
+        this.dynamicGroup.add(mutable.group)
+        return mutable
+      })
+
+    this.parts = { referenceGrid, transformedGrid, axes, unitShape, basis, vectors, outputPlane }
+  }
+
+  private updateVisibility(payload: ThreeRenderPayload): void {
+    if (!this.parts) return
+    this.parts.referenceGrid.visible = payload.options.showGrid
+    this.parts.transformedGrid.visible = payload.options.showGrid
+    this.parts.unitShape.visible = payload.options.showUnitShape
+    this.parts.basis.forEach((item) => { item.group.visible = payload.options.showBasis })
+    this.parts.vectors.forEach((item) => { item.group.visible = payload.options.showVectors })
+  }
+
+  private updateDynamicGeometry(payload: ThreeRenderPayload): void {
+    if (!this.parts) return
+    updateLineSegments(this.parts.transformedGrid, transformedGridPoints(payload))
+    updateLineSegments(this.parts.unitShape, unitShapePoints(payload))
+
+    this.parts.basis.forEach((item, index) => {
+      const values = Array.from({ length: payload.inputDim }, (_, col) => (col === index ? 1 : 0))
+      updateMutableArrow(item, transformPoint(payload.visualMatrix, values, payload.inputDim))
+    })
+
+    const visibleVectors = payload.vectors.filter((vector) => vector.dim === payload.inputDim)
+    this.parts.vectors.forEach((item, index) => {
+      const output = applyMatrixToVector(payload.visualMatrix, visibleVectors[index].values) as Point3
+      updateMutableArrow(item, [output[0] ?? 0, output[1] ?? 0, output[2] ?? 0])
+    })
   }
 
   private resize(): void {
     const rect = this.container.getBoundingClientRect()
     const nextWidth = Math.max(1, Math.floor(rect.width))
     const nextHeight = Math.max(1, Math.floor(rect.height))
-    if (nextWidth === this.width && nextHeight === this.height) {
-      return
-    }
+    if (nextWidth === this.width && nextHeight === this.height) return
     this.width = nextWidth
     this.height = nextHeight
     this.camera.aspect = this.width / this.height
@@ -104,16 +241,14 @@ export class Three3DRenderer {
   }
 
   private applyCameraView(cameraView: ThreeCameraView): void {
-    if (cameraView === this.cameraView && cameraView === 'free') {
-      this.controls.enabled = true
+    if (cameraView === this.cameraView) {
+      this.controls.enabled = cameraView === 'free'
       return
     }
 
     this.cameraView = cameraView
     this.controls.enabled = cameraView === 'free'
-    if (cameraView === 'free') {
-      return
-    }
+    if (cameraView === 'free') return
 
     const distance = 7
     const positions: Record<Exclude<ThreeCameraView, 'free'>, Point3> = {
@@ -123,9 +258,7 @@ export class Three3DRenderer {
     }
     this.camera.position.set(...positions[cameraView])
     this.camera.up.set(0, 1, 0)
-    if (cameraView === 'y') {
-      this.camera.up.set(0, 0, 1)
-    }
+    if (cameraView === 'y') this.camera.up.set(0, 0, 1)
     this.camera.lookAt(0, 0, 0)
     this.controls.target.set(0, 0, 0)
     this.camera.updateProjectionMatrix()
@@ -133,108 +266,34 @@ export class Three3DRenderer {
 
   private applyViewZoom(viewZoom: number): void {
     const zoom = Math.max(0.25, Math.min(2.5, viewZoom))
-    if (Math.abs(this.camera.zoom - zoom) < 1e-6) {
-      return
-    }
+    if (Math.abs(this.camera.zoom - zoom) < 1e-6) return
     this.camera.zoom = zoom
     this.camera.updateProjectionMatrix()
   }
+}
 
-  private clearScene(): void {
-    this.scene.traverse((object) => {
-      const mesh = object as THREE.Object3D & {
-        geometry?: THREE.BufferGeometry
-        material?: THREE.Material | THREE.Material[]
-      }
-      mesh.geometry?.dispose()
-      const materials = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : []
-      materials.forEach((material) => {
-        const mappedMaterial = material as THREE.Material & { map?: THREE.Texture }
-        mappedMaterial.map?.dispose()
-        material.dispose()
-      })
-    })
-    this.scene.clear()
-  }
-
-  private addReferenceGrid(payload: ThreeRenderPayload): void {
-    const grid = new THREE.GridHelper(10, 10, payload.theme.colors.grid, payload.theme.colors.grid)
-    grid.material.transparent = true
-    grid.material.opacity = 0.45
-    this.scene.add(grid)
-  }
-
-  private addTransformedGrid(payload: ThreeRenderPayload): void {
-    const points: Point3[] = []
-    for (let line = -4; line <= 4; line += 1) {
-      for (let value = -4; value < 4; value += 0.5) {
-        points.push(transformPoint(payload.visualMatrix, [value, line, 0], payload.inputDim))
-        points.push(transformPoint(payload.visualMatrix, [value + 0.5, line, 0], payload.inputDim))
-        points.push(transformPoint(payload.visualMatrix, [line, value, 0], payload.inputDim))
-        points.push(transformPoint(payload.visualMatrix, [line, value + 0.5, 0], payload.inputDim))
-      }
-    }
-    this.scene.add(lineSegments(points, payload.theme.colors.transformedGrid, 0.5))
-  }
-
-  private addAxes(payload: ThreeRenderPayload): void {
-    const axisColor = payload.theme.colors.axis
-    const points: Point3[] = [
-      [-5, 0, 0],
-      [5, 0, 0],
-      [0, -5, 0],
-      [0, 5, 0],
-      [0, 0, -5],
-      [0, 0, 5],
-    ]
-    this.scene.add(lineSegments(points, axisColor, 0.9))
-  }
-
-  private addOutputPlane(payload: ThreeRenderPayload): void {
-    const geometry = new THREE.PlaneGeometry(6, 6)
-    const material = new THREE.MeshBasicMaterial({
-      color: payload.theme.colors.unitShape,
-      transparent: true,
-      opacity: 0.08,
-      side: THREE.DoubleSide,
-    })
-    const plane = new THREE.Mesh(geometry, material)
-    this.scene.add(plane)
-  }
-
-  private addUnitShape(payload: ThreeRenderPayload): void {
-    const corners = payload.inputDim === 3 ? unitCubeCorners() : unitSquareCorners()
-    const edges = payload.inputDim === 3 ? cubeEdges() : squareEdges()
-    const points: Point3[] = []
-    edges.forEach(([a, b]) => {
-      points.push(transformPoint(payload.visualMatrix, corners[a], payload.inputDim))
-      points.push(transformPoint(payload.visualMatrix, corners[b], payload.inputDim))
-    })
-    this.scene.add(lineSegments(points, payload.theme.colors.unitShape, 0.95, 2))
-  }
-
-  private addBasis(payload: ThreeRenderPayload): void {
-    const colors = [payload.theme.colors.vectorI, payload.theme.colors.vectorJ, payload.theme.colors.vectorK]
-    for (let index = 0; index < payload.inputDim; index += 1) {
-      const values = Array.from({ length: payload.inputDim }, (_, col) => (col === index ? 1 : 0))
-      const end = transformPoint(payload.visualMatrix, values, payload.inputDim)
-      this.scene.add(
-        arrow(end, colors[index], `basis-${index}`, {
-          label: `T(${basisLabel(index)})`,
-          surfaceMode: payload.theme.surfaceMode,
-        }),
-      )
+function transformedGridPoints(payload: ThreeRenderPayload): Point3[] {
+  const points: Point3[] = []
+  for (let line = -4; line <= 4; line += 1) {
+    for (let value = -4; value < 4; value += 0.5) {
+      points.push(transformPoint(payload.visualMatrix, [value, line, 0], payload.inputDim))
+      points.push(transformPoint(payload.visualMatrix, [value + 0.5, line, 0], payload.inputDim))
+      points.push(transformPoint(payload.visualMatrix, [line, value, 0], payload.inputDim))
+      points.push(transformPoint(payload.visualMatrix, [line, value + 0.5, 0], payload.inputDim))
     }
   }
+  return points
+}
 
-  private addVectors(payload: ThreeRenderPayload): void {
-    payload.vectors
-      .filter((vector) => vector.dim === payload.inputDim)
-      .forEach((vector) => {
-        const output = applyMatrixToVector(payload.visualMatrix, vector.values) as Point3
-        this.scene.add(emphasizedVectorArrow(output, vector.color ?? payload.theme.colors.inputVector, vector.name, payload.theme.surfaceMode))
-      })
-  }
+function unitShapePoints(payload: ThreeRenderPayload): Point3[] {
+  const corners = payload.inputDim === 3 ? unitCubeCorners() : unitSquareCorners()
+  const edges = payload.inputDim === 3 ? cubeEdges() : squareEdges()
+  const points: Point3[] = []
+  edges.forEach(([a, b]) => {
+    points.push(transformPoint(payload.visualMatrix, corners[a], payload.inputDim))
+    points.push(transformPoint(payload.visualMatrix, corners[b], payload.inputDim))
+  })
+  return points
 }
 
 function transformPoint(matrix: Matrix, values: number[], inputDim: number): Point3 {
@@ -242,48 +301,68 @@ function transformPoint(matrix: Matrix, values: number[], inputDim: number): Poi
   return [output[0] ?? 0, output[1] ?? 0, output[2] ?? 0]
 }
 
-type ArrowOptions = {
-  headLength?: number
-  headWidth?: number
-  label?: string
-  surfaceMode?: ThemeSurfaceMode
+function createMutableArrow({
+  color,
+  label,
+  surfaceMode,
+  emphasized,
+  headLength,
+  headWidth,
+}: {
+  color: string
+  label: string
+  surfaceMode: ThemeSurfaceMode
+  emphasized: boolean
+  headLength: number
+  headWidth: number
+}): MutableArrow {
+  const group = new THREE.Group()
+  const helper = new THREE.ArrowHelper(
+    new THREE.Vector3(1, 0, 0),
+    new THREE.Vector3(0, 0, 0),
+    1,
+    color,
+    headLength,
+    headWidth,
+  )
+  group.add(helper)
+
+  const zeroDot = emphasized
+    ? null
+    : new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 16), new THREE.MeshBasicMaterial({ color }))
+  if (zeroDot) group.add(zeroDot)
+
+  const endpoint = emphasized
+    ? new THREE.Mesh(
+        new THREE.SphereGeometry(0.09, 18, 18),
+        new THREE.MeshBasicMaterial({ color, depthTest: false, depthWrite: false }),
+      )
+    : null
+  if (endpoint) {
+    endpoint.renderOrder = 21
+    group.add(endpoint)
+  }
+
+  const labelSprite = vectorLabel(label, color, surfaceMode)
+  labelSprite.renderOrder = emphasized ? 22 : 20
+  group.add(labelSprite)
+  if (emphasized) keepVisible(group)
+
+  return { group, helper, zeroDot, endpoint, label: labelSprite, headLength, headWidth }
 }
 
-function arrow(
-  end: Point3,
-  color: string,
-  name: string,
-  options: ArrowOptions = {},
-): THREE.Object3D {
+function updateMutableArrow(arrow: MutableArrow, end: Point3): void {
   const vector = new THREE.Vector3(...end)
   const length = vector.length()
-  const group = new THREE.Group()
-  group.name = name
-  if (length < 1e-6) {
-    const dot = new THREE.Mesh(
-      new THREE.SphereGeometry(0.06, 16, 16),
-      new THREE.MeshBasicMaterial({ color }),
-    )
-    dot.name = name
-    group.add(dot)
-  } else {
-    const helper = new THREE.ArrowHelper(
-      vector.clone().normalize(),
-      new THREE.Vector3(0, 0, 0),
-      length,
-      color,
-      options.headLength ?? 0.18,
-      options.headWidth ?? 0.1,
-    )
-    helper.name = name
-    group.add(helper)
+  const hasLength = length >= 1e-6
+  arrow.helper.visible = hasLength
+  if (hasLength) {
+    arrow.helper.setDirection(vector.clone().normalize())
+    arrow.helper.setLength(length, arrow.headLength, arrow.headWidth)
   }
-  if (options.label) {
-    const sprite = vectorLabel(options.label, color, options.surfaceMode ?? 'dark')
-    sprite.position.copy(labelPosition(vector))
-    group.add(sprite)
-  }
-  return group
+  if (arrow.zeroDot) arrow.zeroDot.visible = !hasLength
+  if (arrow.endpoint) arrow.endpoint.position.copy(vector)
+  arrow.label.position.copy(labelPosition(vector))
 }
 
 function vectorLabel(text: string, color: string, surfaceMode: ThemeSurfaceMode): THREE.Sprite {
@@ -291,9 +370,7 @@ function vectorLabel(text: string, color: string, surfaceMode: ThemeSurfaceMode)
   const font = '600 28px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
   const canvas = document.createElement('canvas')
   const context = canvas.getContext('2d')
-  if (!context) {
-    return new THREE.Sprite()
-  }
+  if (!context) return new THREE.Sprite()
   context.font = font
   const metrics = context.measureText(text)
   const width = Math.ceil(metrics.width + paddingX * 2)
@@ -330,9 +407,7 @@ function vectorLabel(text: string, color: string, surfaceMode: ThemeSurfaceMode)
 }
 
 function labelPosition(vector: THREE.Vector3): THREE.Vector3 {
-  if (vector.length() < 1e-6) {
-    return new THREE.Vector3(0.22, 0.24, 0.18)
-  }
+  if (vector.length() < 1e-6) return new THREE.Vector3(0.22, 0.24, 0.18)
   const direction = vector.clone().normalize()
   return vector.clone().add(direction.multiplyScalar(0.2)).add(new THREE.Vector3(0.08, 0.1, 0.08))
 }
@@ -359,41 +434,11 @@ function drawRoundedRect(
   context.closePath()
 }
 
-function emphasizedVectorArrow(end: Point3, color: string, name: string, surfaceMode: ThemeSurfaceMode): THREE.Object3D {
-  const group = new THREE.Group()
-  group.name = name
-  group.renderOrder = 20
-  const vector = new THREE.Vector3(...end)
-  const length = vector.length()
-  const arrowObject = arrow(end, color, `${name}-arrow`, { headLength: 0.28, headWidth: 0.16 })
-  group.add(arrowObject)
-
-  const endpoint = new THREE.Mesh(
-    new THREE.SphereGeometry(0.09, 18, 18),
-    new THREE.MeshBasicMaterial({ color, depthTest: false, depthWrite: false }),
-  )
-  endpoint.position.set(...end)
-  endpoint.name = `${name}-endpoint`
-  endpoint.renderOrder = 21
-  group.add(endpoint)
-
-  const labelOffset = length < 1e-6 ? new THREE.Vector3(0.22, 0.22, 0.22) : vector.clone().normalize().multiplyScalar(0.28)
-  const label = vectorLabel(`T(${name})`, color, surfaceMode)
-  label.position.copy(vector.clone().add(labelOffset))
-  label.renderOrder = 22
-  group.add(label)
-
-  keepVisible(group)
-  return group
-}
-
 function keepVisible(object: THREE.Object3D): void {
   object.traverse((child) => {
     child.renderOrder = Math.max(child.renderOrder, 20)
     const material = (child as THREE.Mesh | THREE.Line).material
-    if (!material) {
-      return
-    }
+    if (!material) return
     const materials = Array.isArray(material) ? material : [material]
     materials.forEach((item) => {
       item.depthTest = false
@@ -403,9 +448,50 @@ function keepVisible(object: THREE.Object3D): void {
 }
 
 function lineSegments(points: Point3[], color: string, opacity: number, lineWidth = 1): THREE.LineSegments {
-  const geometry = new THREE.BufferGeometry().setFromPoints(points.map((point) => new THREE.Vector3(...point)))
+  const geometry = new THREE.BufferGeometry()
   const material = new THREE.LineBasicMaterial({ color, transparent: true, opacity, linewidth: lineWidth })
-  return new THREE.LineSegments(geometry, material)
+  const line = new THREE.LineSegments(geometry, material)
+  updateLineSegments(line, points)
+  return line
+}
+
+export function updateLineSegments(line: THREE.LineSegments, points: Point3[]): void {
+  const requiredLength = points.length * 3
+  const current = line.geometry.getAttribute('position') as THREE.BufferAttribute | undefined
+  let attribute = current
+  if (!attribute || attribute.array.length !== requiredLength) {
+    attribute = new THREE.Float32BufferAttribute(new Float32Array(requiredLength), 3)
+    line.geometry.setAttribute('position', attribute)
+  }
+  const values = attribute.array as Float32Array
+  points.forEach((point, index) => {
+    const offset = index * 3
+    values[offset] = point[0]
+    values[offset + 1] = point[1]
+    values[offset + 2] = point[2]
+  })
+  attribute.needsUpdate = true
+  if (points.length > 0) line.geometry.computeBoundingSphere()
+}
+
+function disposeGroup(group: THREE.Group): void {
+  const children = [...group.children]
+  children.forEach((child) => {
+    child.traverse((object) => {
+      const mesh = object as THREE.Object3D & {
+        geometry?: THREE.BufferGeometry
+        material?: THREE.Material | THREE.Material[]
+      }
+      mesh.geometry?.dispose()
+      const materials = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : []
+      materials.forEach((material) => {
+        const mappedMaterial = material as THREE.Material & { map?: THREE.Texture }
+        mappedMaterial.map?.dispose()
+        material.dispose()
+      })
+    })
+    group.remove(child)
+  })
 }
 
 function unitCubeCorners(): Point3[] {
@@ -432,28 +518,14 @@ function unitSquareCorners(): Point3[] {
 
 function cubeEdges(): Array<[number, number]> {
   return [
-    [0, 1],
-    [1, 2],
-    [2, 3],
-    [3, 0],
-    [4, 5],
-    [5, 6],
-    [6, 7],
-    [7, 4],
-    [0, 4],
-    [1, 5],
-    [2, 6],
-    [3, 7],
+    [0, 1], [1, 2], [2, 3], [3, 0],
+    [4, 5], [5, 6], [6, 7], [7, 4],
+    [0, 4], [1, 5], [2, 6], [3, 7],
   ]
 }
 
 function squareEdges(): Array<[number, number]> {
-  return [
-    [0, 1],
-    [1, 2],
-    [2, 3],
-    [3, 0],
-  ]
+  return [[0, 1], [1, 2], [2, 3], [3, 0]]
 }
 
 function basisLabel(index: number): string {

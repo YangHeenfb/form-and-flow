@@ -297,3 +297,136 @@ test('Matrix 2D does not request the Three.js vendor chunk', async ({ page }) =>
   await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
   expect(scripts.some((url) => /vendor-three/i.test(url))).toBe(false)
 })
+
+test.describe('Matrix R3 playback', () => {
+  const cases = [
+    { input: 3, output: 3, label: 'R3 to R3' },
+    { input: 3, output: 2, label: 'R3 to R2' },
+    { input: 2, output: 3, label: 'R2 to R3' },
+  ] as const
+
+  for (const playbackCase of cases) {
+    test(`${playbackCase.label} advances and changes the rendered frame`, async ({ page }) => {
+      const errors = collectRuntimeErrors(page)
+      await page.setViewportSize({ width: 1280, height: 900 })
+      await page.goto('/modules/matrix/transformations')
+      await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+
+      if (playbackCase.input === 3) await selectMatrixDimension(page, 0, 'R3')
+      if (playbackCase.output === 3) await selectMatrixDimension(page, 1, 'R3')
+
+      const threeCanvas = page.locator('.three-host canvas')
+      await expect(threeCanvas).toBeVisible({ timeout: 15_000 })
+      await expect(page.locator('.three-host-fallback')).toHaveCount(0)
+
+      const firstMatrixEntry = page.locator('.matrix-grid input[type="number"]').first()
+      await firstMatrixEntry.fill('2')
+      await firstMatrixEntry.blur()
+      const progress = page.getByLabel('Playback progress')
+      await expect(progress).toHaveValue('0')
+
+      const initialThreeFrame = await threeCanvas.screenshot()
+      const trueR2Canvas = page.locator('.canvas-2d')
+      const initialR2Frame = playbackCase.input === 3 && playbackCase.output === 2
+        ? await trueR2Canvas.screenshot()
+        : null
+
+      await page.getByRole('button', { name: 'Play', exact: true }).click()
+      await expect(page.getByRole('button', { name: 'Pause', exact: true })).toBeVisible()
+      await expect.poll(async () => Number(await progress.inputValue()), { timeout: 1_000 }).toBeGreaterThan(0.1)
+
+      const middleThreeFrame = await threeCanvas.screenshot()
+      const middleR2Frame = initialR2Frame ? await trueR2Canvas.screenshot() : null
+      expect(initialThreeFrame.equals(middleThreeFrame)).toBe(false)
+      if (initialR2Frame && middleR2Frame) expect(initialR2Frame.equals(middleR2Frame)).toBe(false)
+
+      await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible({ timeout: 5_000 })
+      await expect(progress).toHaveValue('1')
+      const finalThreeFrame = await threeCanvas.screenshot()
+      expect(middleThreeFrame.equals(finalThreeFrame)).toBe(false)
+      expect(errors).toEqual([])
+    })
+  }
+
+  test('pause, seek, resume, speed, and reset preserve exact progress', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await page.goto('/modules/matrix/transformations')
+    await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+    await selectMatrixDimension(page, 0, 'R3')
+    await selectMatrixDimension(page, 1, 'R3')
+    await page.locator('.three-host canvas').waitFor({ state: 'visible' })
+    await page.locator('.matrix-grid input[type="number"]').first().fill('2')
+
+    const progress = page.getByLabel('Playback progress')
+    await page.getByRole('button', { name: 'Play', exact: true }).click()
+    await expect.poll(async () => Number(await progress.inputValue())).toBeGreaterThan(0.1)
+    await page.getByRole('button', { name: 'Pause', exact: true }).click()
+    const pausedProgress = Number(await progress.inputValue())
+    await page.waitForTimeout(250)
+    expect(Number(await progress.inputValue())).toBeCloseTo(pausedProgress, 3)
+
+    await progress.fill('0.6')
+    await expect(progress).toHaveValue('0.6')
+    await page.locator('.speed-control input[type="range"]').fill('2.5')
+    await page.getByRole('button', { name: 'Play', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible({ timeout: 3_000 })
+    await expect(progress).toHaveValue('1')
+
+    await page.getByRole('button', { name: 'Reset animation', exact: true }).click()
+    await expect(progress).toHaveValue('0')
+  })
+
+  test('step mode advances through every matrix without relying on effect restart', async ({ page }) => {
+    await page.goto('/modules/matrix/transformations')
+    await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+    await page.getByRole('button', { name: 'Add', exact: true }).first().click()
+    await page.getByRole('button', { name: /^Step:/ }).click()
+    await page.locator('.matrix-grid input[type="number"]').first().fill('2')
+
+    const progress = page.getByLabel('Playback progress')
+    await page.getByRole('button', { name: 'Play', exact: true }).click()
+    await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible({ timeout: 6_000 })
+    await expect(progress).toHaveValue('1')
+  })
+
+  test('reduced motion completes a 3D transformation immediately', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('/modules/matrix/transformations')
+    await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+    await selectMatrixDimension(page, 0, 'R3')
+    await selectMatrixDimension(page, 1, 'R3')
+    await page.locator('.three-host canvas').waitFor({ state: 'visible' })
+    await page.locator('.matrix-grid input[type="number"]').first().fill('2')
+
+    await page.getByRole('button', { name: 'Play', exact: true }).click()
+    await expect(page.getByLabel('Playback progress')).toHaveValue('1')
+    await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible()
+  })
+
+  test('3D PNG export still works after an incremental animation frame', async ({ page }) => {
+    await page.goto('/modules/matrix/transformations')
+    await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+    await selectMatrixDimension(page, 0, 'R3')
+    await selectMatrixDimension(page, 1, 'R3')
+    await page.locator('.three-host canvas').waitFor({ state: 'visible' })
+    await page.locator('.matrix-grid input[type="number"]').first().fill('2')
+    await page.getByRole('button', { name: 'Play', exact: true }).click()
+    await expect.poll(async () => Number(await page.getByLabel('Playback progress').inputValue())).toBeGreaterThan(0.1)
+    await page.getByRole('button', { name: 'Pause', exact: true }).click()
+
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByRole('button', { name: 'Export PNG', exact: true }).click(),
+    ])
+    expect(download.suggestedFilename()).toBe('matrix-motion.png')
+    const stream = await download.createReadStream()
+    let byteCount = 0
+    for await (const chunk of stream) byteCount += chunk.length
+    expect(byteCount).toBeGreaterThan(1_000)
+  })
+})
+
+async function selectMatrixDimension(page: Page, index: number, label: 'R3') {
+  await page.locator('.dim-selectors .select-menu-trigger').nth(index).click()
+  await page.locator('[role="option"]').filter({ hasText: label }).last().click()
+}

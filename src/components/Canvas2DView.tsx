@@ -13,6 +13,7 @@ const visibleGridFraction = 0.18
 type Props = RenderPayload & {
   title: string
   subtitle: string
+  isAnimating?: boolean
   onViewPanChange: Dispatch<SetStateAction<ViewPan>>
   registerExporter: (exporter: () => string | null) => void
   registerFrameRenderer?: (renderer: (frame: MatrixAnimationFrame) => void) => () => void
@@ -27,7 +28,7 @@ type DragState = {
   startPan: ViewPan
 }
 
-export function Canvas2DView({ title, subtitle, onViewPanChange, registerExporter, registerFrameRenderer, headerAction, stageAction, ...payload }: Props) {
+export function Canvas2DView({ title, subtitle, isAnimating = false, onViewPanChange, registerExporter, registerFrameRenderer, headerAction, stageAction, ...payload }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const dragRef = useRef<DragState | null>(null)
   const payloadRef = useRef(payload)
@@ -60,12 +61,15 @@ export function Canvas2DView({ title, subtitle, onViewPanChange, registerExporte
 
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas) {
+    if (!canvas || isAnimating) {
       return
     }
     renderer.render(canvas, payload)
-    registerExporter(() => canvas.toDataURL('image/png'))
-  }, [payload, registerExporter, renderer])
+  }, [isAnimating, payload, renderer])
+
+  useEffect(() => {
+    registerExporter(() => canvasRef.current?.toDataURL('image/png') ?? null)
+  }, [registerExporter])
 
   useEffect(() => {
     clampCurrentPan()

@@ -10,6 +10,7 @@ type Props = ThreeRenderPayload & {
   copy: AppCopy['threeView']
   title: string
   subtitle: string
+  isAnimating?: boolean
   cameraView: ThreeCameraView
   onCameraViewChange: (view: ThreeCameraView) => void
   viewResetKey?: number
@@ -21,7 +22,7 @@ type Props = ThreeRenderPayload & {
 
 const cameraViews: ThreeCameraView[] = ['free', 'x', 'y', 'z']
 
-export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewChange, viewResetKey, registerExporter, registerFrameRenderer, headerAction, stageAction, ...payload }: Props) {
+export function Three3DView({ copy, title, subtitle, isAnimating = false, cameraView, onCameraViewChange, viewResetKey, registerExporter, registerFrameRenderer, headerAction, stageAction, ...payload }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null)
   const rendererRef = useRef<Three3DRenderer | null>(null)
   const payloadRef = useRef(payload)
@@ -51,6 +52,7 @@ export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewCha
       return
     }
     registerExporter(() => rendererRef.current?.exportPng() ?? null)
+    rendererRef.current.render(payloadRef.current, cameraViewRef.current)
     return () => {
       rendererRef.current?.dispose()
       rendererRef.current = null
@@ -58,10 +60,10 @@ export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewCha
   }, [registerExporter])
 
   useEffect(() => {
-    if (!webglUnavailable) {
+    if (!webglUnavailable && !isAnimating) {
       rendererRef.current?.render(payload, cameraView)
     }
-  }, [cameraView, payload, webglUnavailable])
+  }, [cameraView, isAnimating, payload, webglUnavailable])
 
   useEffect(() => {
     rendererRef.current?.resetCamera()
@@ -83,10 +85,10 @@ export function Three3DView({ copy, title, subtitle, cameraView, onCameraViewCha
           matrix: frame.matrix,
           visualMatrix: frame.visualMatrix,
         },
-        cameraView,
+        cameraViewRef.current,
       )
     })
-  }, [cameraView, registerFrameRenderer, webglUnavailable])
+  }, [registerFrameRenderer, webglUnavailable])
 
   return (
     <section className="view-panel">
