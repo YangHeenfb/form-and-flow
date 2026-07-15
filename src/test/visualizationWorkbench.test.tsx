@@ -3,10 +3,12 @@ import { createRoot, type Root } from 'react-dom/client'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AnimationControls } from '../components/AnimationControls.tsx'
+import { LessonScaffold } from '../core/ui/LessonScaffold.tsx'
 import { appCopy } from '../i18n.ts'
 import { identityMatrix } from '../math/matrix.ts'
 import { MatrixMotionLab } from '../modules/matrix/MatrixMotionLab.tsx'
 import { useResizeObserver } from '../platform/useElementSize.ts'
+import { LessonStageActions } from '../platform/LessonStageActions.tsx'
 import { VisualizationWorkbench } from '../platform/VisualizationWorkbench.tsx'
 import type { OverlayPanelDefinition } from '../platform/visualizationLayoutTypes.ts'
 import { useAppState } from '../state/useAppState.ts'
@@ -67,15 +69,31 @@ describe('VisualizationWorkbench', () => {
 
   it('opens the standard readout drawer and restores focus after Escape', async () => {
     const { container, unmount } = render(<WorkbenchHarness />)
-    const readoutButton = container.querySelector<HTMLButtonElement>('.visualization-standard-readout-rail button')!
+    const readoutButton = container.querySelector<HTMLButtonElement>('.lesson-stage-readout-action')!
 
+    expect(container.querySelector('.visualization-standard-readout-rail')).toBeNull()
+    expect(readoutButton.getAttribute('aria-expanded')).toBe('false')
     readoutButton.focus()
     await click(readoutButton)
+    expect(readoutButton.getAttribute('aria-expanded')).toBe('true')
     expect(container.querySelector('[role="dialog"]')?.textContent).toContain('Right Panel')
 
     pressKey(document, 'Escape')
     expect(container.querySelector('[role="dialog"]')).toBeNull()
     expect(document.activeElement).toBe(readoutButton)
+
+    unmount()
+  })
+
+  it('places the readout action between graph help and focus and hides it in focus mode', () => {
+    const { container, unmount } = render(<WorkbenchHarness />)
+    const actionLabels = Array.from(container.querySelectorAll('.lesson-stage-actions > button')).map((button) =>
+      button.textContent?.trim(),
+    )
+
+    expect(actionLabels).toEqual(['Graph notes', 'Readout', 'Focus', 'Export'])
+    pressKey(document, 'f')
+    expect(container.querySelector('.lesson-stage-readout-action')).toBeNull()
 
     unmount()
   })
@@ -112,6 +130,24 @@ describe('VisualizationWorkbench', () => {
 
     expect(getWorkbench(container).classList.contains('is-focus')).toBe(false)
     expect(onTogglePlay).not.toHaveBeenCalled()
+
+    unmount()
+  })
+})
+
+describe('LessonScaffold standard readout action', () => {
+  it('opens the lesson readout drawer from the stage action and restores focus', async () => {
+    const { container, unmount } = render(<LessonScaffoldHarness />)
+    const readoutButton = container.querySelector<HTMLButtonElement>('.lesson-stage-readout-action')!
+
+    expect(container.querySelector('.lesson-standard-readout-rail')).toBeNull()
+    readoutButton.focus()
+    await click(readoutButton)
+    expect(container.querySelector('[role="dialog"]')?.textContent).toContain('Lesson Readout')
+
+    pressKey(document, 'Escape')
+    expect(container.querySelector('[role="dialog"]')).toBeNull()
+    expect(document.activeElement).toBe(readoutButton)
 
     unmount()
   })
@@ -225,12 +261,41 @@ function WorkbenchHarness({
       subtitle="Test workbench"
       labels={labels}
       leftPanel={<p>Left Panel</p>}
-      stage={<input aria-label="Editable field" />}
+      stage={(
+        <>
+          <LessonStageActions
+            graphLabel="Graph notes"
+            onGraphHelp={vi.fn()}
+            focusButton={<button type="button">Focus</button>}
+            exportLabel="Export"
+            onExport={vi.fn()}
+          />
+          <input aria-label="Editable field" />
+        </>
+      )}
       rightPanel={<p>Right Panel</p>}
       transport={<button type="button">Transport</button>}
       overlayPanels={panels}
       inspectorAction={inspectorAction}
       shortcutActions={{ togglePlay: onTogglePlay }}
+    />
+  )
+}
+
+function LessonScaffoldHarness() {
+  return (
+    <LessonScaffold
+      controls={<p>Lesson Controls</p>}
+      main={(
+        <LessonStageActions
+          graphLabel="Graph notes"
+          onGraphHelp={vi.fn()}
+          focusButton={<button type="button">Focus</button>}
+          exportLabel="Export"
+          onExport={vi.fn()}
+        />
+      )}
+      explanation={<p>Lesson Readout</p>}
     />
   )
 }

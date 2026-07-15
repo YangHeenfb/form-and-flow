@@ -13,6 +13,7 @@ import {
 import { ChevronDown, Info, SlidersHorizontal } from 'lucide-react'
 import { OverlayDrawer } from './OverlayDrawer.tsx'
 import { OverlayTransport } from './OverlayTransport.tsx'
+import { StandardReadoutActionProvider } from './LessonStageActions.tsx'
 import { VisualizationToolbar, type VisualizationLabels } from './VisualizationToolbar.tsx'
 import { hudIdleDelayMs, loadAutoHideHud, saveAutoHideHud } from './autoHideHud.ts'
 import {
@@ -240,105 +241,101 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
       .join(' ')
 
     return (
-      <div
-        className={className}
-        data-layout-mode={layoutState.mode}
-        onPointerMove={isExpanded ? revealHud : undefined}
-        onTouchStart={isExpanded ? revealHud : undefined}
-        onFocusCapture={isExpanded ? revealHud : undefined}
+      <StandardReadoutActionProvider
+        value={{
+          label: labels.explanation ?? 'Readout',
+          open: standardReadoutOpen,
+          enabled: !isExpanded,
+          onToggle: () => setStandardReadoutOpen((open) => !open),
+        }}
       >
-        {isExpanded && (
-          <VisualizationToolbar
-            title={title}
-            subtitle={subtitle}
-            labels={labels}
-            panels={overlayPanels}
-            activePanelId={activePanelId}
-            isFocusMode={mode === 'focus'}
-            autoHideHud={autoHideHud}
-            onTogglePanel={togglePanel}
-            onAutoHideHudChange={setAutoHideHud}
-          />
-        )}
+        <div
+          className={className}
+          data-layout-mode={layoutState.mode}
+          onPointerMove={isExpanded ? revealHud : undefined}
+          onTouchStart={isExpanded ? revealHud : undefined}
+          onFocusCapture={isExpanded ? revealHud : undefined}
+        >
+          {isExpanded && (
+            <VisualizationToolbar
+              title={title}
+              subtitle={subtitle}
+              labels={labels}
+              panels={overlayPanels}
+              activePanelId={activePanelId}
+              isFocusMode={mode === 'focus'}
+              autoHideHud={autoHideHud}
+              onTogglePanel={togglePanel}
+              onAutoHideHudChange={setAutoHideHud}
+            />
+          )}
 
-        <div className="visualization-standard-layout">
-          <aside className="left-panel visualization-standard-left" data-mobile-open={mobileControlsOpen ? 'true' : 'false'}>
-            <header className="visualization-inspector-header">
-              <SlidersHorizontal size={16} aria-hidden="true" />
-              <span>{labels.controls ?? 'Controls'}</span>
-              {inspectorAction && <div className="visualization-inspector-action">{inspectorAction}</div>}
-            </header>
-            <div className="visualization-mobile-inspector-header">
+          <div className="visualization-standard-layout">
+            <aside className="left-panel visualization-standard-left" data-mobile-open={mobileControlsOpen ? 'true' : 'false'}>
+              <header className="visualization-inspector-header">
+                <SlidersHorizontal size={16} aria-hidden="true" />
+                <span>{labels.controls ?? 'Controls'}</span>
+                {inspectorAction && <div className="visualization-inspector-action">{inspectorAction}</div>}
+              </header>
+              <div className="visualization-mobile-inspector-header">
+                <button
+                  type="button"
+                  className="visualization-mobile-section-toggle"
+                  aria-expanded={mobileControlsOpen}
+                  aria-controls={mobileControlsId}
+                  onClick={() => setMobileControlsOpen((open) => !open)}
+                >
+                  <SlidersHorizontal size={17} />
+                  <span>{labels.controls ?? 'Controls'}</span>
+                  <ChevronDown className="visualization-mobile-section-chevron" size={17} aria-hidden="true" />
+                </button>
+                {inspectorAction && <div className="visualization-mobile-inspector-action">{inspectorAction}</div>}
+              </div>
+              <div className="visualization-mobile-section-content" id={mobileControlsId}>{leftPanel}</div>
+            </aside>
+            <div className="visualization-center-column">
+              <section className="center-stage visualization-stage" ref={setStageNode}>
+                {stage}
+              </section>
+              {!isExpanded && <OverlayTransport>{transport}</OverlayTransport>}
+            </div>
+            <div className="visualization-standard-right" data-mobile-open={mobileReadoutOpen ? 'true' : 'false'}>
               <button
                 type="button"
                 className="visualization-mobile-section-toggle"
-                aria-expanded={mobileControlsOpen}
-                aria-controls={mobileControlsId}
-                onClick={() => setMobileControlsOpen((open) => !open)}
+                aria-expanded={mobileReadoutOpen}
+                aria-controls={mobileReadoutId}
+                onClick={() => setMobileReadoutOpen((open) => !open)}
               >
-                <SlidersHorizontal size={17} />
-                <span>{labels.controls ?? 'Controls'}</span>
+                <Info size={17} />
+                <span>{labels.explanation ?? 'Readout'}</span>
                 <ChevronDown className="visualization-mobile-section-chevron" size={17} aria-hidden="true" />
               </button>
-              {inspectorAction && <div className="visualization-mobile-inspector-action">{inspectorAction}</div>}
+              <div className="visualization-mobile-section-content" id={mobileReadoutId}>{rightPanel}</div>
             </div>
-            <div className="visualization-mobile-section-content" id={mobileControlsId}>{leftPanel}</div>
-          </aside>
-          <div className="visualization-center-column">
-            <section className="center-stage visualization-stage" ref={setStageNode}>
-              {stage}
-            </section>
-            {!isExpanded && <OverlayTransport>{transport}</OverlayTransport>}
           </div>
-          <div className="visualization-standard-right" data-mobile-open={mobileReadoutOpen ? 'true' : 'false'}>
-            <button
-              type="button"
-              className="visualization-mobile-section-toggle"
-              aria-expanded={mobileReadoutOpen}
-              aria-controls={mobileReadoutId}
-              onClick={() => setMobileReadoutOpen((open) => !open)}
+
+          {isExpanded && <OverlayTransport>{transport}</OverlayTransport>}
+
+          {isExpanded && activePanel && (
+            <OverlayDrawer title={activePanel.title} side={activePanel.side} closeLabel={labels.closePanel} onClose={closePanel}>
+              {activePanel.content}
+            </OverlayDrawer>
+          )}
+
+          {!isExpanded && standardReadoutOpen && (
+            <OverlayDrawer
+              className="visualization-standard-readout-drawer"
+              title={labels.explanation ?? 'Readout'}
+              side="right"
+              closeLabel={labels.closePanel}
+              onClose={() => setStandardReadoutOpen(false)}
             >
-              <Info size={17} />
-              <span>{labels.explanation ?? 'Readout'}</span>
-              <ChevronDown className="visualization-mobile-section-chevron" size={17} aria-hidden="true" />
-            </button>
-            <div className="visualization-mobile-section-content" id={mobileReadoutId}>{rightPanel}</div>
-          </div>
-          <aside className="visualization-standard-readout-rail" aria-label={labels.explanation ?? 'Readout'}>
-            <button
-              type="button"
-              className={standardReadoutOpen ? 'active' : ''}
-              aria-haspopup="dialog"
-              aria-expanded={standardReadoutOpen}
-              onClick={() => setStandardReadoutOpen((open) => !open)}
-            >
-              <Info size={18} aria-hidden="true" />
-              <span>{labels.explanation ?? 'Readout'}</span>
-            </button>
-          </aside>
+              {rightPanel}
+            </OverlayDrawer>
+          )}
         </div>
-
-        {isExpanded && <OverlayTransport>{transport}</OverlayTransport>}
-
-        {isExpanded && activePanel && (
-          <OverlayDrawer title={activePanel.title} side={activePanel.side} closeLabel={labels.closePanel} onClose={closePanel}>
-            {activePanel.content}
-          </OverlayDrawer>
-        )}
-
-        {!isExpanded && standardReadoutOpen && (
-          <OverlayDrawer
-            className="visualization-standard-readout-drawer"
-            title={labels.explanation ?? 'Readout'}
-            side="right"
-            closeLabel={labels.closePanel}
-            onClose={() => setStandardReadoutOpen(false)}
-          >
-            {rightPanel}
-          </OverlayDrawer>
-        )}
-
-      </div>
+      </StandardReadoutActionProvider>
     )
   },
 )

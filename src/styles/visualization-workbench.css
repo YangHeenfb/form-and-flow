@@ -6,8 +6,8 @@
 
 .visualization-standard-layout {
   position: relative;
-  grid-template-areas: 'controls stage readout';
-  grid-template-columns: minmax(260px, 280px) minmax(0, 1fr) 72px;
+  grid-template-areas: 'controls stage';
+  grid-template-columns: minmax(260px, 280px) minmax(0, 1fr);
   gap: 14px;
 }
 
@@ -135,60 +135,17 @@
   border-top: 1px solid color-mix(in srgb, var(--panel-border) 72%, transparent);
 }
 
-.visualization-standard-readout-rail {
-  grid-area: readout;
-  min-width: 0;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  border: 1px solid var(--panel-border);
-  border-radius: var(--radius-md);
-  background: var(--panel-bg);
-  padding: 8px;
-}
-
-.visualization-standard-readout-rail button {
-  width: 100%;
-  min-width: 0;
-  min-height: 86px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border-color: transparent;
-  color: var(--text-muted);
-  background: transparent;
-  padding: 8px 4px;
-}
-
-.visualization-standard-readout-rail button span {
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.visualization-standard-readout-rail button:hover,
-.visualization-standard-readout-rail button.active {
-  color: var(--text-main);
-  border-color: color-mix(in srgb, var(--focus) 30%, var(--panel-border));
-  background: color-mix(in srgb, var(--focus) 9%, var(--panel-bg-soft));
-}
-
-.visualization-workbench.is-expanded .visualization-standard-readout-rail {
-  display: none;
-}
-
 .visualization-overlay-drawer {
   border-color: var(--panel-border);
   background: var(--panel-bg);
   box-shadow: 0 20px 60px color-mix(in srgb, black 28%, transparent);
 }
 
-.visualization-standard-readout-drawer {
+.visualization-overlay-drawer.visualization-standard-readout-drawer {
   top: 0;
-  right: 86px;
+  right: 0;
   bottom: 0;
-  width: min(430px, calc(100% - 110px));
+  width: min(430px, calc(100% - 24px));
 }
 
 .visualization-standard-readout-drawer .right-panel,
@@ -254,8 +211,8 @@
   }
 
   .visualization-inspector-header,
-  .visualization-standard-readout-rail,
-  .visualization-standard-readout-drawer {
+  .visualization-overlay-drawer.visualization-standard-readout-drawer,
+  .lesson-stage-readout-action {
     display: none;
   }
 

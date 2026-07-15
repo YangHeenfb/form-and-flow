@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react'
 import { ChevronDown, Info, SlidersHorizontal } from 'lucide-react'
 import { OverlayDrawer } from '../../platform/OverlayDrawer.tsx'
+import { StandardReadoutActionProvider } from '../../platform/LessonStageActions.tsx'
 import type { OverlayPanelSide } from '../../platform/visualizationLayoutTypes.ts'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
 
@@ -100,96 +101,93 @@ export function LessonScaffold({
   useEffect(() => () => onFocusPanelActiveChange?.(false), [onFocusPanelActiveChange])
 
   return (
-    <section className={joinClassNames('lesson-shell', className)} data-focus-mode={isFocusMode ? 'focus' : 'standard'}>
-      <aside className={joinClassNames('lesson-shell-controls platform-card', controlsClassName)} data-mobile-open={mobileControlsOpen ? 'true' : 'false'}>
-        <header className="lesson-inspector-header">
-          <SlidersHorizontal size={16} aria-hidden="true" />
-          <span>{labels.controls}</span>
-        </header>
-        <button
-          type="button"
-          className="lesson-mobile-section-toggle"
-          aria-expanded={mobileControlsOpen}
-          aria-controls={controlsId}
-          onClick={() => setMobileControlsOpen((open) => !open)}
-        >
-          <SlidersHorizontal size={17} />
-          <span>{labels.controls}</span>
-          <ChevronDown className="lesson-mobile-section-chevron" size={17} aria-hidden="true" />
-        </button>
-        <div className="lesson-mobile-section-content" id={controlsId}>{controls}</div>
-      </aside>
-      <main className={joinClassNames('lesson-shell-main', mainClassName)}>{main}</main>
-      <aside className={joinClassNames('lesson-shell-explanation platform-card', explanationClassName)} data-mobile-open={mobileReadoutOpen ? 'true' : 'false'}>
-        <button
-          type="button"
-          className="lesson-mobile-section-toggle"
-          aria-expanded={mobileReadoutOpen}
-          aria-controls={readoutId}
-          onClick={() => setMobileReadoutOpen((open) => !open)}
-        >
-          <Info size={17} />
-          <span>{labels.readout}</span>
-          <ChevronDown className="lesson-mobile-section-chevron" size={17} aria-hidden="true" />
-        </button>
-        <div className="lesson-mobile-section-content" id={readoutId}>{explanation}</div>
-      </aside>
-      <aside className="lesson-standard-readout-rail" aria-label={labels.readout}>
-        <button
-          type="button"
-          className={standardReadoutOpen ? 'active' : ''}
-          aria-haspopup="dialog"
-          aria-expanded={standardReadoutOpen}
-          onClick={() => setStandardReadoutOpen((open) => !open)}
-        >
-          <Info size={18} aria-hidden="true" />
-          <span>{labels.readout}</span>
-        </button>
-      </aside>
-      {!isFocusMode && standardReadoutOpen && (
-        <OverlayDrawer
-          className="lesson-standard-readout-drawer"
-          title={labels.readout}
-          side="right"
-          closeLabel={closeFocusPanelLabel ?? labels.closePanel}
-          onClose={() => setStandardReadoutOpen(false)}
-        >
-          <div className={joinClassNames('lesson-standard-readout-content', explanationClassName)}>{explanation}</div>
-        </OverlayDrawer>
-      )}
-      {isFocusMode && (focusPanels.length > 0 || autoHideToggle) && (
-        <div className="lesson-focus-panel-buttons" role="group" aria-label={labels.panelGroup}>
-          {focusPanels.map((panel) => {
-            const Icon = panel.icon
-            const isActive = activePanelId === panel.id
-            return (
-              <button
-                key={panel.id}
-                type="button"
-                className={isActive ? 'active' : ''}
-                aria-pressed={isActive}
-                onClick={() => setActivePanelId((current) => (current === panel.id ? null : panel.id))}
-              >
-                <Icon size={16} />
-                {panel.title}
-              </button>
-            )
-          })}
-          {autoHideToggle}
-        </div>
-      )}
-      {isFocusMode && activePanel && (
-        <OverlayDrawer
-          title={activePanel.title}
-          side={activePanel.side}
-          closeLabel={closeFocusPanelLabel ?? labels.closePanel}
-          onClose={() => setActivePanelId(null)}
-        >
-          {activePanel.content}
-        </OverlayDrawer>
-      )}
-      {isFocusMode && focusTransport && <div className="lesson-focus-transport">{focusTransport}</div>}
-    </section>
+    <StandardReadoutActionProvider
+      value={{
+        label: labels.readout,
+        open: standardReadoutOpen,
+        enabled: !isFocusMode,
+        onToggle: () => setStandardReadoutOpen((open) => !open),
+      }}
+    >
+      <section className={joinClassNames('lesson-shell', className)} data-focus-mode={isFocusMode ? 'focus' : 'standard'}>
+        <aside className={joinClassNames('lesson-shell-controls platform-card', controlsClassName)} data-mobile-open={mobileControlsOpen ? 'true' : 'false'}>
+          <header className="lesson-inspector-header">
+            <SlidersHorizontal size={16} aria-hidden="true" />
+            <span>{labels.controls}</span>
+          </header>
+          <button
+            type="button"
+            className="lesson-mobile-section-toggle"
+            aria-expanded={mobileControlsOpen}
+            aria-controls={controlsId}
+            onClick={() => setMobileControlsOpen((open) => !open)}
+          >
+            <SlidersHorizontal size={17} />
+            <span>{labels.controls}</span>
+            <ChevronDown className="lesson-mobile-section-chevron" size={17} aria-hidden="true" />
+          </button>
+          <div className="lesson-mobile-section-content" id={controlsId}>{controls}</div>
+        </aside>
+        <main className={joinClassNames('lesson-shell-main', mainClassName)}>{main}</main>
+        <aside className={joinClassNames('lesson-shell-explanation platform-card', explanationClassName)} data-mobile-open={mobileReadoutOpen ? 'true' : 'false'}>
+          <button
+            type="button"
+            className="lesson-mobile-section-toggle"
+            aria-expanded={mobileReadoutOpen}
+            aria-controls={readoutId}
+            onClick={() => setMobileReadoutOpen((open) => !open)}
+          >
+            <Info size={17} />
+            <span>{labels.readout}</span>
+            <ChevronDown className="lesson-mobile-section-chevron" size={17} aria-hidden="true" />
+          </button>
+          <div className="lesson-mobile-section-content" id={readoutId}>{explanation}</div>
+        </aside>
+        {!isFocusMode && standardReadoutOpen && (
+          <OverlayDrawer
+            className="lesson-standard-readout-drawer"
+            title={labels.readout}
+            side="right"
+            closeLabel={closeFocusPanelLabel ?? labels.closePanel}
+            onClose={() => setStandardReadoutOpen(false)}
+          >
+            <div className={joinClassNames('lesson-standard-readout-content', explanationClassName)}>{explanation}</div>
+          </OverlayDrawer>
+        )}
+        {isFocusMode && (focusPanels.length > 0 || autoHideToggle) && (
+          <div className="lesson-focus-panel-buttons" role="group" aria-label={labels.panelGroup}>
+            {focusPanels.map((panel) => {
+              const Icon = panel.icon
+              const isActive = activePanelId === panel.id
+              return (
+                <button
+                  key={panel.id}
+                  type="button"
+                  className={isActive ? 'active' : ''}
+                  aria-pressed={isActive}
+                  onClick={() => setActivePanelId((current) => (current === panel.id ? null : panel.id))}
+                >
+                  <Icon size={16} />
+                  {panel.title}
+                </button>
+              )
+            })}
+            {autoHideToggle}
+          </div>
+        )}
+        {isFocusMode && activePanel && (
+          <OverlayDrawer
+            title={activePanel.title}
+            side={activePanel.side}
+            closeLabel={closeFocusPanelLabel ?? labels.closePanel}
+            onClose={() => setActivePanelId(null)}
+          >
+            {activePanel.content}
+          </OverlayDrawer>
+        )}
+        {isFocusMode && focusTransport && <div className="lesson-focus-transport">{focusTransport}</div>}
+      </section>
+    </StandardReadoutActionProvider>
   )
 }
 
