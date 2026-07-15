@@ -4,6 +4,8 @@
 
 Languages: English | [中文](README.zh-CN.md)
 
+**Live demo:** [formnflow.netlify.app](https://formnflow.netlify.app)
+
 **Form & Flow** is an interactive mathematics laboratory for exploring structure through motion, shape, and direct manipulation. Its six completed modules contain 27 explorers for linear algebra, calculus, Fourier analysis, differential equations, probability, and convolution.
 
 ## Preview
@@ -79,7 +81,7 @@ scripts/             # build audits
 
 ## Project scope and limitations
 
-The catalogue includes roadmap cards for future topics, but only the six modules listed above are marked complete. The project currently has no public hosted demo; run it locally or deploy the generated `dist/` directory to a static host with SPA route fallback enabled.
+The catalogue includes roadmap cards for future topics, but only the six modules listed above are marked complete. The public demo is deployed on Netlify with SPA route fallback, and every push to `main` is built and published automatically after validation.
 
 Current priorities are mathematical correctness, responsive interaction, accessibility, and coherent explorer boundaries—not adding unvalidated subject areas.
 

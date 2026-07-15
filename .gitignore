@@ -15,6 +15,7 @@ screenshots
 CODEX_NOTES.md
 playwright-report
 test-results
+.netlify
 
 # Editor directories and files
 .vscode/*
