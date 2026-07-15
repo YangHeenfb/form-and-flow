@@ -1,8 +1,53 @@
+.lesson-shell {
+  position: relative;
+}
+
+.lesson-shell,
+.lesson-shell.calculus-lesson:not(.diffeq-lesson),
+.lesson-shell.fourier-lesson,
+.lesson-shell.probability-lesson,
+.lesson-shell.convolution-lesson {
+  grid-template-areas: 'controls stage readout';
+  grid-template-columns: minmax(260px, 280px) minmax(0, 1fr) 72px;
+  width: 100%;
+  max-height: 860px;
+}
+
 .lesson-shell-controls,
 .lesson-shell-explanation {
   padding: 0;
   border-color: var(--panel-border);
   background: var(--panel-bg);
+}
+
+.lesson-shell-controls {
+  grid-area: controls;
+}
+
+.lesson-shell-main {
+  grid-area: stage;
+}
+
+.lesson-shell-explanation {
+  display: none;
+  grid-area: explanation;
+}
+
+.lesson-inspector-header {
+  position: sticky;
+  z-index: 3;
+  top: 0;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-bottom: 1px solid var(--panel-border);
+  color: var(--text-main);
+  background: color-mix(in srgb, var(--panel-bg) 96%, transparent);
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
 }
 
 .lesson-mobile-section-toggle {
@@ -15,6 +60,66 @@
   align-content: start;
   gap: 12px;
   padding: 15px;
+}
+
+.lesson-standard-readout-rail {
+  grid-area: readout;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  background: var(--panel-bg);
+  padding: 8px;
+}
+
+.lesson-standard-readout-rail button {
+  width: 100%;
+  min-width: 0;
+  min-height: 86px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-color: transparent;
+  color: var(--text-muted);
+  background: transparent;
+  padding: 8px 4px;
+}
+
+.lesson-standard-readout-rail button span {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lesson-standard-readout-rail button:hover,
+.lesson-standard-readout-rail button.active {
+  color: var(--text-main);
+  border-color: color-mix(in srgb, var(--focus) 30%, var(--panel-border));
+  background: color-mix(in srgb, var(--focus) 9%, var(--panel-bg-soft));
+}
+
+.lesson-shell[data-focus-mode='focus'] .lesson-standard-readout-rail {
+  display: none;
+}
+
+.lesson-standard-readout-drawer {
+  top: 0;
+  right: 86px;
+  bottom: 0;
+  width: min(430px, calc(100% - 110px));
+}
+
+.lesson-standard-readout-content {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.lesson-standard-readout-content > :first-child {
+  margin-top: 0;
 }
 
 .lesson-shell-controls :where(.control-field, .range-control, .toggle-row) {
@@ -51,7 +156,7 @@
   box-shadow: none;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 1179px) {
   .lesson-shell,
   .lesson-shell.calculus-lesson:not(.diffeq-lesson),
   .lesson-shell.fourier-lesson,
@@ -72,21 +177,20 @@
 
   .lesson-shell-main {
     grid-area: stage;
-    grid-template-rows: auto minmax(360px, 58vh) auto;
-  }
-
-  .lesson-shell-controls {
-    grid-area: controls;
-  }
-
-  .lesson-shell-explanation {
-    grid-area: explanation;
+    grid-template-rows: auto minmax(480px, 62vh) auto;
   }
 
   .lesson-shell-controls,
   .lesson-shell-explanation {
     min-width: 0;
+    display: block;
     overflow: hidden;
+  }
+
+  .lesson-inspector-header,
+  .lesson-standard-readout-rail,
+  .lesson-standard-readout-drawer {
+    display: none;
   }
 
   .lesson-mobile-section-toggle {
@@ -141,5 +245,11 @@
     width: 100%;
     min-width: 0;
     padding: 12px;
+  }
+}
+
+@media (max-width: 860px) {
+  .lesson-shell-main {
+    grid-template-rows: auto minmax(360px, 58vh) auto;
   }
 }

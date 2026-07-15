@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { platformSurfaceModeEventName } from '../../platform/platformLocale.tsx'
+import { usePlatformSurfaceMode } from '../../platform/platformLocale.tsx'
 
 export type GraphViewport = {
   xMin: number
@@ -37,6 +37,7 @@ type Props = {
 }
 
 export function GraphCanvas({ className, ariaLabel, xMin, xMax, yMin, yMax, draw, onViewportChange }: Props) {
+  const { surfaceMode } = usePlatformSurfaceMode()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const dragRef = useRef<{
     pointerId: number
@@ -68,12 +69,10 @@ export function GraphCanvas({ className, ariaLabel, xMin, xMax, yMin, yMax, draw
     render()
     const observer = new ResizeObserver(render)
     observer.observe(canvas)
-    window.addEventListener(platformSurfaceModeEventName, render)
     return () => {
       observer.disconnect()
-      window.removeEventListener(platformSurfaceModeEventName, render)
     }
-  }, [draw, xMax, xMin, yMax, yMin])
+  }, [draw, surfaceMode, xMax, xMin, yMax, yMin])
 
   const makeViewportFromCanvas = () => {
     const canvas = canvasRef.current

@@ -51,17 +51,48 @@ const highContrastColors: ThemeSettings['colors'] = {
   unitShape: '#ffffff',
 }
 
+const highContrastLightColors: ThemeSettings['colors'] = {
+  ...highContrastColors,
+  background: '#ffffff',
+  text: '#000000',
+  grid: '#59677a',
+  axis: '#000000',
+}
+
 export function applyColorPreset(settings: ThemeSettings, preset: ColorPreset): ThemeSettings {
   if (preset === 'high-contrast') {
     return {
       ...settings,
       colorPreset: preset,
-      colors: settings.surfaceMode === 'dark' ? highContrastColors : { ...highContrastColors, background: '#ffffff', text: '#000000', axis: '#000000' },
+      colors: settings.surfaceMode === 'dark' ? highContrastColors : highContrastLightColors,
     }
   }
   return settings.surfaceMode === 'dark'
     ? neutralDarkTheme
     : neutralLightTheme
+}
+
+export function normalizeThemeSurface(settings: ThemeSettings, surfaceMode: ThemeSurfaceMode): ThemeSettings {
+  if (settings.colorPreset === 'high-contrast') {
+    return {
+      ...settings,
+      surfaceMode,
+      colors: surfaceMode === 'dark' ? highContrastColors : highContrastLightColors,
+    }
+  }
+
+  const safeSurface = surfaceMode === 'dark' ? neutralDarkTheme.colors : neutralLightTheme.colors
+  return {
+    ...settings,
+    surfaceMode,
+    colors: {
+      ...settings.colors,
+      background: safeSurface.background,
+      text: safeSurface.text,
+      grid: safeSurface.grid,
+      axis: safeSurface.axis,
+    },
+  }
 }
 
 export function saveThemeSettings(settings: ThemeSettings, storage: Storage = localStorage): void {
@@ -107,28 +138,16 @@ function completeThemeSettings(settings: ThemeSettings): ThemeSettings {
   }
 }
 
-export function useThemeState(initialTheme?: ThemeSettings) {
-  const [theme, setTheme] = useState<ThemeSettings>(() => initialTheme ?? loadThemeSettings())
+export function useThemeState(surfaceMode: ThemeSurfaceMode, initialTheme?: ThemeSettings) {
+  const [theme, setTheme] = useState<ThemeSettings>(() => normalizeThemeSurface(initialTheme ?? loadThemeSettings(), surfaceMode))
 
   useEffect(() => {
     saveThemeSettings(theme)
   }, [theme])
 
-  const setSurfaceMode = useCallback((surfaceMode: ThemeSurfaceMode) => {
-    setTheme((current) => {
-      const base = surfaceMode === 'dark' ? neutralDarkTheme : neutralLightTheme
-      const withMode = {
-        ...base,
-        colorPreset: current.colorPreset,
-        colors: {
-          ...base.colors,
-          text: current.colors.text,
-          background: current.colors.background,
-        },
-      }
-      return current.colorPreset === 'high-contrast' ? applyColorPreset(withMode, 'high-contrast') : withMode
-    })
-  }, [])
+  useEffect(() => {
+    setTheme((current) => current.surfaceMode === surfaceMode ? current : normalizeThemeSurface(current, surfaceMode))
+  }, [surfaceMode])
 
   const setColorPreset = useCallback((colorPreset: ColorPreset) => {
     setTheme((current) => applyColorPreset(current, colorPreset))
@@ -172,7 +191,6 @@ export function useThemeState(initialTheme?: ThemeSettings) {
   return {
     theme,
     cssVariables,
-    setSurfaceMode,
     setColorPreset,
     setColor,
     setTheme,

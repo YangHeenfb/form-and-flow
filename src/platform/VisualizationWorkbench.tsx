@@ -77,6 +77,7 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
     const [hudActivityCount, setHudActivityCount] = useState(0)
     const [mobileControlsOpen, setMobileControlsOpen] = useState(false)
     const [mobileReadoutOpen, setMobileReadoutOpen] = useState(false)
+    const [standardReadoutOpen, setStandardReadoutOpen] = useState(false)
     const mobileControlsId = useId()
     const mobileReadoutId = useId()
 
@@ -138,6 +139,7 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
     )
 
     const enterFocus = useCallback(() => {
+      setStandardReadoutOpen(false)
       setMode('focus')
       revealHud()
     }, [revealHud])
@@ -173,6 +175,11 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
         }
 
         if (event.key === 'Escape') {
+          if (standardReadoutOpen) {
+            event.preventDefault()
+            setStandardReadoutOpen(false)
+            return
+          }
           if (activePanelId) {
             event.preventDefault()
             closePanel()
@@ -216,6 +223,7 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
       closePanel,
       exitFocus,
       mode,
+      standardReadoutOpen,
       shortcutActions,
       toggleFocus,
     ])
@@ -253,6 +261,10 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
 
         <div className="visualization-standard-layout">
           <aside className="left-panel visualization-standard-left" data-mobile-open={mobileControlsOpen ? 'true' : 'false'}>
+            <header className="visualization-inspector-header">
+              <SlidersHorizontal size={16} aria-hidden="true" />
+              <span>{labels.controls ?? 'Controls'}</span>
+            </header>
             <button
               type="button"
               className="visualization-mobile-section-toggle"
@@ -286,6 +298,18 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
             </button>
             <div className="visualization-mobile-section-content" id={mobileReadoutId}>{rightPanel}</div>
           </div>
+          <aside className="visualization-standard-readout-rail" aria-label={labels.explanation ?? 'Readout'}>
+            <button
+              type="button"
+              className={standardReadoutOpen ? 'active' : ''}
+              aria-haspopup="dialog"
+              aria-expanded={standardReadoutOpen}
+              onClick={() => setStandardReadoutOpen((open) => !open)}
+            >
+              <Info size={18} aria-hidden="true" />
+              <span>{labels.explanation ?? 'Readout'}</span>
+            </button>
+          </aside>
         </div>
 
         {isExpanded && <OverlayTransport>{transport}</OverlayTransport>}
@@ -293,6 +317,18 @@ export const VisualizationWorkbench = forwardRef<VisualizationWorkbenchHandle, V
         {isExpanded && activePanel && (
           <OverlayDrawer title={activePanel.title} side={activePanel.side} closeLabel={labels.closePanel} onClose={closePanel}>
             {activePanel.content}
+          </OverlayDrawer>
+        )}
+
+        {!isExpanded && standardReadoutOpen && (
+          <OverlayDrawer
+            className="visualization-standard-readout-drawer"
+            title={labels.explanation ?? 'Readout'}
+            side="right"
+            closeLabel={labels.closePanel}
+            onClose={() => setStandardReadoutOpen(false)}
+          >
+            {rightPanel}
           </OverlayDrawer>
         )}
 

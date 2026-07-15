@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { platformSurfaceModeEventName } from '../../../platform/platformLocale.tsx'
+import { usePlatformSurfaceMode } from '../../../platform/platformLocale.tsx'
 import { readProbabilityTheme, type ProbabilityTheme } from './probabilityThemeAdapter.ts'
 
 export type ProbabilityCanvasSize = {
@@ -15,6 +15,7 @@ type Props = {
 }
 
 export function ProbabilityCanvas({ ariaLabel, className, draw }: Props) {
+  const { surfaceMode } = usePlatformSurfaceMode()
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
@@ -38,13 +39,11 @@ export function ProbabilityCanvas({ ariaLabel, className, draw }: Props) {
     schedule()
     const observer = new ResizeObserver(schedule)
     observer.observe(canvas)
-    window.addEventListener(platformSurfaceModeEventName, schedule)
     return () => {
       cancelAnimationFrame(frame)
-      window.removeEventListener(platformSurfaceModeEventName, schedule)
       observer.disconnect()
     }
-  }, [draw])
+  }, [draw, surfaceMode])
 
   return <canvas ref={canvasRef} className={`graph-canvas probability-canvas probability-main-canvas${className ? ` ${className}` : ''}`} aria-label={ariaLabel} />
 }

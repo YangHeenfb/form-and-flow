@@ -7,12 +7,11 @@ import { moduleRegistry } from './moduleRegistry.ts'
 import { localizeModule, platformCopy } from './platformCopy.ts'
 import {
   loadStoredPlatformLocale,
-  loadStoredSurfaceMode,
   PlatformLocaleContext,
+  PlatformSurfaceModeProvider,
   platformLocaleEventName,
   platformLocaleStorageKey,
-  platformSurfaceModeEventName,
-  platformSurfaceStorageKey,
+  usePlatformSurfaceMode,
   type PlatformSurfaceMode,
 } from './platformLocale.tsx'
 import { getExplorerMode, moduleExplorerHref } from './routes.ts'
@@ -28,18 +27,20 @@ export function PlatformShell({ currentModule, currentExplorerId, currentMode, c
   const resetKey = `${currentModule?.id ?? 'home'}:${currentExplorerId ?? ''}`
 
   return (
-    <ModuleActionProvider key={resetKey}>
-      <PlatformShellContent currentModule={currentModule} currentExplorerId={currentExplorerId} currentMode={currentMode}>
-        {children}
-      </PlatformShellContent>
-    </ModuleActionProvider>
+    <PlatformSurfaceModeProvider>
+      <ModuleActionProvider key={resetKey}>
+        <PlatformShellContent currentModule={currentModule} currentExplorerId={currentExplorerId} currentMode={currentMode}>
+          {children}
+        </PlatformShellContent>
+      </ModuleActionProvider>
+    </PlatformSurfaceModeProvider>
   )
 }
 
 function PlatformShellContent({ currentModule, currentExplorerId, currentMode, children }: Props) {
   const assetBase = import.meta.env.BASE_URL
   const [locale, setLocale] = useState(() => loadStoredPlatformLocale())
-  const [surfaceMode, setSurfaceMode] = useState<PlatformSurfaceMode>(() => loadStoredSurfaceMode())
+  const { surfaceMode, setSurfaceMode } = usePlatformSurfaceMode()
   const { actions: moduleActions } = useModuleActionContext()
   const copy = platformCopy[locale].shell
   const modules = [...moduleRegistry].sort((a, b) => a.order - b.order).map((module) => localizeModule(module, locale))
@@ -75,11 +76,6 @@ function PlatformShellContent({ currentModule, currentExplorerId, currentMode, c
     localStorage.setItem(platformLocaleStorageKey, locale)
     window.dispatchEvent(new CustomEvent(platformLocaleEventName, { detail: locale }))
   }, [locale])
-
-  useEffect(() => {
-    localStorage.setItem(platformSurfaceStorageKey, surfaceMode)
-    window.dispatchEvent(new CustomEvent(platformSurfaceModeEventName, { detail: surfaceMode }))
-  }, [surfaceMode])
 
   const themeAria = surfaceMode === 'dark' ? copy.switchToLightMode : copy.switchToDarkMode
 

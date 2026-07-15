@@ -46,6 +46,7 @@ export function LessonScaffold({
   const { locale } = usePlatformLocale()
   const labels = focusPanelLabels[locale]
   const [activePanelId, setActivePanelId] = useState<LessonFocusPanelId | null>(null)
+  const [standardReadoutOpen, setStandardReadoutOpen] = useState(false)
   const [mobileControlsOpen, setMobileControlsOpen] = useState(false)
   const [mobileReadoutOpen, setMobileReadoutOpen] = useState(false)
   const controlsId = useId()
@@ -89,6 +90,7 @@ export function LessonScaffold({
     if (!isFocusMode || !focusPanels.some((panel) => panel.id === activePanelId)) {
       setActivePanelId(null)
     }
+    if (isFocusMode) setStandardReadoutOpen(false)
   }, [activePanelId, focusPanels, isFocusMode])
 
   useEffect(() => {
@@ -100,6 +102,10 @@ export function LessonScaffold({
   return (
     <section className={joinClassNames('lesson-shell', className)} data-focus-mode={isFocusMode ? 'focus' : 'standard'}>
       <aside className={joinClassNames('lesson-shell-controls platform-card', controlsClassName)} data-mobile-open={mobileControlsOpen ? 'true' : 'false'}>
+        <header className="lesson-inspector-header">
+          <SlidersHorizontal size={16} aria-hidden="true" />
+          <span>{labels.controls}</span>
+        </header>
         <button
           type="button"
           className="lesson-mobile-section-toggle"
@@ -128,6 +134,29 @@ export function LessonScaffold({
         </button>
         <div className="lesson-mobile-section-content" id={readoutId}>{explanation}</div>
       </aside>
+      <aside className="lesson-standard-readout-rail" aria-label={labels.readout}>
+        <button
+          type="button"
+          className={standardReadoutOpen ? 'active' : ''}
+          aria-haspopup="dialog"
+          aria-expanded={standardReadoutOpen}
+          onClick={() => setStandardReadoutOpen((open) => !open)}
+        >
+          <Info size={18} aria-hidden="true" />
+          <span>{labels.readout}</span>
+        </button>
+      </aside>
+      {!isFocusMode && standardReadoutOpen && (
+        <OverlayDrawer
+          className="lesson-standard-readout-drawer"
+          title={labels.readout}
+          side="right"
+          closeLabel={closeFocusPanelLabel ?? labels.closePanel}
+          onClose={() => setStandardReadoutOpen(false)}
+        >
+          <div className={joinClassNames('lesson-standard-readout-content', explanationClassName)}>{explanation}</div>
+        </OverlayDrawer>
+      )}
       {isFocusMode && (focusPanels.length > 0 || autoHideToggle) && (
         <div className="lesson-focus-panel-buttons" role="group" aria-label={labels.panelGroup}>
           {focusPanels.map((panel) => {

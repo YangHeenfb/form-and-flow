@@ -5,6 +5,9 @@
 }
 
 .visualization-standard-layout {
+  position: relative;
+  grid-template-areas: 'controls stage readout';
+  grid-template-columns: minmax(260px, 280px) minmax(0, 1fr) 72px;
   gap: 14px;
 }
 
@@ -20,12 +23,154 @@
   box-shadow: none;
 }
 
+.visualization-standard-left {
+  grid-area: controls;
+  padding: 0;
+  overflow: auto;
+}
+
+.visualization-center-column {
+  grid-area: stage;
+}
+
+.visualization-standard-right {
+  grid-area: explanation;
+  display: none;
+}
+
+.visualization-inspector-header {
+  position: sticky;
+  z-index: 3;
+  top: 0;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-bottom: 1px solid var(--panel-border);
+  color: var(--text-main);
+  background: color-mix(in srgb, var(--panel-bg) 96%, transparent);
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+}
+
 .visualization-mobile-section-toggle {
   display: none;
 }
 
 .visualization-mobile-section-content {
-  display: contents;
+  min-width: 0;
+  display: block;
+}
+
+.visualization-standard-left .panel-section {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 13px 12px;
+}
+
+.visualization-standard-left .panel-section + .panel-section,
+.visualization-standard-left .panel-section + .matrix-appearance-disclosure {
+  border-top: 1px solid color-mix(in srgb, var(--panel-border) 78%, transparent);
+}
+
+.visualization-standard-left .matrix-learning-entry {
+  min-height: 42px;
+  padding-block: 8px;
+}
+
+.visualization-standard-left .matrix-learning-entry .learning-help-trigger {
+  min-height: 36px;
+  color: var(--text-muted);
+  border-color: transparent;
+  background: transparent;
+}
+
+.matrix-appearance-disclosure {
+  border-top: 1px solid color-mix(in srgb, var(--panel-border) 78%, transparent);
+}
+
+.matrix-appearance-disclosure > summary {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 12px;
+  color: var(--text-main);
+  cursor: pointer;
+  list-style: none;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.matrix-appearance-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.matrix-appearance-disclosure > summary span {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.matrix-appearance-disclosure > summary > svg {
+  color: var(--text-muted);
+  transition: transform 140ms ease;
+}
+
+.matrix-appearance-disclosure[open] > summary > svg {
+  transform: rotate(180deg);
+}
+
+.matrix-appearance-content {
+  border-top: 1px solid color-mix(in srgb, var(--panel-border) 72%, transparent);
+}
+
+.visualization-standard-readout-rail {
+  grid-area: readout;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  background: var(--panel-bg);
+  padding: 8px;
+}
+
+.visualization-standard-readout-rail button {
+  width: 100%;
+  min-width: 0;
+  min-height: 86px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-color: transparent;
+  color: var(--text-muted);
+  background: transparent;
+  padding: 8px 4px;
+}
+
+.visualization-standard-readout-rail button span {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.visualization-standard-readout-rail button:hover,
+.visualization-standard-readout-rail button.active {
+  color: var(--text-main);
+  border-color: color-mix(in srgb, var(--focus) 30%, var(--panel-border));
+  background: color-mix(in srgb, var(--focus) 9%, var(--panel-bg-soft));
+}
+
+.visualization-workbench.is-expanded .visualization-standard-readout-rail {
+  display: none;
 }
 
 .visualization-overlay-drawer {
@@ -34,12 +179,47 @@
   box-shadow: 0 20px 60px color-mix(in srgb, black 28%, transparent);
 }
 
+.visualization-standard-readout-drawer {
+  top: 0;
+  right: 86px;
+  bottom: 0;
+  width: min(430px, calc(100% - 110px));
+}
+
+.visualization-standard-readout-drawer .right-panel,
+.visualization-standard-readout-drawer .info-card {
+  height: auto;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  overflow: visible;
+}
+
+.visualization-standard-readout-drawer .info-card + .info-card {
+  margin-top: 14px;
+  border-top: 1px solid var(--panel-border);
+  padding-top: 14px;
+}
+
 .visualization-stage-toolbar {
   border-color: var(--panel-border);
   background: var(--panel-bg);
 }
 
-@media (max-width: 860px) {
+@media (max-width: 1179px) {
+  .matrix-embedded-shell {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .matrix-embedded-shell .visualization-workbench,
+  .visualization-standard-layout {
+    overflow: visible;
+  }
+
   .visualization-standard-layout {
     grid-template-areas:
       'stage'
@@ -49,8 +229,15 @@
     gap: 12px;
   }
 
-  .visualization-center-column {
-    grid-area: stage;
+  .visualization-standard-left,
+  .visualization-standard-right {
+    min-width: 0;
+    display: block;
+    padding: 0;
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-md);
+    background: var(--panel-bg);
+    overflow: hidden;
   }
 
   .visualization-standard-left {
@@ -61,14 +248,10 @@
     grid-area: explanation;
   }
 
-  .visualization-standard-left,
-  .visualization-standard-right {
-    min-width: 0;
-    padding: 0;
-    border: 1px solid var(--panel-border);
-    border-radius: var(--radius-md);
-    background: var(--panel-bg);
-    overflow: hidden;
+  .visualization-inspector-header,
+  .visualization-standard-readout-rail,
+  .visualization-standard-readout-drawer {
+    display: none;
   }
 
   .visualization-mobile-section-toggle {
@@ -104,12 +287,12 @@
 
   [data-mobile-open='true'] > .visualization-mobile-section-content {
     display: grid;
-    gap: 12px;
-    padding: 0 12px 12px;
+    gap: 0;
+    padding: 0;
   }
 
   .visualization-stage {
-    min-height: min(62vh, 560px);
+    min-height: min(64vh, 600px);
   }
 
   .visualization-overlay-transport {
@@ -120,5 +303,11 @@
 
   .visualization-overlay-transport .transport {
     width: 100%;
+  }
+}
+
+@media (max-width: 860px) {
+  .visualization-stage {
+    min-height: min(62vh, 560px);
   }
 }

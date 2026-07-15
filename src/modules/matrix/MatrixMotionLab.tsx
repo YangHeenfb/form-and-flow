@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Focus, Languages, Moon, Sun } from 'lucide-react'
+import { ChevronDown, Focus, Languages, Moon, Palette, Sun } from 'lucide-react'
 import { AnimationControls } from '../../components/AnimationControls.tsx'
 import { Canvas2DView } from '../../components/Canvas2DView.tsx'
 import { ExplanationPanel } from '../../components/ExplanationPanel.tsx'
@@ -25,9 +25,10 @@ import { LessonStageActions } from '../../platform/LessonStageActions.tsx'
 import {
   platformLocaleEventName,
   platformLocaleStorageKey,
-  platformSurfaceModeEventName,
+  PlatformSurfaceModeProvider,
   readStoredPlatformLocaleValue,
-  readStoredSurfaceModeValue,
+  useOptionalPlatformSurfaceMode,
+  usePlatformSurfaceMode,
 } from '../../platform/platformLocale.tsx'
 import { VisualizationWorkbench, type VisualizationWorkbenchHandle } from '../../platform/VisualizationWorkbench.tsx'
 import type { OverlayPanelDefinition, VisualizationWorkbenchStatus } from '../../platform/visualizationLayoutTypes.ts'
@@ -58,8 +59,19 @@ type MatrixMotionLabProps = {
 }
 
 export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
+  const surfaceContext = useOptionalPlatformSurfaceMode()
+  if (surfaceContext) return <MatrixMotionLabContent embedded={embedded} />
+  return (
+    <PlatformSurfaceModeProvider>
+      <MatrixMotionLabContent embedded={embedded} />
+    </PlatformSurfaceModeProvider>
+  )
+}
+
+function MatrixMotionLabContent({ embedded = false }: MatrixMotionLabProps) {
   const appState = useAppState()
-  const themeState = useThemeState()
+  const { surfaceMode, setSurfaceMode } = usePlatformSurfaceMode()
+  const themeState = useThemeState(surfaceMode)
   const [locale, setLocale] = useState<Locale>(() => loadLocale())
   const [animation, setAnimation] = useState<AnimationState>(initialAnimation)
   const [threeCameraView, setThreeCameraView] = useState<ThreeCameraView>('free')
@@ -119,21 +131,11 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
       const next = (event as CustomEvent<Locale>).detail
       if (next === 'en' || next === 'zh') setLocale(next)
     }
-    const syncSurfaceMode = (event: Event) => {
-      const next = (event as CustomEvent<'dark' | 'light'>).detail
-      if (next === 'dark' || next === 'light') themeState.setSurfaceMode(next)
-    }
     window.addEventListener(platformLocaleEventName, syncLocale)
-    window.addEventListener(platformSurfaceModeEventName, syncSurfaceMode)
-    const storedSurfaceMode = readStoredSurfaceModeValue()
-    if (storedSurfaceMode === 'dark' || storedSurfaceMode === 'light') {
-      themeState.setSurfaceMode(storedSurfaceMode)
-    }
     return () => {
       window.removeEventListener(platformLocaleEventName, syncLocale)
-      window.removeEventListener(platformSurfaceModeEventName, syncSurfaceMode)
     }
-  }, [themeState.setSurfaceMode])
+  }, [])
 
   const composedMap = useMemo(() => {
     if (!appState.validation.valid) {
@@ -461,6 +463,19 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
     />
   )
 
+  const compactThemePanel = (
+    <details className="matrix-appearance-disclosure">
+      <summary>
+        <span>
+          <Palette size={16} />
+          {copy.themePanel.title}
+        </span>
+        <ChevronDown size={17} aria-hidden="true" />
+      </summary>
+      <div className="matrix-appearance-content">{themePanel}</div>
+    </details>
+  )
+
   const explanationPanel = (
     <ExplanationPanel
       locale={locale}
@@ -571,10 +586,10 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
             <button
               className="background-toggle"
               type="button"
-              onClick={() => themeState.setSurfaceMode(themeState.theme.surfaceMode === 'dark' ? 'light' : 'dark')}
+              onClick={() => setSurfaceMode(surfaceMode === 'dark' ? 'light' : 'dark')}
             >
-              {themeState.theme.surfaceMode === 'dark' ? <Moon size={17} /> : <Sun size={17} />}
-              {themeState.theme.surfaceMode === 'dark' ? copy.top.darkApp : copy.top.lightApp}
+              {surfaceMode === 'dark' ? <Moon size={17} /> : <Sun size={17} />}
+              {surfaceMode === 'dark' ? copy.top.darkApp : copy.top.lightApp}
             </button>
           </div>
         </header>
@@ -589,7 +604,7 @@ export function MatrixMotionLab({ embedded = false }: MatrixMotionLabProps) {
           <>
             {matrixPanel}
             {vectorPanel}
-            {themePanel}
+            {compactThemePanel}
           </>
         }
         stage={stage}

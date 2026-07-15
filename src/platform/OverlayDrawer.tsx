@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import type { OverlayPanelSide } from './visualizationLayoutTypes.ts'
 
 type OverlayDrawerProps = {
+  className?: string
   title: string
   side?: OverlayPanelSide
   children: ReactNode
@@ -10,7 +11,7 @@ type OverlayDrawerProps = {
   onClose: () => void
 }
 
-export function OverlayDrawer({ title, side = 'right', children, closeLabel, onClose }: OverlayDrawerProps) {
+export function OverlayDrawer({ className, title, side = 'right', children, closeLabel, onClose }: OverlayDrawerProps) {
   const titleRef = useRef<HTMLHeadingElement | null>(null)
   const titleId = useId()
   const previousFocusRef = useRef<HTMLElement | null>(null)
@@ -35,7 +36,7 @@ export function OverlayDrawer({ title, side = 'right', children, closeLabel, onC
 
   return (
     <aside
-      className={`visualization-overlay-drawer ${side}`}
+      className={['visualization-overlay-drawer', side, className].filter(Boolean).join(' ')}
       role="dialog"
       aria-modal="false"
       aria-labelledby={titleId}

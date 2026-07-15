@@ -49,6 +49,21 @@ describe('VisualizationWorkbench', () => {
     unmount()
   })
 
+  it('opens the standard readout drawer and restores focus after Escape', async () => {
+    const { container, unmount } = render(<WorkbenchHarness />)
+    const readoutButton = container.querySelector<HTMLButtonElement>('.visualization-standard-readout-rail button')!
+
+    readoutButton.focus()
+    await click(readoutButton)
+    expect(container.querySelector('[role="dialog"]')?.textContent).toContain('Right Panel')
+
+    pressKey(document, 'Escape')
+    expect(container.querySelector('[role="dialog"]')).toBeNull()
+    expect(document.activeElement).toBe(readoutButton)
+
+    unmount()
+  })
+
   it('opens an overlay drawer and keeps focus mode after the first Escape', async () => {
     const { container, unmount } = render(<WorkbenchHarness />)
     const workbench = getWorkbench(container)

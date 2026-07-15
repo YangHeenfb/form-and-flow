@@ -65,6 +65,18 @@ test.describe('ready explorers', () => {
       await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
       await expectNoHorizontalOverflow(page)
 
+      const isMatrix = route.includes('/matrix/')
+      const shell = page.locator(isMatrix ? '.visualization-standard-layout' : '.lesson-shell')
+      const stage = page.locator(isMatrix ? '.visualization-center-column' : '.lesson-shell-main')
+      const rail = page.locator(isMatrix ? '.visualization-standard-readout-rail' : '.lesson-standard-readout-rail')
+      const inspector = page.locator(isMatrix ? '.visualization-inspector-header' : '.lesson-inspector-header')
+      await expect(rail).toBeVisible()
+      await expect(inspector).toBeVisible()
+      const shellBox = await shell.boundingBox()
+      const stageBox = await stage.boundingBox()
+      expect(shellBox && stageBox).toBeTruthy()
+      expect(stageBox!.width / shellBox!.width).toBeGreaterThanOrEqual(0.6)
+
       const accessibility = await new AxeBuilder({ page }).analyze()
       const blocking = accessibility.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))
       expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([])
@@ -73,7 +85,7 @@ test.describe('ready explorers', () => {
   }
 })
 
-for (const width of [375, 390, 768, 1280]) {
+for (const width of [375, 390, 768, 1024, 1280]) {
   test.describe(`${width}px layout`, () => {
     for (const route of representativeRoutes) {
       test(`${route} has no viewport overflow`, async ({ page }) => {
@@ -166,6 +178,60 @@ test('Matrix mobile workbench keeps controls collapsed below visualization and t
   expect(accessibility.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([])
 })
 
+test('tablet layouts keep the canvas first and collapse parameters and readout', async ({ page }) => {
+  await page.setViewportSize({ width: 1024, height: 900 })
+  await page.goto('/modules/calculus/derivative')
+  await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+
+  const graph = page.locator('.calculus-canvas')
+  const parameters = page.locator('.lesson-shell-controls .lesson-mobile-section-toggle')
+  const readout = page.locator('.lesson-shell-explanation .lesson-mobile-section-toggle')
+  await expect(parameters).toBeVisible()
+  await expect(readout).toBeVisible()
+  await expect(parameters).toHaveAttribute('aria-expanded', 'false')
+  await expect(readout).toHaveAttribute('aria-expanded', 'false')
+  await expect(page.locator('.lesson-standard-readout-rail')).toBeHidden()
+
+  const graphBox = await graph.boundingBox()
+  const parametersBox = await parameters.boundingBox()
+  expect(graphBox && parametersBox).toBeTruthy()
+  expect(graphBox!.y).toBeLessThan(parametersBox!.y)
+})
+
+test('standard lesson readout opens as a drawer and restores trigger focus', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/modules/calculus/derivative')
+  await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+
+  const trigger = page.locator('.lesson-standard-readout-rail button')
+  await trigger.click()
+  const drawer = page.locator('.lesson-standard-readout-drawer')
+  await expect(drawer).toBeVisible()
+  await expect(drawer).toContainText('Formula used')
+  await page.keyboard.press('Escape')
+  await expect(drawer).toHaveCount(0)
+  await expect(trigger).toBeFocused()
+})
+
+test('Matrix standard readout uses a drawer and Appearance stays collapsed by default', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/modules/matrix/transformations')
+  await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+
+  const appearance = page.locator('.matrix-appearance-disclosure')
+  await expect(appearance).not.toHaveAttribute('open', '')
+
+  const trigger = page.locator('.visualization-standard-readout-rail button')
+  await trigger.click()
+  const drawer = page.locator('.visualization-standard-readout-drawer')
+  await expect(drawer).toBeVisible()
+  await expect(drawer).toContainText('Current Dimensions')
+
+  await page.keyboard.press('f')
+  await expect(drawer).toHaveCount(0)
+  await expect(page.locator('.visualization-workbench')).toHaveClass(/is-focus/)
+})
+
 test('custom explorer selector supports keyboard focus and selection', async ({ page }) => {
   await page.goto('/modules/calculus/derivative')
   await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
@@ -189,6 +255,33 @@ test('surface theme updates canvas colors and keeps the stored preference', asyn
     Array.from(canvas.getContext('2d')!.getImageData(2, 2, 1, 1).data.slice(0, 3)),
   )
   expect(background).toEqual([17, 23, 27])
+
+  await page.reload()
+  await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+  await expect(page.getByRole('button', { name: 'Light mode' })).toBeVisible()
+})
+
+test('Matrix follows the platform surface mode with a safe dark canvas palette', async ({ page }) => {
+  await page.goto('/modules/matrix/transformations')
+  await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
+  await page.getByRole('button', { name: 'Dark mode' }).click()
+  await expect(page.getByRole('button', { name: 'Light mode' })).toBeVisible()
+
+  const background = await page.locator('.canvas-2d').evaluate((canvas: HTMLCanvasElement) =>
+    Array.from(canvas.getContext('2d')!.getImageData(2, 2, 1, 1).data.slice(0, 3)),
+  )
+  expect(background).toEqual([13, 20, 28])
+
+  const colors = await page.locator('.matrix-embedded-shell').evaluate((element) => {
+    const style = getComputedStyle(element)
+    return {
+      background: style.getPropertyValue('--app-bg').trim(),
+      text: style.getPropertyValue('--text-main').trim(),
+      grid: style.getPropertyValue('--grid-color').trim(),
+      axis: style.getPropertyValue('--axis-color').trim(),
+    }
+  })
+  expect(colors).toEqual({ background: '#0d141c', text: '#eef3f8', grid: '#3f4a55', axis: '#d7dde5' })
 
   await page.reload()
   await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
