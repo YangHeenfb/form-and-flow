@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { CircleHelp, Pause, Play, RotateCcw } from 'lucide-react'
 import { GraphCanvas } from '../../core/graph2d/GraphCanvas.tsx'
@@ -17,6 +17,7 @@ import { calculusFunctionNames, completeBareFunctionInput, normalizeMathInput } 
 import type { FilterConfig, FilterType, FourierCoefficient, ReconstructionMode, Spectrum, WindingPoint } from './fourierTypes.ts'
 import { compileFourierExpression, fourierPresets, getFourierPreset, sampleFourierExpression, sampleFourierPreset, type SignalPreset } from './fourierPresets.ts'
 import { applyFilter } from './math/filters.ts'
+import { computeFrequencyPair, computeFrequencyPairFrame, synthesizeFrequencyPair, type FrequencyPair } from './math/frequencyPair.ts'
 import { computeCoefficientAtFrequency, computeIntegerSpectrum, computeSpectrum, computeWindingPoints, findDominantFrequencies, interpolateWindingPoint, selectPairedFrequencyBlocks, selectTopCoefficients } from './math/fourier.ts'
 import { maxAbsError, meanSquaredError, reconstructSamples } from './math/reconstruction.ts'
 
@@ -25,6 +26,7 @@ type Props = {
 }
 
 type FourierLocale = Locale
+type SpectrumView = 'probe' | 'pair'
 type FourierTermId = 'winding' | 'frequency' | 'coefficient' | 'center-of-mass' | 'spectrum' | 'phase' | 'reconstruction' | 'filtering'
 type FourierControlGroupId = 'samples' | 'spectrum' | 'reconstruction' | 'filtering' | 'display'
 type FourierHelpMode = { kind: 'beginner' } | { kind: 'control'; group: FourierControlGroupId } | { kind: 'graph' } | { kind: 'term'; term: FourierTermId }
@@ -63,8 +65,11 @@ type DrawState = {
   filteredSamples: number[]
   includedCoefficients: FourierCoefficient[]
   windingPoints: WindingPoint[]
+  spectrumView: SpectrumView
   selectedFrequency: number
   selectedCoefficient: FourierCoefficient
+  frequencyPair: FrequencyPair
+  frequencyPairSamples: number[]
   playhead: number
   showOriginalSignal: boolean
   showWindingPath: boolean
@@ -108,6 +113,10 @@ const fourierCopy: Record<FourierLocale, {
     spectrum: string
     reconstruction: string
     filtering: string
+    probeView: string
+    pairView: string
+    spectrumViewLabel: string
+    pairPlaybackProgress: string
     controls: Record<string, string>
     toggles: Record<string, string>
   }
@@ -142,8 +151,13 @@ const fourierCopy: Record<FourierLocale, {
       spectrum: 'Spectrum',
       reconstruction: 'Reconstruction',
       filtering: 'Filtering',
+      probeView: 'Frequency probe',
+      pairView: '± frequency synthesis',
+      spectrumViewLabel: 'Spectrum view',
+      pairPlaybackProgress: 'Time in one cycle',
       controls: {
         frequency: 'frequency',
+        pairFrequency: 'frequency pair ±f',
         sampleCount: 'samples',
         speed: 'speed',
         frequencyMin: 'frequency min',
@@ -183,6 +197,14 @@ const fourierCopy: Record<FourierLocale, {
         formula: '|C(f)| = |1/N sum x[n]e^{-i2πfn/N}|',
         formulaTex: '|C(f)|=\\left|\\frac{1}{N}\\sum_{n=0}^{N-1}x[n]e^{-i2\\pi fn/N}\\right|',
         watch: 'For this signal, look for strong responses near 1 and 3. Because we observe one finite slice, peaks can spread around those values instead of appearing as only one bar.',
+      },
+      'spectrum-pair': {
+        title: 'Positive and Negative Frequency Synthesis',
+        what: 'The coefficients at +f and -f rotate in opposite directions. For a real signal, they are mirror images, so their vertical parts cancel and their sum stays real.',
+        why: 'The two arrows are not two extra physical waves. They are the conjugate complex coordinates used to rebuild one real oscillating contribution from the selected test frequency.',
+        formula: 'x±f(t)=C(f)e^{i2πft}+C(-f)e^{-i2πft}=2 Re(C(f)e^{i2πft})',
+        formulaTex: 'x_{\pm f}(t)=C(f)e^{i2\pi ft}+C(-f)e^{-i2\pi ft}=2\operatorname{Re}\!\left(C(f)e^{i2\pi ft}\right)',
+        watch: 'Choose a spectrum peak first. At a weak frequency the arrows and reconstructed contribution remain small because this view does not normalize them for display.',
       },
       reconstruction: {
         title: 'Signal Reconstruction',
@@ -231,8 +253,13 @@ const fourierCopy: Record<FourierLocale, {
       spectrum: '频谱',
       reconstruction: '重建',
       filtering: '滤波',
+      probeView: '频率检测',
+      pairView: '正负频率合成',
+      spectrumViewLabel: '频谱观察方式',
+      pairPlaybackProgress: '单周期时间',
       controls: {
         frequency: '频率',
+        pairFrequency: '频率对 ±f',
         sampleCount: '采样数',
         speed: '速度',
         frequencyMin: '最小频率',
@@ -273,6 +300,14 @@ const fourierCopy: Record<FourierLocale, {
         formulaTex: '|C(f)|=\\left|\\frac{1}{N}\\sum_{n=0}^{N-1}x[n]e^{-i2\\pi fn/N}\\right|',
         watch: '对这个信号，你会在 1 和 3 附近看到强响应。因为我们只观察有限长度的一段曲线，峰可能会在附近扩散，而不是只出现在一个柱子上。',
       },
+      'spectrum-pair': {
+        title: '正负频率合成',
+        what: '+f 和 -f 两个系数沿相反方向旋转。对真实信号，它们互为镜像，纵向部分抵消，合成结果始终留在实轴上。',
+        why: '这两根箭头不是两个额外的物理波，而是用复数坐标重建当前测试频率对应真实振动时所需的一对共轭成分。',
+        formula: 'x±f(t)=C(f)e^{i2πft}+C(-f)e^{-i2πft}=2 Re(C(f)e^{i2πft})',
+        formulaTex: 'x_{\pm f}(t)=C(f)e^{i2\pi ft}+C(-f)e^{-i2\pi ft}=2\operatorname{Re}\!\left(C(f)e^{i2\pi ft}\right)',
+        watch: '先选择一个频谱峰值最容易看清。弱频率处的箭头和合成波会保持很小，因为这里不会为了显示效果偷偷归一化。',
+      },
       reconstruction: {
         title: '信号重建',
         what: '重建就是把选中的频率成分重新叠回去。每个傅里叶系数都像一个小波：大小决定它有多强，角度决定它从哪里开始。',
@@ -296,7 +331,7 @@ const fourierCopy: Record<FourierLocale, {
 export function FourierLesson({ lessonId }: Props) {
   const { locale } = usePlatformLocale()
   const lessonKey = isFourierLesson(lessonId) ? lessonId : 'spectrum'
-  const copy = fourierCopy[locale].lessons[lessonKey]
+  const defaultCopy = fourierCopy[locale].lessons[lessonKey]
   const ui = fourierCopy[locale].ui
   const [presetId, setPresetId] = useState(() => readInitialPresetParam(defaultPresetForLesson(lessonKey)))
   const selectedPreset = getFourierPreset(presetId === 'custom' ? defaultPresetForLesson(lessonKey) : presetId)
@@ -306,6 +341,8 @@ export function FourierLesson({ lessonId }: Props) {
   const [sampleCount, setSampleCount] = useState(() => readNumberParam('samples', 512))
   const [normalizeAmplitude, setNormalizeAmplitude] = useState(() => readBooleanParam('normalize', false))
   const [selectedFrequency, setSelectedFrequency] = useState(() => readNumberParam('freq', selectedPreset.defaultFrequency))
+  const [spectrumView, setSpectrumView] = useState<SpectrumView>(() => lessonKey === 'spectrum' ? readSpectrumViewParam() : 'probe')
+  const [pairFrequency, setPairFrequency] = useState(() => clampPairFrequency(Math.abs(readNumberParam('freq', selectedPreset.defaultFrequency))))
   const [frequencySnap, setFrequencySnap] = useState(() => readBooleanParam('snap', false))
   const [frequencyMin, setFrequencyMin] = useState(() => readNumberParam('fmin', -10))
   const [frequencyMax, setFrequencyMax] = useState(() => readNumberParam('fmax', 10))
@@ -333,13 +370,31 @@ export function FourierLesson({ lessonId }: Props) {
   const [logMagnitude, setLogMagnitude] = useState(false)
   const [positiveOnly, setPositiveOnly] = useState(false)
   const [helpMode, setHelpMode] = useState<FourierHelpMode | null>(null)
-  const activeHelpTopic = helpMode ? getFourierHelpTopic(helpMode, lessonKey, locale) : null
+  const didInitializePreset = useRef(false)
+  const copy = lessonKey === 'spectrum' && spectrumView === 'pair'
+    ? fourierCopy[locale].lessons['spectrum-pair']
+    : defaultCopy
+  const activeHelpTopic = helpMode ? getFourierHelpTopic(helpMode, lessonKey, locale, spectrumView) : null
+
+  const changeSpectrumView = useCallback((nextView: SpectrumView) => {
+    if (nextView === spectrumView) return
+    setPlaying(false)
+    setPlayhead(0)
+    if (nextView === 'pair') setPairFrequency(clampPairFrequency(Math.abs(selectedFrequency)))
+    setSpectrumView(nextView)
+    replaceSpectrumViewParam(nextView)
+  }, [selectedFrequency, spectrumView])
 
   useEffect(() => {
+    if (!didInitializePreset.current) {
+      didInitializePreset.current = true
+      return
+    }
     if (presetId === 'custom') return
     const preset = getFourierPreset(presetId)
     setExpression(preset.expression ?? preset.label)
     setSelectedFrequency(preset.defaultFrequency)
+    setPairFrequency(clampPairFrequency(Math.abs(preset.defaultFrequency)))
   }, [presetId])
 
   useEffect(() => {
@@ -349,7 +404,7 @@ export function FourierLesson({ lessonId }: Props) {
     const tick = (now: number) => {
       const delta = Math.min(80, now - previous)
       previous = now
-      if (lessonKey === 'spectrum') {
+      if (lessonKey === 'spectrum' && spectrumView === 'probe') {
         setSelectedFrequency((value) => {
           const span = Math.max(1, frequencyMax - frequencyMin)
           const next = value + delta * 0.000225 * playbackSpeed * span
@@ -374,7 +429,7 @@ export function FourierLesson({ lessonId }: Props) {
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [frequencyMax, frequencyMin, lessonKey, maxHarmonic, playbackSpeed, playing, reconstructionMode])
+  }, [frequencyMax, frequencyMin, lessonKey, maxHarmonic, playbackSpeed, playing, reconstructionMode, spectrumView])
 
   const roundedSampleCount = clampInteger(sampleCount, 64, 1024)
   const roundedMaxHarmonic = clampInteger(maxHarmonic, 1, 80)
@@ -415,6 +470,14 @@ export function FourierLesson({ lessonId }: Props) {
       : { frequency: selectedFrequency, value: { re: 0, im: 0 }, magnitude: 0, phase: 0 },
     [lessonKey, samplesResult.samples, selectedFrequency],
   )
+  const frequencyPair = useMemo(
+    () => computeFrequencyPair(samplesResult.samples, lessonKey === 'spectrum' ? pairFrequency : 0),
+    [lessonKey, pairFrequency, samplesResult.samples],
+  )
+  const frequencyPairSamples = useMemo(
+    () => lessonKey === 'spectrum' ? synthesizeFrequencyPair(frequencyPair, roundedSampleCount) : [],
+    [frequencyPair, lessonKey, roundedSampleCount],
+  )
   const windingPoints = useMemo(
     () => lessonKey === 'spectrum' ? computeWindingPoints(samplesResult.samples, selectedFrequency) : [],
     [lessonKey, samplesResult.samples, selectedFrequency],
@@ -451,8 +514,11 @@ export function FourierLesson({ lessonId }: Props) {
   const values = getValueRows({
     locale,
     lessonKey,
+    spectrumView,
     selectedFrequency,
     selectedCoefficient,
+    frequencyPair,
+    playhead,
     spectrum,
     integerSpectrum,
     samples: samplesResult.samples,
@@ -470,6 +536,8 @@ export function FourierLesson({ lessonId }: Props) {
   const spectrumClamped = Math.abs(safeFrequencyStep - Math.max(0.05, Math.abs(frequencyStep))) > 1e-9
   const playbackProgress = getFourierPlaybackProgress({
     lessonKey,
+    spectrumView,
+    playhead,
     selectedFrequency,
     frequencyMin,
     frequencyMax,
@@ -480,7 +548,9 @@ export function FourierLesson({ lessonId }: Props) {
   const seekPlaybackProgress = useCallback(
     (progress: number) => {
       const next = clampProgress(progress)
-      if (lessonKey === 'spectrum') {
+      if (lessonKey === 'spectrum' && spectrumView === 'pair') {
+        setPlayhead(next)
+      } else if (lessonKey === 'spectrum') {
         setSelectedFrequency(valueFromProgress(next, frequencyMin, frequencyMax))
       } else if (lessonKey === 'reconstruction') {
         setCoefficientCount(valueFromProgress(next, 1, maxHarmonic * 2 + 1))
@@ -488,7 +558,7 @@ export function FourierLesson({ lessonId }: Props) {
         setCutoff(valueFromProgress(next, 0, maxHarmonic))
       }
     },
-    [frequencyMax, frequencyMin, lessonKey, maxHarmonic],
+    [frequencyMax, frequencyMin, lessonKey, maxHarmonic, spectrumView],
   )
 
   const draw = useCallback(
@@ -504,8 +574,11 @@ export function FourierLesson({ lessonId }: Props) {
         filteredSamples,
         includedCoefficients,
         windingPoints,
+        spectrumView,
         selectedFrequency,
         selectedCoefficient,
+        frequencyPair,
+        frequencyPairSamples,
         playhead,
         showOriginalSignal,
         showWindingPath,
@@ -544,7 +617,10 @@ export function FourierLesson({ lessonId }: Props) {
       showWindingPath,
       showWindingVectors,
       spectrum,
+      spectrumView,
       windingPoints,
+      frequencyPair,
+      frequencyPairSamples,
     ],
   )
 
@@ -553,10 +629,10 @@ export function FourierLesson({ lessonId }: Props) {
     if (!canvas) return
     const anchor = document.createElement('a')
     anchor.href = canvas.toDataURL('image/png')
-    anchor.download = `fourier-${lessonKey}.png`
+    anchor.download = `fourier-${lessonKey}${lessonKey === 'spectrum' && spectrumView === 'pair' ? '-pair' : ''}.png`
     anchor.click()
   }
-  const playback = getPlaybackLabels(lessonKey, playing, locale)
+  const playback = getPlaybackLabels(lessonKey, playing, locale, spectrumView)
 
   return (
     <>
@@ -642,22 +718,43 @@ export function FourierLesson({ lessonId }: Props) {
 
         {lessonKey === 'spectrum' && (
           <ControlGroup title={ui.spectrum} onHelp={() => setHelpMode({ kind: 'control', group: 'spectrum' })} helpAriaLabel={controlHelpAria(ui.controlHelp, ui.spectrum)}>
-            <Range
-              label={ui.controls.frequency}
-              value={selectedFrequency}
-              min={frequencyMin}
-              max={frequencyMax}
-              step={frequencySnap ? 1 : 0.05}
-              onChange={(value) => setSelectedFrequency(frequencySnap ? Math.round(value) : value)}
-            />
-            <Toggle label={ui.toggles.snap} checked={frequencySnap} onChange={setFrequencySnap} />
-            <Range label={ui.controls.frequencyMin} value={frequencyMin} min={-30} max={0} step={1} onChange={setFrequencyMin} />
-            <Range label={ui.controls.frequencyMax} value={frequencyMax} min={1} max={30} step={1} onChange={setFrequencyMax} />
-            <Range label={ui.controls.frequencyStep} value={frequencyStep} min={0.05} max={1} step={0.05} onChange={setFrequencyStep} />
-            {spectrumClamped && <p className="warning-text">{locale === 'zh' ? '频谱点数已限制在 401 以内。' : 'Spectrum points are limited to 401.'}</p>}
-            <Toggle label={ui.toggles.logMagnitude} checked={logMagnitude} onChange={setLogMagnitude} />
-            <Toggle label={ui.toggles.positiveOnly} checked={positiveOnly} onChange={setPositiveOnly} />
-            <Toggle label={ui.toggles.phase} checked={showPhase} onChange={setShowPhase} />
+            {spectrumView === 'pair' ? (
+              <>
+                <Range
+                  label={ui.controls.pairFrequency}
+                  value={pairFrequency}
+                  min={0}
+                  max={30}
+                  step={frequencySnap ? 1 : 0.05}
+                  onChange={(value) => setPairFrequency(clampPairFrequency(frequencySnap ? Math.round(value) : value))}
+                />
+                <Toggle label={ui.toggles.snap} checked={frequencySnap} onChange={setFrequencySnap} />
+                <p className="input-help">
+                  {locale === 'zh'
+                    ? '这里直接计算当前真实信号的 C(+f) 与 C(-f)。非整数 f 是一次连续频率测试；整数 f 才直接对应离散重建中的频率块。'
+                    : 'This directly computes C(+f) and C(-f) for the current real signal. Non-integer f is a continuous frequency test; integer f directly matches a discrete reconstruction block.'}
+                </p>
+              </>
+            ) : (
+              <>
+                <Range
+                  label={ui.controls.frequency}
+                  value={selectedFrequency}
+                  min={frequencyMin}
+                  max={frequencyMax}
+                  step={frequencySnap ? 1 : 0.05}
+                  onChange={(value) => setSelectedFrequency(frequencySnap ? Math.round(value) : value)}
+                />
+                <Toggle label={ui.toggles.snap} checked={frequencySnap} onChange={setFrequencySnap} />
+                <Range label={ui.controls.frequencyMin} value={frequencyMin} min={-30} max={0} step={1} onChange={setFrequencyMin} />
+                <Range label={ui.controls.frequencyMax} value={frequencyMax} min={1} max={30} step={1} onChange={setFrequencyMax} />
+                <Range label={ui.controls.frequencyStep} value={frequencyStep} min={0.05} max={1} step={0.05} onChange={setFrequencyStep} />
+                {spectrumClamped && <p className="warning-text">{locale === 'zh' ? '频谱点数已限制在 401 以内。' : 'Spectrum points are limited to 401.'}</p>}
+                <Toggle label={ui.toggles.logMagnitude} checked={logMagnitude} onChange={setLogMagnitude} />
+                <Toggle label={ui.toggles.positiveOnly} checked={positiveOnly} onChange={setPositiveOnly} />
+                <Toggle label={ui.toggles.phase} checked={showPhase} onChange={setShowPhase} />
+              </>
+            )}
           </ControlGroup>
         )}
 
@@ -712,21 +809,34 @@ export function FourierLesson({ lessonId }: Props) {
 
         <ControlGroup title={ui.display} onHelp={() => setHelpMode({ kind: 'control', group: 'display' })} helpAriaLabel={controlHelpAria(ui.controlHelp, ui.display)}>
           <Toggle label={ui.toggles.original} checked={showOriginalSignal} onChange={setShowOriginalSignal} />
-          <Toggle label={ui.toggles.windingPath} checked={showWindingPath} onChange={setShowWindingPath} />
-          <Toggle label={ui.toggles.vectors} checked={showWindingVectors} onChange={setShowWindingVectors} />
-          <Toggle label={ui.toggles.center} checked={showCenterOfMass} onChange={setShowCenterOfMass} />
-          <Toggle label={ui.toggles.spectrum} checked={showSpectrum} onChange={setShowSpectrum} />
-          <Toggle label={ui.toggles.reconstruction} checked={showReconstruction} onChange={setShowReconstruction} />
-          <Toggle label={ui.toggles.residual} checked={showResidual} onChange={setShowResidual} />
+          {!(lessonKey === 'spectrum' && spectrumView === 'pair') && (
+            <>
+              <Toggle label={ui.toggles.windingPath} checked={showWindingPath} onChange={setShowWindingPath} />
+              <Toggle label={ui.toggles.vectors} checked={showWindingVectors} onChange={setShowWindingVectors} />
+              <Toggle label={ui.toggles.center} checked={showCenterOfMass} onChange={setShowCenterOfMass} />
+              <Toggle label={ui.toggles.spectrum} checked={showSpectrum} onChange={setShowSpectrum} />
+              <Toggle label={ui.toggles.reconstruction} checked={showReconstruction} onChange={setShowReconstruction} />
+              <Toggle label={ui.toggles.residual} checked={showResidual} onChange={setShowResidual} />
+            </>
+          )}
           <Toggle label={ui.toggles.labels} checked={showLabels} onChange={setShowLabels} />
         </ControlGroup>
         </InspectorSection>
       }
       stage={
-        <div className="graph-help-stage fourier-graph-stage">
+        <div className={`graph-help-stage fourier-graph-stage${lessonKey === 'spectrum' ? ' has-spectrum-view-switch' : ''}`}>
+          {lessonKey === 'spectrum' && (
+            <SpectrumViewSwitch
+              value={spectrumView}
+              label={ui.spectrumViewLabel}
+              probeLabel={ui.probeView}
+              pairLabel={ui.pairView}
+              onChange={changeSpectrumView}
+            />
+          )}
           <GraphCanvas
             className="graph-canvas fourier-canvas"
-            ariaLabel={`${copy.title}. ${copy.what}`}
+            ariaLabel={getFourierCanvasAriaLabel(copy, locale, spectrumView, frequencyPair)}
             xMin={0}
             xMax={1}
             yMin={-1.25}
@@ -757,9 +867,10 @@ export function FourierLesson({ lessonId }: Props) {
             { label: ui.reset, icon: <RotateCcw size={16} />, onClick: () => {
               setPlaying(false)
               resetLesson(lessonKey, selectedPreset.defaultFrequency, setSelectedFrequency, setCoefficientCount, setCutoff, setPlayhead)
+              if (lessonKey === 'spectrum' && spectrumView === 'pair') setPairFrequency(clampPairFrequency(Math.abs(selectedPreset.defaultFrequency)))
             } },
           ]}
-          progress={{ label: ui.playbackProgress, value: playbackProgress, onChange: seekPlaybackProgress }}
+          progress={{ label: lessonKey === 'spectrum' && spectrumView === 'pair' ? ui.pairPlaybackProgress : ui.playbackProgress, value: playbackProgress, onChange: seekPlaybackProgress }}
           speed={{ label: ui.controls.speed, value: playbackSpeed, min: 0.25, max: 3, step: 0.05, onChange: setPlaybackSpeed }}
         />
       )}
@@ -780,13 +891,11 @@ export function FourierLesson({ lessonId }: Props) {
           <Formula tex={copy.formulaTex} block label={copy.formula} />
         </p>
         <h2>{ui.seeing}</h2>
-        <p>{renderFourierWhat(lessonKey, locale, copy.what, (term) => setHelpMode({ kind: 'term', term }))}</p>
+        <p>{renderFourierWhat(lessonKey, locale, copy.what, (term) => setHelpMode({ kind: 'term', term }), spectrumView)}</p>
         <p>{copy.why}</p>
         <h2>{ui.watch}</h2>
         <p className="input-help">
-          {locale === 'zh'
-            ? '约定：t 在 [0,1]，N 是采样数，n 是采样点编号。f=1 表示整段信号绕一圈，f=3 表示绕三圈，f=-3 表示反方向绕三圈。公式里的负号规定分析时的旋转方向；重建时用相反方向加回来。'
-            : 'Convention: t is in [0,1], N is the sample count, and n is the sample index. f=1 means one turn, f=3 means three turns, and f=-3 turns the opposite way. The minus sign sets the analysis rotation direction; reconstruction adds components back with the opposite sign.'}
+          {getFourierConventionCopy(lessonKey, spectrumView, locale)}
         </p>
         <p>{getWatchCopy(lessonKey, locale, copy.watch, presetId, filterType)}</p>
         </>
@@ -856,6 +965,8 @@ function Range({
 
 function getFourierPlaybackProgress({
   lessonKey,
+  spectrumView,
+  playhead,
   selectedFrequency,
   frequencyMin,
   frequencyMax,
@@ -864,6 +975,8 @@ function getFourierPlaybackProgress({
   cutoff,
 }: {
   lessonKey: 'spectrum' | 'reconstruction' | 'filtering'
+  spectrumView: SpectrumView
+  playhead: number
   selectedFrequency: number
   frequencyMin: number
   frequencyMax: number
@@ -871,6 +984,7 @@ function getFourierPlaybackProgress({
   maxHarmonic: number
   cutoff: number
 }): number {
+  if (lessonKey === 'spectrum' && spectrumView === 'pair') return clampProgress(playhead)
   if (lessonKey === 'spectrum') return progressFromValue(selectedFrequency, frequencyMin, frequencyMax)
   if (lessonKey === 'reconstruction') return progressFromValue(coefficientCount, 1, maxHarmonic * 2 + 1)
   if (lessonKey === 'filtering') return progressFromValue(cutoff, 0, maxHarmonic)
@@ -900,6 +1014,40 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
   )
 }
 
+function SpectrumViewSwitch({
+  value,
+  label,
+  probeLabel,
+  pairLabel,
+  onChange,
+}: {
+  value: SpectrumView
+  label: string
+  probeLabel: string
+  pairLabel: string
+  onChange: (view: SpectrumView) => void
+}) {
+  const options: Array<{ value: SpectrumView; label: string }> = [
+    { value: 'probe', label: probeLabel },
+    { value: 'pair', label: pairLabel },
+  ]
+  return (
+    <div className="fourier-spectrum-view-switch" role="group" aria-label={label} data-view={value}>
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          aria-pressed={value === option.value}
+          className={value === option.value ? 'active' : ''}
+          onClick={() => onChange(option.value)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 function ControlGroup({ title, children, onHelp, helpAriaLabel }: { title: string; children: ReactNode; onHelp?: () => void; helpAriaLabel?: string }) {
   return (
     <div className="fourier-control-group">
@@ -924,7 +1072,7 @@ function controlHelpAria(prefix: string, title: string): string {
   return `${prefix}: ${title}`
 }
 
-function renderFourierWhat(lessonId: string, locale: FourierLocale, fallback: string, onTerm: (term: FourierTermId) => void): ReactNode {
+function renderFourierWhat(lessonId: string, locale: FourierLocale, fallback: string, onTerm: (term: FourierTermId) => void, spectrumView: SpectrumView = 'probe'): ReactNode {
   const term = (id: FourierTermId, labelText: string) => (
     <TermButton key={id} onClick={() => onTerm(id)}>
       {labelText}
@@ -932,6 +1080,17 @@ function renderFourierWhat(lessonId: string, locale: FourierLocale, fallback: st
   )
 
   if (lessonId === 'spectrum') {
+    if (spectrumView === 'pair') {
+      return locale === 'zh' ? (
+        <>
+          当前真实信号在 {term('frequency', '+f 和 -f')} 处产生一对共轭 {term('coefficient', '系数')}；重建时两根箭头反向旋转，合成一条真实的 {term('reconstruction', '频率对波形')}。
+        </>
+      ) : (
+        <>
+          The current real signal creates conjugate {term('coefficient', 'coefficients')} at {term('frequency', '+f and -f')}. During {term('reconstruction', 'reconstruction')}, their arrows rotate in opposite directions and sum to one real pair contribution.
+        </>
+      )
+    }
     return locale === 'zh' ? (
       <>
         {term('spectrum', '频谱')} 是很多次“频率测试”的结果；每个测试 {term('frequency', '频率')} 都会产生一个 {term('coefficient', '系数')}，柱子越高代表平均点越偏离中心。
@@ -970,11 +1129,71 @@ function renderFourierWhat(lessonId: string, locale: FourierLocale, fallback: st
   return fallback
 }
 
-function getFourierHelpTopic(mode: FourierHelpMode, lessonId: string, locale: FourierLocale): HelpTopic {
+function getFourierHelpTopic(mode: FourierHelpMode, lessonId: string, locale: FourierLocale, spectrumView: SpectrumView): HelpTopic {
   if (mode.kind === 'term') return fourierTermTopic(mode.term, locale)
-  if (mode.kind === 'control') return fourierControlTopic(mode.group, locale)
-  if (mode.kind === 'graph') return fourierGraphTopic(lessonId, locale)
+  if (mode.kind === 'control') {
+    if (lessonId === 'spectrum' && spectrumView === 'pair') return fourierPairControlTopic(mode.group, locale)
+    return fourierControlTopic(mode.group, locale)
+  }
+  if (mode.kind === 'graph') return fourierGraphTopic(lessonId, locale, spectrumView)
+  if (lessonId === 'spectrum' && spectrumView === 'pair') return fourierPairBeginnerTopic(locale)
   return fourierBeginnerTopic(locale)
+}
+
+function fourierPairBeginnerTopic(locale: FourierLocale): HelpTopic {
+  return locale === 'zh'
+    ? {
+        eyebrow: '笔记',
+        title: '从镜像系数到真实波形',
+        summary: '这个视图从当前信号计算 C(+f) 和 C(-f)，再把它们作为两根反向旋转的箭头加回来。',
+        sections: [
+          { title: '为什么成对', body: '真实信号满足 C(-f)=C(f)*。两根箭头长度相同、角度互为镜像，所以纵向虚数部分抵消。' },
+          { title: '合成结果', body: '黄色箭头始终留在实轴上；它的横坐标随时间变化，正好形成上方黄色的频率对波形。' },
+          { title: '不是完整原信号', body: '上方青色曲线仍是完整原信号，黄色曲线只表示当前 ±f 这一对系数的合成结果。弱频率处它自然会很小。' },
+          { title: '非整数频率', body: '非整数 f 是连续频率扫描得到的一次测试结果；整数 f 才直接对应离散 Fourier 重建中的一个频率块。' },
+        ],
+      }
+    : {
+        eyebrow: 'Notes',
+        title: 'From mirror coefficients to a real wave',
+        summary: 'This view computes C(+f) and C(-f) from the current signal, then adds them back as two oppositely rotating arrows.',
+        sections: [
+          { title: 'Why a pair', body: 'A real signal satisfies C(-f)=C(f)*. The arrows have equal lengths and mirrored angles, so their vertical imaginary parts cancel.' },
+          { title: 'The sum', body: 'The yellow resultant stays on the real axis. Its horizontal coordinate over time is the yellow pair-contribution curve above.' },
+          { title: 'Not the whole signal', body: 'The cyan curve is the full source signal. The yellow curve is only the contribution synthesized from the selected ±f coefficients, so weak frequencies remain visibly small.' },
+          { title: 'Non-integer frequencies', body: 'A non-integer f is one continuous frequency test. Integer f directly matches a frequency block in the discrete Fourier reconstruction.' },
+        ],
+      }
+}
+
+function fourierPairControlTopic(group: FourierControlGroupId, locale: FourierLocale): HelpTopic {
+  if (group !== 'spectrum' && group !== 'display') return fourierControlTopic(group, locale)
+  if (group === 'display') {
+    return locale === 'zh'
+      ? { eyebrow: '参数说明', title: '合成显示', summary: '显示开关只改变画面，不改变 C(+f)、C(-f) 或合成结果。', sections: [{ title: '曲线与标签', body: '原始信号可以隐藏，以便单独观察黄色频率对波形；标签开关控制画布标题、箭头与频谱柱标注。' }] }
+      : { eyebrow: 'Parameter notes', title: 'Synthesis display', summary: 'Display toggles do not change C(+f), C(-f), or the synthesized result.', sections: [{ title: 'Curves and labels', body: 'The source signal can be hidden to isolate the yellow pair contribution. Labels controls panel, arrow, and spectrum-bar annotations.' }] }
+  }
+  return locale === 'zh'
+    ? {
+        eyebrow: '参数说明',
+        title: '频率对 ±f',
+        summary: '这里选择一个非负 f，并始终同时计算当前真实信号的 C(+f) 与 C(-f)。',
+        sections: [
+          { title: '频率', body: 'f=1 表示单位区间内转一圈。吸附整数便于连接离散重建；关闭后可以观察连续频率测试。' },
+          { title: '真实大小', body: '箭头和柱子直接使用系数大小，不会因为频率很弱而单独放大。' },
+          { title: '直流项', body: 'f=0 与自身镜像重合，因此只显示一个静止的 C(0)，不会重复相加。' },
+        ],
+      }
+    : {
+        eyebrow: 'Parameter notes',
+        title: 'Frequency pair ±f',
+        summary: 'Choose a non-negative f; the view always computes both C(+f) and C(-f) from the current real signal.',
+        sections: [
+          { title: 'Frequency', body: 'f=1 makes one turn over the unit interval. Integer snap connects directly to discrete reconstruction; disabling it explores the continuous frequency test.' },
+          { title: 'True magnitude', body: 'Arrow and bar lengths use the actual coefficient magnitude and are not enlarged just because the frequency is weak.' },
+          { title: 'DC', body: 'At f=0 the mirror is the same coefficient, so the view shows one stationary C(0) and never doubles it.' },
+        ],
+      }
 }
 
 function fourierBeginnerTopic(locale: FourierLocale): HelpTopic {
@@ -1313,7 +1532,7 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
   return topics[group]
 }
 
-function fourierGraphTopic(lessonId: string, locale: FourierLocale): HelpTopic {
+function fourierGraphTopic(lessonId: string, locale: FourierLocale, spectrumView: SpectrumView): HelpTopic {
   if (lessonId === 'reconstruction') {
     return locale === 'zh'
       ? {
@@ -1354,6 +1573,30 @@ function fourierGraphTopic(lessonId: string, locale: FourierLocale): HelpTopic {
           sections: [
             { title: 'Top curves', body: 'Removing high frequencies usually smooths corners and noise. Removing low frequencies weakens slow trends.' },
             { title: 'Bottom spectrum', body: 'Kept frequencies still have bars; removed frequencies shrink or disappear.' },
+          ],
+        }
+  }
+
+  if (spectrumView === 'pair') {
+    return locale === 'zh'
+      ? {
+          eyebrow: '视觉笔记',
+          title: '正负频率合成视图',
+          summary: '上方比较完整原信号与当前 ±f 频率对的贡献；下方把同一对系数画成箭头和镜像频谱柱。',
+          sections: [
+            { title: '上方曲线', body: '青色是完整原信号，黄色只由 C(+f) 和 C(-f) 合成。移动时间进度时，黄色游标值与下方黄色合向量的横坐标一致。' },
+            { title: '双箭头', body: '青色 +f 箭头和紫色 -f 箭头反向旋转。虚线平行四边形显示向量相加；两者纵向部分抵消，黄色合向量留在实轴。' },
+            { title: '镜像柱', body: '右下两根柱子使用真实 |C(-f)| 与 |C(+f)|。对真实信号两者相等；f=0 时只显示一个直流柱。' },
+          ],
+        }
+      : {
+          eyebrow: 'Visual notes',
+          title: 'Positive and negative frequency synthesis',
+          summary: 'The top compares the full source signal with the selected ±f pair contribution; below, the same coefficients appear as arrows and mirror spectrum bars.',
+          sections: [
+            { title: 'Top curves', body: 'Cyan is the full source signal; yellow is synthesized only from C(+f) and C(-f). The yellow cursor value matches the horizontal coordinate of the yellow resultant below.' },
+            { title: 'Two arrows', body: 'The cyan +f and purple -f arrows rotate in opposite directions. A dashed parallelogram shows vector addition; their vertical parts cancel, leaving the yellow result on the real axis.' },
+            { title: 'Mirror bars', body: 'The lower-right bars use the true |C(-f)| and |C(+f)| values. They match for a real signal; f=0 shows one DC bar.' },
           ],
         }
   }
@@ -1494,7 +1737,8 @@ function formula(tex: string) {
 function drawFourierScene(ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme, state: DrawState) {
   ctx.fillStyle = theme.background
   ctx.fillRect(0, 0, viewport.width, viewport.height)
-  if (state.lessonId === 'spectrum') drawSpectrumLesson(ctx, viewport, theme, state)
+  if (state.lessonId === 'spectrum' && state.spectrumView === 'pair') drawFrequencyPairLesson(ctx, viewport, theme, state)
+  else if (state.lessonId === 'spectrum') drawSpectrumLesson(ctx, viewport, theme, state)
   if (state.lessonId === 'reconstruction') drawReconstructionLesson(ctx, viewport, theme, state)
   if (state.lessonId === 'filtering') drawFilteringLesson(ctx, viewport, theme, state)
 }
@@ -1510,6 +1754,183 @@ function drawSpectrumLesson(ctx: CanvasRenderingContext2D, viewport: GraphViewpo
   drawSignalPanel(ctx, signalRect, theme, state.samples, true, state.playhead, state.showLabels ? label(state.locale, 'Time signal', '时间信号') : '')
   if (state.showSpectrum) drawSpectrumPanel(ctx, spectrumRect, theme, state.spectrum, state.selectedFrequency, state.logMagnitude, state.positiveOnly, state.showPhase, state.showLabels ? label(state.locale, 'Magnitude spectrum', '幅值频谱') : '')
   drawWindingPanel(ctx, windingRect, theme, state)
+}
+
+function drawFrequencyPairLesson(ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme, state: DrawState) {
+  const pairTheme = getFrequencyPairTheme(theme)
+  const compact = viewport.width < 720
+  const gap = compact ? 10 : 14
+  const signalHeight = viewport.height * (compact ? 0.28 : 0.3)
+  const signalRect = { x: gap, y: gap, width: viewport.width - gap * 2, height: signalHeight }
+  const lowerY = signalRect.y + signalRect.height + gap
+  let pairRect: Rect
+  let spectrumRect: Rect
+
+  if (compact) {
+    const remaining = viewport.height - lowerY - gap * 2
+    const pairHeight = remaining * 0.68
+    pairRect = { x: gap, y: lowerY, width: viewport.width - gap * 2, height: pairHeight }
+    spectrumRect = { x: gap, y: lowerY + pairHeight + gap, width: viewport.width - gap * 2, height: remaining - pairHeight }
+  } else {
+    pairRect = { x: gap, y: lowerY, width: viewport.width * 0.62 - gap * 1.5, height: viewport.height - lowerY - gap }
+    spectrumRect = { x: pairRect.x + pairRect.width + gap, y: lowerY, width: viewport.width - pairRect.width - gap * 3, height: pairRect.height }
+  }
+
+  drawPairSignalPanel(ctx, signalRect, pairTheme, state)
+  drawFrequencyPairPlane(ctx, pairRect, pairTheme, state)
+  drawFrequencyPairSpectrum(ctx, spectrumRect, pairTheme, state)
+}
+
+function getFrequencyPairTheme(theme: GraphTheme): GraphTheme {
+  if (theme.background.toLowerCase() !== '#fbfcfd') return theme
+  return {
+    ...theme,
+    primary: '#0b7a70',
+    secondary: '#6c4fc0',
+    warning: '#716f00',
+  }
+}
+
+function drawPairSignalPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, state: DrawState) {
+  drawPanel(ctx, rect, theme, state.showLabels ? label(state.locale, 'Source and selected pair', '原信号与当前频率对') : '')
+  drawGridLines(ctx, rect, theme)
+  const displayedSamples = [
+    ...(state.showOriginalSignal ? state.samples : []),
+    ...state.frequencyPairSamples,
+  ]
+  const amplitudeRange = signalAmplitudeRange(displayedSamples)
+  drawAmplitudeScale(ctx, rect, theme, amplitudeRange)
+  if (state.showOriginalSignal) drawSamples(ctx, rect, state.samples, theme.primary, 1.8, false, amplitudeRange)
+  drawSamples(ctx, rect, state.frequencyPairSamples, theme.warning, 2.4, false, amplitudeRange)
+  const cursorX = rect.x + 10 + clampProgress(state.playhead) * (rect.width - 20)
+  ctx.strokeStyle = theme.accent
+  ctx.lineWidth = 1.3
+  ctx.beginPath()
+  ctx.moveTo(cursorX, rect.y + 9)
+  ctx.lineTo(cursorX, rect.y + rect.height - 9)
+  ctx.stroke()
+  if (state.showLabels) {
+    drawFourierLegend(ctx, rect, theme, [
+      ...(state.showOriginalSignal ? [{ label: label(state.locale, 'source', '原信号'), color: theme.primary }] : []),
+      { label: label(state.locale, 'selected ±f pair', '当前 ±f 频率对'), color: theme.warning },
+    ])
+  }
+}
+
+function drawFrequencyPairPlane(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, state: DrawState) {
+  drawPanel(ctx, rect, theme, state.showLabels ? label(state.locale, 'Opposite rotations and their sum', '反向旋转与合向量') : '')
+  const frame = computeFrequencyPairFrame(state.frequencyPair, state.playhead)
+  const center = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 + (rect.height < 150 ? 4 : 10) }
+  const sourceRange = state.samples.reduce((max, value) => Math.max(max, Math.abs(value)), 0)
+  const vectorRange = Math.max(
+    1.25,
+    sourceRange,
+    Math.hypot(frame.sum.re, frame.sum.im),
+    Math.hypot(frame.positive.re, frame.positive.im) + (frame.negative ? Math.hypot(frame.negative.re, frame.negative.im) : 0),
+  ) * 1.12
+  const scale = Math.max(1, Math.min(rect.width, rect.height) * 0.4 / vectorRange)
+
+  ctx.strokeStyle = theme.gridMinor
+  ctx.lineWidth = 1
+  for (const fraction of [0.25, 0.5, 0.75, 1]) {
+    ctx.beginPath()
+    ctx.arc(center.x, center.y, vectorRange * fraction * scale, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+  ctx.strokeStyle = theme.axis
+  ctx.beginPath()
+  ctx.moveTo(rect.x + 12, center.y)
+  ctx.lineTo(rect.x + rect.width - 12, center.y)
+  ctx.moveTo(center.x, rect.y + 28)
+  ctx.lineTo(center.x, rect.y + rect.height - 12)
+  ctx.stroke()
+
+  const positiveTip = complexToScreen(center, scale, frame.positive)
+  const sumTip = complexToScreen(center, scale, frame.sum)
+
+  if (frame.negative) {
+    const negativeTip = complexToScreen(center, scale, frame.negative)
+    drawArrow(ctx, center, positiveTip, theme.primary, 2.5)
+    drawArrow(ctx, center, negativeTip, theme.secondary, 2.5)
+    drawDashedSegment(ctx, positiveTip, sumTip, theme.secondary)
+    drawDashedSegment(ctx, negativeTip, sumTip, theme.primary)
+    drawDashedSegment(ctx, positiveTip, { x: positiveTip.x, y: center.y }, theme.primary)
+    drawDashedSegment(ctx, negativeTip, { x: negativeTip.x, y: center.y }, theme.secondary)
+    if (state.showLabels && rect.height >= 145) {
+      drawCanvasLabel(ctx, `+${formatFrequency(state.frequencyPair.frequency)}`, positiveTip, theme.primary, rect)
+      drawCanvasLabel(ctx, `-${formatFrequency(state.frequencyPair.frequency)}`, negativeTip, theme.secondary, rect)
+    }
+    drawArrow(ctx, center, sumTip, theme.warning, 3.2)
+    drawDot(ctx, sumTip.x, sumTip.y, theme.warning, 4)
+    if (state.showLabels) drawCanvasLabel(ctx, label(state.locale, 'real sum', '实数合成'), sumTip, theme.warning, rect, true)
+  } else {
+    drawArrow(ctx, center, sumTip, theme.warning, 3.2)
+    drawDot(ctx, sumTip.x, sumTip.y, theme.warning, 4)
+    if (state.showLabels) drawCanvasLabel(ctx, label(state.locale, 'C(0) = real sum', 'C(0) = 实数合成'), sumTip, theme.warning, rect, true)
+  }
+
+  if (state.showLabels) {
+    ctx.fillStyle = theme.muted
+    ctx.font = '11px Inter, system-ui, sans-serif'
+    ctx.textAlign = 'left'
+    ctx.fillText(
+      state.frequencyPair.frequency === 0
+        ? label(state.locale, 'DC is its own mirror', 'DC 与自身镜像重合')
+        : label(state.locale, 'vertical parts cancel', '纵向分量相消'),
+      rect.x + 10,
+      rect.y + rect.height - 10,
+    )
+  }
+}
+
+function drawFrequencyPairSpectrum(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, state: DrawState) {
+  drawPanel(ctx, rect, theme, state.showLabels ? label(state.locale, 'Mirror coefficients', '镜像频率系数') : '')
+  const base = rect.y + rect.height - Math.min(28, rect.height * 0.24)
+  const top = rect.y + Math.min(36, rect.height * 0.32)
+  const height = Math.max(4, base - top)
+  const sourceRange = Math.max(1.25, ...state.samples.map((value) => Math.abs(value)))
+  ctx.strokeStyle = theme.axis
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(rect.x + 12, base)
+  ctx.lineTo(rect.x + rect.width - 12, base)
+  ctx.stroke()
+
+  if (state.frequencyPair.frequency === 0 || !state.frequencyPair.negative) {
+    const barTop = drawPairSpectrumBar(ctx, rect.x + rect.width / 2, base, height, state.frequencyPair.positive.magnitude, sourceRange, theme.primary)
+    if (state.showLabels) drawPairSpectrumLabel(ctx, rect.x + rect.width / 2, base, barTop, '0', state.frequencyPair.positive.magnitude, theme)
+    return
+  }
+
+  const negativeX = rect.x + rect.width * 0.3
+  const positiveX = rect.x + rect.width * 0.7
+  const negativeTop = drawPairSpectrumBar(ctx, negativeX, base, height, state.frequencyPair.negative.magnitude, sourceRange, theme.secondary)
+  const positiveTop = drawPairSpectrumBar(ctx, positiveX, base, height, state.frequencyPair.positive.magnitude, sourceRange, theme.primary)
+  if (state.showLabels) {
+    drawPairSpectrumLabel(ctx, negativeX, base, negativeTop, `-${formatFrequency(state.frequencyPair.frequency)}`, state.frequencyPair.negative.magnitude, theme)
+    drawPairSpectrumLabel(ctx, positiveX, base, positiveTop, `+${formatFrequency(state.frequencyPair.frequency)}`, state.frequencyPair.positive.magnitude, theme)
+  }
+}
+
+function drawPairSpectrumBar(ctx: CanvasRenderingContext2D, x: number, base: number, availableHeight: number, magnitude: number, scaleRange: number, color: string): number {
+  const barHeight = Math.min(availableHeight, magnitude / Math.max(1e-9, scaleRange) * availableHeight)
+  ctx.strokeStyle = color
+  ctx.lineWidth = 8
+  ctx.beginPath()
+  ctx.moveTo(x, base)
+  ctx.lineTo(x, base - barHeight)
+  ctx.stroke()
+  drawDot(ctx, x, base - barHeight, color, 3)
+  return base - barHeight
+}
+
+function drawPairSpectrumLabel(ctx: CanvasRenderingContext2D, x: number, base: number, barTop: number, frequency: string, magnitude: number, theme: GraphTheme) {
+  ctx.fillStyle = theme.muted
+  ctx.font = '10px Inter, system-ui, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.fillText(frequency, x, base + 13)
+  ctx.fillText(`|C| ${formatNumber(magnitude)}`, x, barTop - 7)
+  ctx.textAlign = 'left'
 }
 
 function drawReconstructionLesson(ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme, state: DrawState) {
@@ -1846,6 +2267,52 @@ function drawDot(ctx: CanvasRenderingContext2D, x: number, y: number, color: str
   ctx.fill()
 }
 
+function drawArrow(ctx: CanvasRenderingContext2D, from: { x: number; y: number }, to: { x: number; y: number }, color: string, width: number) {
+  const angle = Math.atan2(to.y - from.y, to.x - from.x)
+  const length = Math.hypot(to.x - from.x, to.y - from.y)
+  const head = Math.min(10, Math.max(5, length * 0.22))
+  ctx.strokeStyle = color
+  ctx.fillStyle = color
+  ctx.lineWidth = width
+  ctx.setLineDash([])
+  ctx.beginPath()
+  ctx.moveTo(from.x, from.y)
+  ctx.lineTo(to.x, to.y)
+  ctx.stroke()
+  if (length < 2) {
+    drawDot(ctx, to.x, to.y, color, Math.max(2.5, width))
+    return
+  }
+  ctx.beginPath()
+  ctx.moveTo(to.x, to.y)
+  ctx.lineTo(to.x - head * Math.cos(angle - Math.PI / 6), to.y - head * Math.sin(angle - Math.PI / 6))
+  ctx.lineTo(to.x - head * Math.cos(angle + Math.PI / 6), to.y - head * Math.sin(angle + Math.PI / 6))
+  ctx.closePath()
+  ctx.fill()
+}
+
+function drawDashedSegment(ctx: CanvasRenderingContext2D, from: { x: number; y: number }, to: { x: number; y: number }, color: string) {
+  ctx.strokeStyle = color
+  ctx.lineWidth = 1.1
+  ctx.setLineDash([4, 4])
+  ctx.beginPath()
+  ctx.moveTo(from.x, from.y)
+  ctx.lineTo(to.x, to.y)
+  ctx.stroke()
+  ctx.setLineDash([])
+}
+
+function drawCanvasLabel(ctx: CanvasRenderingContext2D, text: string, point: { x: number; y: number }, color: string, rect: Rect, preferBelow = false) {
+  ctx.font = '11px Inter, system-ui, sans-serif'
+  const width = ctx.measureText(text).width
+  const x = Math.max(rect.x + 6, Math.min(rect.x + rect.width - width - 6, point.x + 7))
+  const proposedY = point.y + (preferBelow ? 17 : -9)
+  const y = Math.max(rect.y + 34, Math.min(rect.y + rect.height - 20, proposedY))
+  ctx.fillStyle = color
+  ctx.textAlign = 'left'
+  ctx.fillText(text, x, y)
+}
+
 function complexToScreen(center: { x: number; y: number }, scale: number, point: { re: number; im: number }) {
   return {
     x: center.x + point.re * scale,
@@ -1865,8 +2332,11 @@ function selectReconstructionCoefficients(coefficients: FourierCoefficient[], mo
 function getValueRows(state: {
   locale: FourierLocale
   lessonKey: string
+  spectrumView: SpectrumView
   selectedFrequency: number
   selectedCoefficient: FourierCoefficient
+  frequencyPair: FrequencyPair
+  playhead: number
   spectrum: Spectrum
   integerSpectrum: Spectrum
   samples: number[]
@@ -1883,6 +2353,20 @@ function getValueRows(state: {
 }): ValueRow[] {
   const dominant = findDominantPeaks(state.spectrum, 4).map((coefficient) => formatPeakFrequency(coefficient.frequency, state.locale)).join(', ')
   const noValue = state.locale === 'zh' ? '无' : 'none'
+  if (state.lessonKey === 'spectrum' && state.spectrumView === 'pair') {
+    const frame = computeFrequencyPairFrame(state.frequencyPair, state.playhead)
+    const isDc = state.frequencyPair.frequency === 0 || !state.frequencyPair.negative
+    return [
+      { label: state.locale === 'zh' ? '频率对' : 'frequency pair', value: isDc ? '0' : `±${formatFrequency(state.frequencyPair.frequency)}` },
+      { label: 'C(+f)', value: formatComplexValue(state.frequencyPair.positive.value) },
+      { label: 'C(-f)', value: state.frequencyPair.negative ? formatComplexValue(state.frequencyPair.negative.value) : (state.locale === 'zh' ? '与 C(0) 重合' : 'same as C(0)') },
+      { label: '|C(+f)|', value: formatNumber(state.frequencyPair.positive.magnitude) },
+      { label: '|C(-f)|', value: state.frequencyPair.negative ? formatNumber(state.frequencyPair.negative.magnitude) : '—' },
+      { label: 't', value: formatNumber(state.playhead) },
+      { label: state.locale === 'zh' ? '合成实部' : 'pair real sum', value: formatNumber(frame.sum.re) },
+      { label: state.locale === 'zh' ? '剩余虚部' : 'remaining imaginary', value: formatNumber(frame.sum.im) },
+    ]
+  }
   if (state.lessonKey === 'spectrum') {
     return [
       { label: state.locale === 'zh' ? '频率范围' : 'frequency range', value: formatFrequencyRange(state.spectrum.frequencyMin, state.spectrum.frequencyMax, state.locale) },
@@ -1965,7 +2449,7 @@ function getFourierPresetDescription(preset: SignalPreset, locale: FourierLocale
   return locale === 'zh' ? preset.descriptionZh ?? preset.description : preset.description
 }
 
-function getPlaybackLabels(lessonKey: string, playing: boolean, locale: FourierLocale): { label: string; ariaLabel: string } {
+function getPlaybackLabels(lessonKey: string, playing: boolean, locale: FourierLocale, spectrumView: SpectrumView = 'probe'): { label: string; ariaLabel: string } {
   if (playing) {
     const labelText = locale === 'zh' ? '暂停' : 'Pause'
     return { label: labelText, ariaLabel: labelText }
@@ -1976,6 +2460,10 @@ function getPlaybackLabels(lessonKey: string, playing: boolean, locale: FourierL
   }
   if (lessonKey === 'filtering') {
     const labelText = locale === 'zh' ? '扫过截止频率' : 'Sweep cutoff'
+    return { label: labelText, ariaLabel: labelText }
+  }
+  if (lessonKey === 'spectrum' && spectrumView === 'pair') {
+    const labelText = locale === 'zh' ? '播放旋转' : 'Play rotation'
     return { label: labelText, ariaLabel: labelText }
   }
   const labelText = locale === 'zh' ? '扫描频率' : 'Scan frequencies'
@@ -2042,6 +2530,18 @@ function isReconstructionMode(value: string | null): value is ReconstructionMode
   return value === 'paired-frequency-blocks' || value === 'first-harmonics' || value === 'top-magnitudes'
 }
 
+function readSpectrumViewParam(): SpectrumView {
+  return readParam('view') === 'pair' ? 'pair' : 'probe'
+}
+
+function replaceSpectrumViewParam(view: SpectrumView) {
+  if (typeof window === 'undefined') return
+  const url = new URL(window.location.href)
+  if (view === 'pair') url.searchParams.set('view', 'pair')
+  else url.searchParams.delete('view')
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+}
+
 function readParam(name: string): string | null {
   if (typeof window === 'undefined') return null
   return new URLSearchParams(window.location.search).get(name)
@@ -2064,6 +2564,11 @@ function clampInteger(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, Math.round(value)))
 }
 
+function clampPairFrequency(value: number): number {
+  if (!Number.isFinite(value)) return 0
+  return Math.max(0, Math.min(30, value))
+}
+
 function round(value: number): number {
   return Math.round(value * 1000) / 1000
 }
@@ -2071,6 +2576,11 @@ function round(value: number): number {
 function formatNumber(value: number): string {
   if (!Number.isFinite(value)) return '0'
   return String(round(value))
+}
+
+function formatComplexValue(value: { re: number; im: number }): string {
+  const sign = value.im < 0 ? '-' : '+'
+  return `${formatNumber(value.re)} ${sign} ${formatNumber(Math.abs(value.im))}i`
 }
 
 function formatFrequency(value: number): string {
@@ -2091,6 +2601,26 @@ function formatPeakFrequency(value: number, locale: FourierLocale): string {
 
 function label(locale: FourierLocale, en: string, zh: string): string {
   return locale === 'zh' ? zh : en
+}
+
+function getFourierCanvasAriaLabel(copy: LessonCopy, locale: FourierLocale, spectrumView: SpectrumView, pair: FrequencyPair): string {
+  if (spectrumView !== 'pair') return `${copy.title}. ${copy.what}`
+  const pairLabel = pair.frequency === 0 ? '0' : `±${formatFrequency(pair.frequency)}`
+  const negativeMagnitude = pair.negative?.magnitude ?? pair.positive.magnitude
+  return locale === 'zh'
+    ? `${copy.title}。当前频率对 ${pairLabel}；正频率幅值 ${formatNumber(pair.positive.magnitude)}，负频率幅值 ${formatNumber(negativeMagnitude)}。${copy.what}`
+    : `${copy.title}. Current frequency pair ${pairLabel}; positive magnitude ${formatNumber(pair.positive.magnitude)}, negative magnitude ${formatNumber(negativeMagnitude)}. ${copy.what}`
+}
+
+function getFourierConventionCopy(lessonKey: string, spectrumView: SpectrumView, locale: FourierLocale): string {
+  if (lessonKey === 'spectrum' && spectrumView === 'pair') {
+    return locale === 'zh'
+      ? '约定：分析时 C(f) 使用负指数；这里重建时用正指数加回来。对真实信号 C(-f)=C(f)*，因此两根箭头的虚部相消。非整数 f 只表示当前连续频率测试得到的一对系数。'
+      : 'Convention: analysis uses a negative exponent in C(f), while this reconstruction adds components back with a positive exponent. For a real signal C(-f)=C(f)*, so the arrows cancel in the imaginary direction. Non-integer f denotes one pair from the continuous frequency test.'
+  }
+  return locale === 'zh'
+    ? '约定：t 在 [0,1]，N 是采样数，n 是采样点编号。f=1 表示整段信号绕一圈，f=3 表示绕三圈，f=-3 表示反方向绕三圈。公式里的负号规定分析时的旋转方向；重建时用相反方向加回来。'
+    : 'Convention: t is in [0,1], N is the sample count, and n is the sample index. f=1 means one turn, f=3 means three turns, and f=-3 turns the opposite way. The minus sign sets the analysis rotation direction; reconstruction adds components back with the opposite sign.'
 }
 
 function translateFourierError(message: string, locale: FourierLocale): string {

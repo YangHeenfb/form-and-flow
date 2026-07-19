@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { compileFourierExpression, sampleFourierExpression, sampleFourierPreset } from '../modules/fourier/fourierPresets.ts'
 import { complex, div, expi, formatComplex, magnitude, mul, nearlyEqualComplex } from '../modules/fourier/math/complex.ts'
 import { applyHighPass, applyLowPass } from '../modules/fourier/math/filters.ts'
+import { computeFrequencyPair, computeFrequencyPairFrame, synthesizeFrequencyPair } from '../modules/fourier/math/frequencyPair.ts'
 import { computeCoefficientAtFrequency, computeIntegerSpectrum, findDominantFrequencies, interpolateWindingPoint, selectPairedFrequencyBlocks } from '../modules/fourier/math/fourier.ts'
 import { maxAbsError, reconstructSamples } from '../modules/fourier/math/reconstruction.ts'
 
@@ -92,5 +93,52 @@ describe('fourier transform math', () => {
     expect(interpolateWindingPoint(points, 0.25)).toEqual(complex(1, 1))
     expect(interpolateWindingPoint(points, 0.75)).toEqual(complex(1, 1))
     expect(interpolateWindingPoint([], 0.5)).toBeUndefined()
+  })
+})
+
+describe('conjugate frequency-pair synthesis', () => {
+  it('reconstructs a cosine from equal conjugate arrows', () => {
+    const samples = sampleFourierPreset('cosine-2', 256, false)
+    const pair = computeFrequencyPair(samples, 2)
+
+    expect(pair.positive.magnitude).toBeCloseTo(0.5, 10)
+    expect(pair.negative?.magnitude).toBeCloseTo(0.5, 10)
+    expect(pair.negative?.value.re).toBeCloseTo(pair.positive.value.re, 10)
+    expect(pair.negative?.value.im).toBeCloseTo(-pair.positive.value.im, 10)
+    expect(maxAbsError(samples, synthesizeFrequencyPair(pair, samples.length))).toBeLessThan(1e-10)
+  })
+
+  it('cancels the two arrow heights while reconstructing a sine', () => {
+    const samples = sampleFourierPreset('sine-3', 256, false)
+    const pair = computeFrequencyPair(samples, 3)
+
+    for (const t of [0, 0.071, 0.25, 0.413, 0.9]) {
+      const frame = computeFrequencyPairFrame(pair, t)
+      expect(frame.negative).not.toBeNull()
+      expect(frame.positive.im + frame.negative!.im).toBeCloseTo(0, 10)
+      expect(frame.sum.im).toBeCloseTo(0, 10)
+    }
+    expect(maxAbsError(samples, synthesizeFrequencyPair(pair, samples.length))).toBeLessThan(1e-10)
+  })
+
+  it('keeps a non-peak frequency naturally weak', () => {
+    const samples = sampleFourierPreset('sine-1', 256, false)
+    const pair = computeFrequencyPair(samples, 2)
+    const contribution = synthesizeFrequencyPair(pair, samples.length)
+
+    expect(pair.positive.magnitude).toBeLessThan(0.01)
+    expect(pair.negative?.magnitude).toBeLessThan(0.01)
+    expect(Math.max(...contribution.map(Math.abs))).toBeLessThan(0.01)
+  })
+
+  it('treats DC as one stationary coefficient instead of doubling it', () => {
+    const samples = sampleFourierPreset('constant', 128, false)
+    const pair = computeFrequencyPair(samples, 0)
+    const frame = computeFrequencyPairFrame(pair, 0.73)
+
+    expect(pair.negative).toBeNull()
+    expect(frame.negative).toBeNull()
+    expect(frame.sum.re).toBeCloseTo(1, 10)
+    expect(synthesizeFrequencyPair(pair, samples.length)).toEqual(samples)
   })
 })

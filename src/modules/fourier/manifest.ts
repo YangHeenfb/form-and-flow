@@ -20,7 +20,7 @@ export const fourierManifest: ModuleDefinition = {
   previewKind: 'fourier',
   loadComponent: loadFourierModule,
   explorers: [
-    explorer('spectrum', 'Frequency Spectrum', 'A frequency scan built from the average position of wound signals.', 'A matching frequency fails to cancel around the origin, leaving a visible coefficient.', 'Changing the test frequency links the time curve, winding direction, center of mass, and spectrum position.'),
+    explorer('spectrum', 'Frequency Spectrum', 'Probe a wound signal, then pair its mirrored coefficients to rebuild one real oscillation.', 'A matching probe leaves a visible coefficient; the +f and -f arrows then cancel vertically and add along the real axis.', 'Switching views connects frequency detection, mirrored spectrum peaks, and conjugate-pair synthesis without changing the signal.'),
     explorer('reconstruction', 'Signal Reconstruction', 'A signal rebuilt from selected rotating components.', 'The reconstructed curve gains structure as more coefficients are included.', 'Changing the coefficient set alters both the active spectrum bars and the time-domain approximation.'),
     explorer('filtering', 'Frequency Filtering', 'Time-domain changes produced by editing frequency content.', 'A filter reshapes the signal by retaining some coefficients and suppressing others.', 'Changing the cutoff moves a boundary in the spectrum and immediately changes the reconstructed signal.'),
   ],

@@ -243,9 +243,9 @@ const moduleTranslations: Partial<Record<Locale, Record<string, ModuleTranslatio
       explorers: {
         spectrum: {
           title: '频率频谱',
-          description: '由缠绕信号的平均位置构成的频率扫描。',
-          observation: '匹配的频率不会在原点周围完全抵消，因此会留下可见的系数。',
-          whatChanges: '测试频率同时连接时间曲线、缠绕方向、平均点和频谱位置。',
+          description: '先用缠绕探针检测频率，再用镜像系数对重建一个真实振动。',
+          observation: '匹配的探针会留下可见系数；随后 +f 与 -f 两根箭头纵向抵消、沿实轴相加。',
+          whatChanges: '切换观察方式会把频率检测、镜像频谱峰值和共轭频率对合成连成同一条直觉链。',
           notes: '信号采样于 t∈[0,1]；幅值归一化是显式可选项。',
         },
         reconstruction: {

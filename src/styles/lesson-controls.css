@@ -194,6 +194,10 @@
     grid-template-rows: minmax(0, 1fr) auto;
   }
 
+  .lesson-shell .fourier-graph-stage.has-spectrum-view-switch {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
   .lesson-shell .lesson-stage-actions {
     order: 0;
   }
