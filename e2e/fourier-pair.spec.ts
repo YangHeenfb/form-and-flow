@@ -23,7 +23,7 @@ test.describe('Fourier conjugate frequency-pair view', () => {
     await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
     await expect(page.getByRole('button', { name: '± frequency synthesis' })).toHaveAttribute('aria-pressed', 'true')
     await expect(page.locator('.explorer-stage-header h1')).toHaveText('Positive and Negative Frequency Synthesis')
-    await expect(page.getByRole('slider', { name: 'frequency pair ±f' })).toHaveValue('3')
+    await expect(page.getByRole('slider', { name: 'rotation frequency ±f' })).toHaveValue('3')
   })
 
   test('switches views from the keyboard and keeps the default URL clean', async ({ page }) => {
@@ -36,7 +36,7 @@ test.describe('Fourier conjugate frequency-pair view', () => {
     await page.keyboard.press('Enter')
     await expect(pairButton).toHaveAttribute('aria-pressed', 'true')
     await expect(page).toHaveURL(/view=pair/)
-    await expect(page.getByRole('slider', { name: 'frequency pair ±f' })).toHaveValue('3')
+    await expect(page.getByRole('slider', { name: 'rotation frequency ±f' })).toHaveValue('3')
 
     const probeButton = page.getByRole('button', { name: 'Frequency probe' })
     await probeButton.focus()
@@ -50,16 +50,17 @@ test.describe('Fourier conjugate frequency-pair view', () => {
     await page.goto('/modules/fourier/spectrum?view=pair')
     await expect(page.locator('.module-loading')).toHaveCount(0, { timeout: 15_000 })
 
-    const pairFrequency = page.getByRole('slider', { name: 'frequency pair ±f' })
+    const pairFrequency = page.getByRole('slider', { name: 'rotation frequency ±f' })
     const timeProgress = page.getByRole('slider', { name: 'Time in one cycle' })
     await pairFrequency.fill('3')
     await timeProgress.fill('0.25')
     await expect(pairFrequency).toHaveValue('3')
     await expect(timeProgress).toHaveValue('0.25')
 
-    await page.getByRole('button', { name: 'Readout' }).click()
+    await page.getByRole('button', { name: 'Intuition' }).click()
     const readout = page.locator('.lesson-standard-readout-drawer')
     await expect(readout).toBeVisible()
+    await readout.getByText('Exact readout and formula', { exact: true }).click()
     await expect(readout).toContainText('C(+f)')
     await expect(readout).toContainText('C(-f)')
     await expect(readout).toContainText('remaining imaginary')
@@ -110,7 +111,7 @@ test.describe('Fourier conjugate frequency-pair view', () => {
     await expect(page.locator('.platform-shell')).toHaveAttribute('data-locale', 'zh')
     await expect(page.locator('.explorer-stage-header h1')).toHaveText('正负频率合成')
     await expect(page.getByRole('button', { name: '正负频率合成' })).toHaveAttribute('aria-pressed', 'true')
-    await expect(page.getByRole('slider', { name: '频率对 ±f' })).toBeVisible()
+    await expect(page.getByRole('slider', { name: '旋转频率 ±f' })).toBeVisible()
     await expect(page.getByRole('slider', { name: '单周期时间' })).toBeVisible()
     await expectNoHorizontalOverflow(page)
   })

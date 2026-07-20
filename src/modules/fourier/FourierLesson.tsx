@@ -5,7 +5,7 @@ import { GraphCanvas } from '../../core/graph2d/GraphCanvas.tsx'
 import type { GraphTheme, GraphViewport } from '../../core/graph2d/GraphCanvas.tsx'
 import { ExplorerTransport, InspectorSection } from '../../core/ui/ExplorerChrome.tsx'
 import { Formula } from '../../core/ui/Formula.tsx'
-import { HelpTrigger, LearningDrawer, TermButton, type HelpTopic } from '../../core/ui/LearningHelp.tsx'
+import { HelpTrigger, LearningDrawer, type HelpTopic } from '../../core/ui/LearningHelp.tsx'
 import { LessonScaffold } from '../../core/ui/LessonScaffold.tsx'
 import { expressionToTex } from '../../core/ui/mathNotation.ts'
 import { SelectMenu } from '../../core/ui/SelectMenu.tsx'
@@ -14,11 +14,14 @@ import { LessonStageActions } from '../../platform/LessonStageActions.tsx'
 import { ModuleFocusFrame } from '../../platform/ModuleFocusFrame.tsx'
 import { usePlatformLocale } from '../../platform/platformLocale.tsx'
 import { calculusFunctionNames, completeBareFunctionInput, normalizeMathInput } from '../calculus/shared/mathInput.ts'
+import { FourierExplanation, type FourierValueRow } from './FourierExplanation.tsx'
+import { createFourierExplanationModel, selectCurrentContribution, selectReconstructionCoefficients, type SpectrumView } from './fourierExplanation.ts'
 import type { FilterConfig, FilterType, FourierCoefficient, ReconstructionMode, Spectrum, WindingPoint } from './fourierTypes.ts'
 import { compileFourierExpression, fourierPresets, getFourierPreset, sampleFourierExpression, sampleFourierPreset, type SignalPreset } from './fourierPresets.ts'
+import { axisContains, axisValueToPosition, frequencyAxisTicks, frequencyDisplayDomain, integerMinorTicks, type AxisDomain } from './math/axisTicks.ts'
 import { applyFilter } from './math/filters.ts'
 import { computeFrequencyPair, computeFrequencyPairFrame, synthesizeFrequencyPair, type FrequencyPair } from './math/frequencyPair.ts'
-import { computeCoefficientAtFrequency, computeIntegerSpectrum, computeSpectrum, computeWindingPoints, findDominantFrequencies, interpolateWindingPoint, selectPairedFrequencyBlocks, selectTopCoefficients } from './math/fourier.ts'
+import { computeCoefficientAtFrequency, computeIntegerSpectrum, computeSpectrum, computeWindingPoints, findDominantFrequencies, interpolateWindingPoint } from './math/fourier.ts'
 import { maxAbsError, meanSquaredError, reconstructSamples } from './math/reconstruction.ts'
 
 type Props = {
@@ -26,7 +29,6 @@ type Props = {
 }
 
 type FourierLocale = Locale
-type SpectrumView = 'probe' | 'pair'
 type FourierTermId = 'winding' | 'frequency' | 'coefficient' | 'center-of-mass' | 'spectrum' | 'phase' | 'reconstruction' | 'filtering'
 type FourierControlGroupId = 'samples' | 'spectrum' | 'reconstruction' | 'filtering' | 'display'
 type FourierHelpMode = { kind: 'beginner' } | { kind: 'control'; group: FourierControlGroupId } | { kind: 'graph' } | { kind: 'term'; term: FourierTermId }
@@ -38,11 +40,6 @@ type LessonCopy = {
   formula: string
   formulaTex: string
   watch: string
-}
-
-type ValueRow = {
-  label: string
-  value: string
 }
 
 type SamplesResult = {
@@ -64,6 +61,9 @@ type DrawState = {
   reconstructedSamples: number[]
   filteredSamples: number[]
   includedCoefficients: FourierCoefficient[]
+  currentContributionCoefficients: FourierCoefficient[]
+  currentContributionSamples: number[]
+  filterConfig: FilterConfig
   windingPoints: WindingPoint[]
   spectrumView: SpectrumView
   selectedFrequency: number
@@ -104,6 +104,7 @@ const fourierCopy: Record<FourierLocale, {
     why: string
     formula: string
     values: string
+    intuition: string
     watch: string
     beginnerHelp: string
     controlHelp: string
@@ -142,6 +143,7 @@ const fourierCopy: Record<FourierLocale, {
       why: 'Notes',
       formula: 'Formula',
       values: 'Readout',
+      intuition: 'Intuition',
       watch: 'Notes',
       beginnerHelp: 'Notes',
       controlHelp: 'Parameter notes',
@@ -156,8 +158,8 @@ const fourierCopy: Record<FourierLocale, {
       spectrumViewLabel: 'Spectrum view',
       pairPlaybackProgress: 'Time in one cycle',
       controls: {
-        frequency: 'frequency',
-        pairFrequency: 'frequency pair ±f',
+        frequency: 'winding frequency',
+        pairFrequency: 'rotation frequency ±f',
         sampleCount: 'samples',
         speed: 'speed',
         frequencyMin: 'frequency min',
@@ -192,32 +194,32 @@ const fourierCopy: Record<FourierLocale, {
     lessons: {
       spectrum: {
         title: 'Frequency Spectrum',
-        what: 'A spectrum is the result of testing many frequencies and measuring how far each average point moves from the center.',
-        why: 'Large peaks mean that frequency is strong. Real signals often show mirror peaks at +f and -f because those are two rotation directions.',
+        what: 'Wind the same signal at many test speeds. A matching speed makes the wound graph unbalanced, so its center of mass moves away from the center; plotting those distances produces the spectrum.',
+        why: 'The bar height is the full complex length |C(f)|. Its direction is phase, and real signals often create mirror peaks at +f and -f.',
         formula: '|C(f)| = |1/N sum x[n]e^{-i2πfn/N}|',
         formulaTex: '|C(f)|=\\left|\\frac{1}{N}\\sum_{n=0}^{N-1}x[n]e^{-i2\\pi fn/N}\\right|',
         watch: 'For this signal, look for strong responses near 1 and 3. Because we observe one finite slice, peaks can spread around those values instead of appearing as only one bar.',
       },
       'spectrum-pair': {
         title: 'Positive and Negative Frequency Synthesis',
-        what: 'The coefficients at +f and -f rotate in opposite directions. For a real signal, they are mirror images, so their vertical parts cancel and their sum stays real.',
-        why: 'The two arrows are not two extra physical waves. They are the conjugate complex coordinates used to rebuild one real oscillating contribution from the selected test frequency.',
+        what: 'Read C(+f) and C(-f) from the spectrum and turn them into two mirror arrows rotating in opposite directions. Their vertical parts cancel and their sum stays real.',
+        why: 'The yellow curve is one real contribution made by this pair of arrows, not the complete source signal.',
         formula: 'x±f(t)=C(f)e^{i2πft}+C(-f)e^{-i2πft}=2 Re(C(f)e^{i2πft})',
-        formulaTex: 'x_{\pm f}(t)=C(f)e^{i2\pi ft}+C(-f)e^{-i2\pi ft}=2\operatorname{Re}\!\left(C(f)e^{i2\pi ft}\right)',
+        formulaTex: 'x_{\\pm f}(t)=C(f)e^{i2\\pi ft}+C(-f)e^{-i2\\pi ft}=2\\operatorname{Re}\\!\\left(C(f)e^{i2\\pi ft}\\right)',
         watch: 'Choose a spectrum peak first. At a weak frequency the arrows and reconstructed contribution remain small because this view does not normalize them for display.',
       },
       reconstruction: {
         title: 'Signal Reconstruction',
-        what: 'Reconstruction adds selected frequency components back together. Each coefficient behaves like a small wave with strength and phase.',
-        why: 'In this sampled experiment, a complete set of frequency coefficients can recover the original samples. Keeping only some coefficients gives an approximation.',
+        what: 'Frequency sets an arrow’s rotation speed, while the coefficient sets its length and initial direction. Each selected block makes one contribution, and the contributions add point by point.',
+        why: 'The highlighted dashed curve is the newest contribution. The yellow curve is the cumulative sum of every selected contribution.',
         formula: 'x̂(t)=Σ C(f)e^{i2πft}',
         formulaTex: '\\hat{x}(t)=\\sum_f C(f)e^{i2\\pi ft}',
         watch: 'Smooth signals usually need fewer frequencies. Sharp corners or jumps need many more.',
       },
       filtering: {
         title: 'Frequency Filtering',
-        what: 'Filtering first keeps or weakens chosen parts of the spectrum, then rebuilds the signal from what remains.',
-        why: 'Low-pass keeps slow changes and reduces fast detail, which often smooths noise. High-pass keeps fast detail and weakens slow trends.',
+        what: 'Filtering changes the spectrum bars from C(f) to H(f)C(f), then reuses exactly the same point-by-point reconstruction.',
+        why: 'Low-pass, high-pass, band filters, and magnitude thresholds are different rules for deciding which bars stay and which become zero.',
         formula: 'filtered x̂(t)=Σ H(f)C(f)e^{i2πft}',
         formulaTex: '\\hat{x}_{filtered}(t)=\\sum_f H(f)C(f)e^{i2\\pi ft}',
         watch: 'The cutoff is the shared boundary between the retained spectrum below and the reconstructed signal above.',
@@ -244,6 +246,7 @@ const fourierCopy: Record<FourierLocale, {
       why: '说明',
       formula: '公式',
       values: '读数',
+      intuition: '直觉解释',
       watch: '笔记',
       beginnerHelp: '笔记',
       controlHelp: '参数说明',
@@ -258,8 +261,8 @@ const fourierCopy: Record<FourierLocale, {
       spectrumViewLabel: '频谱观察方式',
       pairPlaybackProgress: '单周期时间',
       controls: {
-        frequency: '频率',
-        pairFrequency: '频率对 ±f',
+        frequency: '缠绕频率',
+        pairFrequency: '旋转频率 ±f',
         sampleCount: '采样数',
         speed: '速度',
         frequencyMin: '最小频率',
@@ -281,7 +284,7 @@ const fourierCopy: Record<FourierLocale, {
         original: '原始信号',
         windingPath: '缠绕路径',
         vectors: '旋转向量',
-        center: '平均点',
+        center: '重心',
         spectrum: '频谱',
         phase: '相位',
         reconstruction: '重建',
@@ -294,32 +297,32 @@ const fourierCopy: Record<FourierLocale, {
     lessons: {
       spectrum: {
         title: '频率频谱',
-        what: '频谱是很多次“频率测试”的结果：每个频率都会产生一个平均点，柱子的高度表示平均点离中心有多远。',
-        why: '柱子越高，说明这个频率在原信号里越明显。对真实信号，常常会同时看到 +f 和 -f 两个镜像峰，它们表示两个相反方向的旋转。',
+        what: '用许多测试转速反复缠绕同一条信号。转速对上时缠绕图会失衡，重心离开中心；把每次重心距离排起来就得到频谱。',
+        why: '柱高是完整复系数的长度 |C(f)|，方向表示相位。真实信号常在 +f 与 -f 产生镜像峰。',
         formula: '|C(f)| = |1/N Σ x[n]e^{-i2πfn/N}|',
         formulaTex: '|C(f)|=\\left|\\frac{1}{N}\\sum_{n=0}^{N-1}x[n]e^{-i2\\pi fn/N}\\right|',
         watch: '对这个信号，你会在 1 和 3 附近看到强响应。因为我们只观察有限长度的一段曲线，峰可能会在附近扩散，而不是只出现在一个柱子上。',
       },
       'spectrum-pair': {
         title: '正负频率合成',
-        what: '+f 和 -f 两个系数沿相反方向旋转。对真实信号，它们互为镜像，纵向部分抵消，合成结果始终留在实轴上。',
-        why: '这两根箭头不是两个额外的物理波，而是用复数坐标重建当前测试频率对应真实振动时所需的一对共轭成分。',
+        what: '从频谱取出 C(+f) 和 C(-f)，把它们变成两根互为镜像、反向旋转的箭头；纵向部分抵消，合成结果留在实轴上。',
+        why: '黄色曲线只是这对箭头形成的一条真实贡献波，不是完整原信号。',
         formula: 'x±f(t)=C(f)e^{i2πft}+C(-f)e^{-i2πft}=2 Re(C(f)e^{i2πft})',
-        formulaTex: 'x_{\pm f}(t)=C(f)e^{i2\pi ft}+C(-f)e^{-i2\pi ft}=2\operatorname{Re}\!\left(C(f)e^{i2\pi ft}\right)',
+        formulaTex: 'x_{\\pm f}(t)=C(f)e^{i2\\pi ft}+C(-f)e^{-i2\\pi ft}=2\\operatorname{Re}\\!\\left(C(f)e^{i2\\pi ft}\\right)',
         watch: '先选择一个频谱峰值最容易看清。弱频率处的箭头和合成波会保持很小，因为这里不会为了显示效果偷偷归一化。',
       },
       reconstruction: {
         title: '信号重建',
-        what: '重建就是把选中的频率成分重新叠回去。每个傅里叶系数都像一个小波：大小决定它有多强，角度决定它从哪里开始。',
-        why: '在这个离散采样的实验里，如果保留完整的一组频率系数，就可以恢复原来的样本。只保留一部分系数时，得到的是近似重建。',
+        what: '频率决定箭头转多快，系数决定箭头长度与初始方向；每个频率块产生一条贡献波，所有贡献逐点相加。',
+        why: '强调色虚线是本次新增贡献，黄色曲线是所有已选贡献的累计结果。',
         formula: 'x̂(t)=Σ C(f)e^{i2πft}',
         formulaTex: '\\hat{x}(t)=\\sum_f C(f)e^{i2\\pi ft}',
         watch: '平滑信号通常需要较少频率；尖角或跳跃需要更多频率。',
       },
       filtering: {
         title: '频率滤波',
-        what: '滤波不是直接在时间曲线上擦掉东西，而是先在频谱里保留或削弱某些频率，再把剩下的频率叠回去。',
-        why: '低通保留慢变化，削弱快变化，所以常用来平滑噪声。高通保留快变化，削弱慢趋势，所以常用来突出边缘或细节。',
+        what: '滤波先把频谱从 C(f) 改成 H(f)C(f)，再原样复用逐点相加的重建过程。',
+        why: '低通、高通、带通、带阻和幅值阈值，只是决定哪些柱子保留、哪些变为零的不同规则。',
         formula: '滤波后 x̂(t)=Σ H(f)C(f)e^{i2πft}',
         formulaTex: '\\hat{x}_{\\text{滤波}}(t)=\\sum_f H(f)C(f)e^{i2\\pi ft}',
         watch: '截止频率是下方保留频谱与上方重建信号之间共用的边界。',
@@ -488,9 +491,19 @@ export function FourierLesson({ lessonId }: Props) {
       : [],
     [integerSpectrum.coefficients, lessonKey, reconstructionCount, reconstructionMode],
   )
+  const currentContributionCoefficients = useMemo(
+    () => lessonKey === 'reconstruction'
+      ? selectCurrentContribution(integerSpectrum.coefficients, reconstructionMode, reconstructionCount)
+      : [],
+    [integerSpectrum.coefficients, lessonKey, reconstructionCount, reconstructionMode],
+  )
   const reconstructedSamples = useMemo(
     () => lessonKey === 'reconstruction' ? reconstructSamples(includedCoefficients, roundedSampleCount) : [],
     [includedCoefficients, lessonKey, roundedSampleCount],
+  )
+  const currentContributionSamples = useMemo(
+    () => lessonKey === 'reconstruction' ? reconstructSamples(currentContributionCoefficients, roundedSampleCount) : [],
+    [currentContributionCoefficients, lessonKey, roundedSampleCount],
   )
   const filterConfig = useMemo<FilterConfig>(
     () => ({ type: filterType, cutoff, lowCutoff, highCutoff, threshold }),
@@ -533,6 +546,28 @@ export function FourierLesson({ lessonId }: Props) {
     highCutoff,
     threshold,
   })
+  const explanationModel = createFourierExplanationModel({
+    locale,
+    lessonKey,
+    spectrumView,
+    selectedFrequency,
+    selectedMagnitude: selectedCoefficient.magnitude,
+    spectrum,
+    pairFrequency: frequencyPair.frequency,
+    pairMagnitude: frequencyPair.positive.magnitude,
+    pairHasNegative: frequencyPair.negative !== null,
+    reconstructionMode,
+    reconstructionCount,
+    includedCoefficients,
+    currentContribution: currentContributionCoefficients,
+    reconstructionMse: meanSquaredError(samplesResult.samples, reconstructedSamples),
+    filterConfig,
+    integerSpectrum,
+    presetId,
+    expression,
+    sampleCount: roundedSampleCount,
+    normalizeAmplitude,
+  })
   const spectrumClamped = Math.abs(safeFrequencyStep - Math.max(0.05, Math.abs(frequencyStep))) > 1e-9
   const playbackProgress = getFourierPlaybackProgress({
     lessonKey,
@@ -573,6 +608,9 @@ export function FourierLesson({ lessonId }: Props) {
         reconstructedSamples,
         filteredSamples,
         includedCoefficients,
+        currentContributionCoefficients,
+        currentContributionSamples,
+        filterConfig,
         windingPoints,
         spectrumView,
         selectedFrequency,
@@ -596,6 +634,7 @@ export function FourierLesson({ lessonId }: Props) {
     [
       filteredSamples,
       filteredSpectrum,
+      filterConfig,
       includedCoefficients,
       integerSpectrum,
       lessonKey,
@@ -603,6 +642,8 @@ export function FourierLesson({ lessonId }: Props) {
       logMagnitude,
       playhead,
       positiveOnly,
+      currentContributionCoefficients,
+      currentContributionSamples,
       reconstructedSamples,
       samplesResult.samples,
       selectedCoefficient,
@@ -643,6 +684,7 @@ export function FourierLesson({ lessonId }: Props) {
       controlsClassName="fourier-controls"
       mainClassName="fourier-main"
       explanationClassName="fourier-explanation"
+      readoutLabel={ui.intuition}
       isFocusMode={isFocusMode}
       autoHideToggle={autoHideToggle}
       onFocusPanelActiveChange={onFocusPanelActiveChange}
@@ -876,29 +918,18 @@ export function FourierLesson({ lessonId }: Props) {
       )}
 
       explanation={
-        <>
-        <h2>{ui.values}</h2>
-        <dl>
-          {values.map((row) => (
-            <div key={row.label}>
-              <dt>{row.label}</dt>
-              <dd>{row.value}</dd>
-            </div>
-          ))}
-        </dl>
-        <h2>{ui.formula}</h2>
-        <p className="formula-text formula-card">
-          <Formula tex={copy.formulaTex} block label={copy.formula} />
-        </p>
-        <h2>{ui.seeing}</h2>
-        <p>{renderFourierWhat(lessonKey, locale, copy.what, (term) => setHelpMode({ kind: 'term', term }), spectrumView)}</p>
-        <p>{copy.why}</p>
-        <h2>{ui.watch}</h2>
-        <p className="input-help">
-          {getFourierConventionCopy(lessonKey, spectrumView, locale)}
-        </p>
-        <p>{getWatchCopy(lessonKey, locale, copy.watch, presetId, filterType)}</p>
-        </>
+        <FourierExplanation
+          model={explanationModel}
+          values={values}
+          formulaTex={copy.formulaTex}
+          formulaLabel={copy.formula}
+          notes={[
+            getFourierConventionCopy(lessonKey, spectrumView, locale),
+            getWatchCopy(lessonKey, locale, copy.watch, presetId, filterType),
+          ]}
+          terms={getFourierTermLinks(lessonKey, spectrumView, locale)}
+          onTerm={(term) => setHelpMode({ kind: 'term', term: term as FourierTermId })}
+        />
       }
     />
       )}
@@ -1072,63 +1103,6 @@ function controlHelpAria(prefix: string, title: string): string {
   return `${prefix}: ${title}`
 }
 
-function renderFourierWhat(lessonId: string, locale: FourierLocale, fallback: string, onTerm: (term: FourierTermId) => void, spectrumView: SpectrumView = 'probe'): ReactNode {
-  const term = (id: FourierTermId, labelText: string) => (
-    <TermButton key={id} onClick={() => onTerm(id)}>
-      {labelText}
-    </TermButton>
-  )
-
-  if (lessonId === 'spectrum') {
-    if (spectrumView === 'pair') {
-      return locale === 'zh' ? (
-        <>
-          当前真实信号在 {term('frequency', '+f 和 -f')} 处产生一对共轭 {term('coefficient', '系数')}；重建时两根箭头反向旋转，合成一条真实的 {term('reconstruction', '频率对波形')}。
-        </>
-      ) : (
-        <>
-          The current real signal creates conjugate {term('coefficient', 'coefficients')} at {term('frequency', '+f and -f')}. During {term('reconstruction', 'reconstruction')}, their arrows rotate in opposite directions and sum to one real pair contribution.
-        </>
-      )
-    }
-    return locale === 'zh' ? (
-      <>
-        {term('spectrum', '频谱')} 是很多次“频率测试”的结果；每个测试 {term('frequency', '频率')} 都会产生一个 {term('coefficient', '系数')}，柱子越高代表平均点越偏离中心。
-      </>
-    ) : (
-      <>
-        The {term('spectrum', 'spectrum')} comes from many frequency tests. Each test {term('frequency', 'frequency')} creates a {term('coefficient', 'coefficient')}, and taller bars mean the average point moved farther from the center.
-      </>
-    )
-  }
-
-  if (lessonId === 'reconstruction') {
-    return locale === 'zh' ? (
-      <>
-        {term('reconstruction', '重建')} 会把选中的傅里叶系数重新相加。默认模式会尽量成对保留 +f 和 -f，让真实信号的重建更自然。
-      </>
-    ) : (
-      <>
-        {term('reconstruction', 'Reconstruction')} adds selected Fourier coefficients back together. The default mode keeps +f and -f pairs together so real-signal reconstruction stays natural.
-      </>
-    )
-  }
-
-  if (lessonId === 'filtering') {
-    return locale === 'zh' ? (
-      <>
-        {term('filtering', '滤波')} 会保留或移除某些频率成分；{term('spectrum', '频谱')} 的变化会直接传回时间信号。
-      </>
-    ) : (
-      <>
-        {term('filtering', 'Filtering')} keeps or removes frequency components, so a change in the {term('spectrum', 'spectrum')} returns directly to the time signal.
-      </>
-    )
-  }
-
-  return fallback
-}
-
 function getFourierHelpTopic(mode: FourierHelpMode, lessonId: string, locale: FourierLocale, spectrumView: SpectrumView): HelpTopic {
   if (mode.kind === 'term') return fourierTermTopic(mode.term, locale)
   if (mode.kind === 'control') {
@@ -1140,27 +1114,58 @@ function getFourierHelpTopic(mode: FourierHelpMode, lessonId: string, locale: Fo
   return fourierBeginnerTopic(locale)
 }
 
+function getFourierTermLinks(lessonId: string, spectrumView: SpectrumView, locale: FourierLocale): Array<{ id: FourierTermId; label: string }> {
+  if (lessonId === 'spectrum' && spectrumView === 'probe') {
+    return locale === 'zh'
+      ? [
+          { id: 'winding', label: '缠绕' },
+          { id: 'center-of-mass', label: '重心' },
+          { id: 'spectrum', label: '频谱' },
+          { id: 'phase', label: '相位' },
+        ]
+      : [
+          { id: 'winding', label: 'winding' },
+          { id: 'center-of-mass', label: 'center of mass' },
+          { id: 'spectrum', label: 'spectrum' },
+          { id: 'phase', label: 'phase' },
+        ]
+  }
+  if (lessonId === 'spectrum') {
+    return locale === 'zh'
+      ? [{ id: 'frequency', label: '正负频率' }, { id: 'coefficient', label: '傅里叶系数' }, { id: 'reconstruction', label: '贡献波' }]
+      : [{ id: 'frequency', label: 'signed frequency' }, { id: 'coefficient', label: 'Fourier coefficient' }, { id: 'reconstruction', label: 'contribution wave' }]
+  }
+  if (lessonId === 'reconstruction') {
+    return locale === 'zh'
+      ? [{ id: 'coefficient', label: '傅里叶系数' }, { id: 'reconstruction', label: '重建' }]
+      : [{ id: 'coefficient', label: 'Fourier coefficient' }, { id: 'reconstruction', label: 'reconstruction' }]
+  }
+  return locale === 'zh'
+    ? [{ id: 'filtering', label: '滤波' }, { id: 'spectrum', label: '频谱' }, { id: 'reconstruction', label: '重建' }]
+    : [{ id: 'filtering', label: 'filtering' }, { id: 'spectrum', label: 'spectrum' }, { id: 'reconstruction', label: 'reconstruction' }]
+}
+
 function fourierPairBeginnerTopic(locale: FourierLocale): HelpTopic {
   return locale === 'zh'
     ? {
         eyebrow: '笔记',
-        title: '从镜像系数到真实波形',
-        summary: '这个视图从当前信号计算 C(+f) 和 C(-f)，再把它们作为两根反向旋转的箭头加回来。',
+        title: '两根反向箭头如何变成一条波',
+        summary: '先从频谱取出 C(+f) 和 C(-f)，再让两根镜像箭头反向旋转并相加。',
         sections: [
-          { title: '为什么成对', body: '真实信号满足 C(-f)=C(f)*。两根箭头长度相同、角度互为镜像，所以纵向虚数部分抵消。' },
-          { title: '合成结果', body: '黄色箭头始终留在实轴上；它的横坐标随时间变化，正好形成上方黄色的频率对波形。' },
-          { title: '不是完整原信号', body: '上方青色曲线仍是完整原信号，黄色曲线只表示当前 ±f 这一对系数的合成结果。弱频率处它自然会很小。' },
+          { title: '频谱给出箭头', body: '系数大小决定箭头长度，系数角度决定初始方向。真实信号满足 C(-f)=C(f)*，所以两根箭头互为镜像。' },
+          { title: '反向旋转并相加', body: '两根箭头的纵向虚数部分始终抵消，黄色合向量留在实轴；它的横坐标随时间画出上方黄色贡献波。' },
+          { title: '只是一条贡献', body: '青色是完整原信号，黄色只来自当前 ±f 两个系数。要恢复完整信号，还要把其它频率块的贡献继续加上。' },
           { title: '非整数频率', body: '非整数 f 是连续频率扫描得到的一次测试结果；整数 f 才直接对应离散 Fourier 重建中的一个频率块。' },
         ],
       }
     : {
         eyebrow: 'Notes',
-        title: 'From mirror coefficients to a real wave',
-        summary: 'This view computes C(+f) and C(-f) from the current signal, then adds them back as two oppositely rotating arrows.',
+        title: 'How two opposite arrows make one wave',
+        summary: 'Take C(+f) and C(-f) from the spectrum, rotate the mirror arrows in opposite directions, and add them.',
         sections: [
-          { title: 'Why a pair', body: 'A real signal satisfies C(-f)=C(f)*. The arrows have equal lengths and mirrored angles, so their vertical imaginary parts cancel.' },
-          { title: 'The sum', body: 'The yellow resultant stays on the real axis. Its horizontal coordinate over time is the yellow pair-contribution curve above.' },
-          { title: 'Not the whole signal', body: 'The cyan curve is the full source signal. The yellow curve is only the contribution synthesized from the selected ±f coefficients, so weak frequencies remain visibly small.' },
+          { title: 'The spectrum sets the arrows', body: 'Coefficient magnitude sets arrow length and coefficient angle sets its initial direction. A real signal satisfies C(-f)=C(f)*, so the arrows are mirrors.' },
+          { title: 'Rotate oppositely and add', body: 'Their vertical imaginary parts always cancel, leaving the yellow resultant on the real axis. Its horizontal coordinate traces the yellow contribution wave above.' },
+          { title: 'Only one contribution', body: 'Cyan is the full source signal; yellow comes only from the current ±f coefficients. Reconstructing the full signal requires adding the other frequency-block contributions.' },
           { title: 'Non-integer frequencies', body: 'A non-integer f is one continuous frequency test. Integer f directly matches a frequency block in the discrete Fourier reconstruction.' },
         ],
       }
@@ -1170,14 +1175,14 @@ function fourierPairControlTopic(group: FourierControlGroupId, locale: FourierLo
   if (group !== 'spectrum' && group !== 'display') return fourierControlTopic(group, locale)
   if (group === 'display') {
     return locale === 'zh'
-      ? { eyebrow: '参数说明', title: '合成显示', summary: '显示开关只改变画面，不改变 C(+f)、C(-f) 或合成结果。', sections: [{ title: '曲线与标签', body: '原始信号可以隐藏，以便单独观察黄色频率对波形；标签开关控制画布标题、箭头与频谱柱标注。' }] }
+      ? { eyebrow: '参数说明', title: '合成显示', summary: '显示开关只改变画面，不改变 C(+f)、C(-f) 或合成结果。', sections: [{ title: '曲线与标签', body: '原始信号可以隐藏，以便单独观察黄色贡献波；标签开关控制画布标题、箭头与频谱柱标注。' }] }
       : { eyebrow: 'Parameter notes', title: 'Synthesis display', summary: 'Display toggles do not change C(+f), C(-f), or the synthesized result.', sections: [{ title: 'Curves and labels', body: 'The source signal can be hidden to isolate the yellow pair contribution. Labels controls panel, arrow, and spectrum-bar annotations.' }] }
   }
   return locale === 'zh'
     ? {
         eyebrow: '参数说明',
-        title: '频率对 ±f',
-        summary: '这里选择一个非负 f，并始终同时计算当前真实信号的 C(+f) 与 C(-f)。',
+        title: '旋转频率 ±f',
+        summary: '这里选择一个非负旋转速度 f，并始终同时计算当前真实信号的 C(+f) 与 C(-f)。',
         sections: [
           { title: '频率', body: 'f=1 表示单位区间内转一圈。吸附整数便于连接离散重建；关闭后可以观察连续频率测试。' },
           { title: '真实大小', body: '箭头和柱子直接使用系数大小，不会因为频率很弱而单独放大。' },
@@ -1186,8 +1191,8 @@ function fourierPairControlTopic(group: FourierControlGroupId, locale: FourierLo
       }
     : {
         eyebrow: 'Parameter notes',
-        title: 'Frequency pair ±f',
-        summary: 'Choose a non-negative f; the view always computes both C(+f) and C(-f) from the current real signal.',
+        title: 'Rotation frequency ±f',
+        summary: 'Choose a non-negative rotation speed f; the view always computes both C(+f) and C(-f) from the current real signal.',
         sections: [
           { title: 'Frequency', body: 'f=1 makes one turn over the unit interval. Integer snap connects directly to discrete reconstruction; disabling it explores the continuous frequency test.' },
           { title: 'True magnitude', body: 'Arrow and bar lengths use the actual coefficient magnitude and are not enlarged just because the frequency is weak.' },
@@ -1200,20 +1205,20 @@ function fourierBeginnerTopic(locale: FourierLocale): HelpTopic {
   if (locale === 'zh') {
     return {
       eyebrow: '笔记',
-      title: '把频率当作探针',
-      summary: '同一条信号可以同时看成时间曲线、一团缠绕点，以及不同旋转频率留下的平均位置。',
+      title: '从缠绕到频谱',
+      summary: '不断改变缠绕转速，观察缠绕图是否失衡，再把重心距离记录到对应频率上。',
       sections: [
         {
-          title: '一个测试频率',
-          body: '测试频率 f 把每个信号高度变成从中心伸出的长度，并让它按 f 的速度旋转；所有采样点由此形成一团点云。',
+          title: '1. 用一个转速缠绕',
+          body: '缠绕频率 f 把每个信号高度变成从中心伸出的长度，并让它按 f 的速度旋转。滑块改变的是测试转速，不是原信号。',
         },
         {
-          title: '平均点',
-          body: '如果测试频率和信号里的某个节奏对得上，点云通常不会平均抵消，平均位置会离开中心。平均位置离中心越远，说明这个频率越明显。',
+          title: '2. 看图形是否失衡',
+          body: '如果转速与信号节奏对上，缠绕点不会均匀抵消，重心（平均点）会离开中心；距离就是 |C(f)|，方向就是相位。',
         },
         {
-          title: '频谱',
-          body: '对很多个 f 重复这个测试，就得到频谱。频谱上的峰值告诉你哪些频率最能解释这条曲线。',
+          title: '3. 把距离排成频谱',
+          body: '对很多个 f 重复测试，把每次 |C(f)| 记到频率横轴上。峰值就是让缠绕图最明显失衡的转速，也就是信号中的强频率。',
         },
         {
           title: '正负频率',
@@ -1229,20 +1234,20 @@ function fourierBeginnerTopic(locale: FourierLocale): HelpTopic {
 
   return {
     eyebrow: 'Notes',
-    title: 'Frequency as a probe',
-    summary: 'The same signal appears as a time curve, a wound point cloud, and the average positions left by different rotation frequencies.',
+    title: 'From winding to the spectrum',
+    summary: 'Change the winding speed, watch whether the wound graph becomes unbalanced, and record the center-of-mass distance at that frequency.',
     sections: [
       {
-        title: 'One test frequency',
-        body: 'A test frequency f turns each signal height into a length from the center and rotates it at speed f, producing a point cloud from the samples.',
+        title: '1. Wind at one speed',
+        body: 'Winding frequency f turns each signal height into a length from the center and rotates it at speed f. The slider changes the test speed, not the source signal.',
       },
       {
-        title: 'Average point',
-        body: 'If the test frequency matches a rhythm in the signal, the point cloud usually does not cancel evenly, so its average moves away from the center. Farther from the center means a clearer frequency.',
+        title: '2. Look for imbalance',
+        body: 'If the speed matches a rhythm in the signal, the wound points stop cancelling evenly and the center of mass (average point) moves away. Distance is |C(f)| and direction is phase.',
       },
       {
-        title: 'Spectrum',
-        body: 'Repeat the test for many values of f and you get a spectrum. Peaks show which frequencies explain the curve best.',
+        title: '3. Line up the distances',
+        body: 'Repeat for many f values and place each |C(f)| on the frequency axis. Peaks are the winding speeds that create the strongest imbalance, hence strong signal frequencies.',
       },
       {
         title: 'Signed frequency',
@@ -1267,7 +1272,7 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
           {
             title: '它改变什么',
             items: [
-              '采样数越高，我们用来做频率测试的点越多，平均点、频谱和重建结果通常更稳定。',
+              '采样数越高，我们用来做缠绕测试的点越多，重心、频谱和重建结果通常更稳定。',
               '采样数越低，计算更轻，但细节可能变粗，尤其是高频、尖角和噪声附近。',
             ],
           },
@@ -1282,13 +1287,13 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
       },
       spectrum: {
         eyebrow: '参数说明',
-        title: '频谱扫描',
-        summary: '这里改变的是“怎么测试频率”和“怎么显示频谱”，不会改变原信号本身。',
+        title: '缠绕频率扫描',
+        summary: '这里改变的是“用什么转速缠绕”和“怎么显示频谱”，不会改变原信号本身。',
         sections: [
           {
-            title: '测试频率',
+            title: '缠绕频率',
             items: [
-              '频率是当前测试频率。它不会改变原信号，只改变我们用什么速度把信号绕起来。',
+              '缠绕频率是当前测试转速。它不会改变原信号，只改变我们用什么速度把信号绕起来。',
               '吸附整数打开后只测试整数频率。对刚好在 [0,1] 内完成整圈的信号，整数频率最容易看清。',
             ],
           },
@@ -1385,7 +1390,7 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
             title: '缠绕视图',
             items: [
               '缠绕路径显示信号绕起来后的点云路径；旋转向量显示当前时间点对应的旋转长度。',
-              '平均点显示当前测试频率的傅里叶系数。它离中心越远，说明当前测试频率越明显。',
+              '重心显示当前缠绕频率的傅里叶系数。它离中心越远，说明当前频率响应越强。',
               '这些缠绕开关主要在频谱页最有用；在重建和滤波页里，有些开关只是保留同一套显示偏好。',
             ],
           },
@@ -1404,7 +1409,7 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
         {
           title: 'What it changes',
           items: [
-            'Higher sample counts give the frequency test more points, so the average point, spectrum, and reconstruction are usually more stable.',
+            'Higher sample counts give the winding test more points, so the center of mass, spectrum, and reconstruction are usually more stable.',
             'Lower sample counts are lighter to compute, but details can get rougher, especially near high frequencies, corners, and noise.',
           ],
         },
@@ -1419,13 +1424,13 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
     },
     spectrum: {
       eyebrow: 'Parameter notes',
-      title: 'Spectrum scan',
-      summary: 'This group changes how frequencies are tested and displayed; it does not change the original signal.',
+      title: 'Winding-frequency scan',
+      summary: 'This group changes the winding speed and spectrum display; it does not change the source signal.',
       sections: [
         {
-          title: 'Test frequency',
+          title: 'Winding frequency',
           items: [
-            'Frequency is the current test frequency. It does not change the original signal; it changes how fast we wind the signal.',
+            'Winding frequency is the current test speed. It does not change the source signal; it changes how fast the signal is wound.',
             'Snap to integer tests only integer frequencies. For signals that complete whole cycles on [0,1], integer frequencies are usually easiest to read.',
           ],
         },
@@ -1522,7 +1527,7 @@ function fourierControlTopic(group: FourierControlGroupId, locale: FourierLocale
           title: 'Winding view',
           items: [
             'Winding path shows the wound point cloud; rotating vector shows the current time point as a rotating length.',
-            'Center of mass shows the average point, which is the Fourier coefficient for the current test frequency.',
+            'Center of mass is the Fourier coefficient for the current winding frequency. Farther from the center means a stronger response.',
             'These winding toggles matter most on the spectrum page; on reconstruction and filtering pages, some toggles simply preserve the same display preferences.',
           ],
         },
@@ -1538,19 +1543,19 @@ function fourierGraphTopic(lessonId: string, locale: FourierLocale, spectrumView
       ? {
           eyebrow: '视觉笔记',
           title: '重建视图',
-          summary: '上方比较原信号和重建信号，下方显示当前用来重建的频率系数。',
+          summary: '上方把本次新增贡献与累计重建分开画出；下方用同一强调色指出产生这条贡献的系数。',
           sections: [
-            { title: '上方曲线', body: '原信号和重建信号越贴近，说明当前保留的频率越能解释原信号。残差打开后会显示两者差多少。' },
-            { title: '下方柱子', body: '被选中的系数参与重建。保留更多系数通常更像原信号，但也更复杂。' },
+            { title: '上方曲线', body: '青色是原信号，强调色虚线是当前新增频率块单独产生的贡献，黄色是全部已选贡献逐点相加后的结果；紫色残差是原信号减去累计重建。' },
+            { title: '下方柱子', body: '强调色柱与上方强调色虚线是同一组系数；黄色柱此前已加入，灰色柱尚未参与。成对模式会一起高亮 -f 与 +f，DC 只高亮一次。' },
           ],
         }
       : {
           eyebrow: 'Visual notes',
           title: 'Reconstruction view',
-          summary: 'The top compares the original and reconstructed signals; the bottom shows which coefficients are being used.',
+          summary: 'The top separates the newest contribution from the cumulative reconstruction; the same highlight color marks its coefficients below.',
           sections: [
-            { title: 'Top curves', body: 'The closer the curves are, the more the selected frequencies explain the original. Turning on residual shows the difference.' },
-            { title: 'Bottom bars', body: 'Selected coefficients are included in the reconstruction. More coefficients usually improve the match but add complexity.' },
+            { title: 'Top curves', body: 'Cyan is the source, the highlighted dashed curve is the newest block alone, yellow is the point-by-point sum of all selected contributions, and purple residual is source minus reconstruction.' },
+            { title: 'Bottom bars', body: 'Highlighted bars produce the highlighted dashed curve. Yellow bars were already included; gray bars are still omitted. Pair mode highlights -f and +f together, while DC appears once.' },
           ],
         }
   }
@@ -1560,19 +1565,19 @@ function fourierGraphTopic(lessonId: string, locale: FourierLocale, spectrumView
       ? {
           eyebrow: '视觉笔记',
           title: '滤波视图',
-          summary: '上方显示滤波前后的信号，下方显示哪些频率被保留或削弱。',
+          summary: '下方先显示哪些频谱柱被保留或压到零，上方再显示用剩余柱重建出的信号。',
           sections: [
-            { title: '上方曲线', body: '如果高频被移除，尖角和噪声通常会变平滑；如果低频被移除，慢变化的趋势会变弱。' },
-            { title: '下方频谱', body: '被保留的频率仍然有柱子；被滤掉的频率会变低或消失。' },
+            { title: '下方频谱', body: '淡黄色区域表示保留范围，虚线表示实际边界；幅值阈值模式改用水平阈值线。原始柱是 C(f)，黄色柱是 H(f)C(f)。' },
+            { title: '上方曲线', body: '黄色滤波结果不是另一种算法，而是把下方剩余系数用重建页同样的逐点相加方法合成。' },
           ],
         }
       : {
           eyebrow: 'Visual notes',
           title: 'Filtering view',
-          summary: 'The top shows before/after signals; the bottom shows which frequencies remain or are reduced.',
+          summary: 'The bottom first shows which spectrum bars remain or become zero; the top is reconstructed from those remaining bars.',
           sections: [
-            { title: 'Top curves', body: 'Removing high frequencies usually smooths corners and noise. Removing low frequencies weakens slow trends.' },
-            { title: 'Bottom spectrum', body: 'Kept frequencies still have bars; removed frequencies shrink or disappear.' },
+            { title: 'Bottom spectrum', body: 'The pale yellow region is retained and dashed lines mark the actual boundaries; magnitude threshold mode uses a horizontal line. Original bars are C(f), yellow bars are H(f)C(f).' },
+            { title: 'Top curves', body: 'The yellow result is not made by another algorithm. It uses the same point-by-point reconstruction as the reconstruction view, now with only the remaining coefficients.' },
           ],
         }
   }
@@ -1582,9 +1587,9 @@ function fourierGraphTopic(lessonId: string, locale: FourierLocale, spectrumView
       ? {
           eyebrow: '视觉笔记',
           title: '正负频率合成视图',
-          summary: '上方比较完整原信号与当前 ±f 频率对的贡献；下方把同一对系数画成箭头和镜像频谱柱。',
+          summary: '上方比较完整原信号与当前两根反向箭头的贡献；下方把同两个系数画成箭头和镜像柱。',
           sections: [
-            { title: '上方曲线', body: '青色是完整原信号，黄色只由 C(+f) 和 C(-f) 合成。移动时间进度时，黄色游标值与下方黄色合向量的横坐标一致。' },
+            { title: '上方曲线', body: '青色是完整原信号，黄色只由 C(+f) 和 C(-f) 合成，是一条贡献波而不是完整信号。移动时间进度时，它与下方黄色合向量的横坐标同步。' },
             { title: '双箭头', body: '青色 +f 箭头和紫色 -f 箭头反向旋转。虚线平行四边形显示向量相加；两者纵向部分抵消，黄色合向量留在实轴。' },
             { title: '镜像柱', body: '右下两根柱子使用真实 |C(-f)| 与 |C(+f)|。对真实信号两者相等；f=0 时只显示一个直流柱。' },
           ],
@@ -1605,21 +1610,21 @@ function fourierGraphTopic(lessonId: string, locale: FourierLocale, spectrumView
     ? {
         eyebrow: '视觉笔记',
         title: '频谱视图',
-        summary: '时间曲线、缠绕平面、平均点和频谱峰值是同一次频率测试的不同表示。',
+        summary: '时间曲线、缠绕平面、重心和频谱柱是同一次缠绕频率测试的连续结果。',
         sections: [
-          { title: '时间信号', body: '上方曲线是原始信号。频率滑块改变的是测试频率，不是原始信号本身。' },
-          { title: '缠绕平面', body: '每个信号高度会变成一根从中心伸出的长度，再按测试频率旋转。高度会变，所以点不一定落在同一个圆上。点云如果明显偏向一边，说明当前测试频率和信号里的某个节奏对上了。' },
-          { title: '平均点 / 频谱', body: '平均点离中心越远，当前频率越强。频谱把很多测试频率的结果排成柱状图，峰值就是主要频率。' },
+          { title: '时间信号', body: '上方曲线是原始信号。缠绕频率滑块只改变测试转速，不会改变原始信号。' },
+          { title: '缠绕平面', body: '每个信号高度会变成一根从中心伸出的长度，再按缠绕频率旋转。高度会变，所以点不一定落在同一个圆上。图形如果明显向一边失衡，说明当前转速和信号里的某个节奏对上了。' },
+          { title: '重心 / 频谱', body: '重心离中心的距离就是 |C(f)|，方向是相位。频谱把很多缠绕转速得到的距离排起来，峰值就是强频率。' },
         ],
       }
     : {
         eyebrow: 'Visual notes',
         title: 'Spectrum view',
-        summary: 'The time curve, winding plane, average point, and spectrum peak are different views of the same frequency test.',
+        summary: 'The time curve, winding plane, center of mass, and spectrum bar are consecutive results of the same winding-frequency test.',
         sections: [
-          { title: 'Time signal', body: 'The top curve is the original signal. The frequency slider changes the test frequency, not the signal itself.' },
+          { title: 'Time signal', body: 'The top curve is the source signal. The winding-frequency slider changes only the test speed, never the source signal.' },
           { title: 'Winding plane', body: 'Each signal height becomes a length from the center and rotates at the test frequency. Because the height changes, the points do not have to sit on one circle. If the point cloud leans strongly to one side, the test frequency matches a rhythm in the signal.' },
-          { title: 'Average point / spectrum', body: 'The farther the average point is from the center, the stronger that frequency is. A spectrum repeats this test for many frequencies and plots the results as bars.' },
+          { title: 'Center of mass / spectrum', body: 'The center-of-mass distance is |C(f)| and its direction is phase. The spectrum lines up those distances from many winding speeds; peaks are strong frequencies.' },
         ],
       }
 }
@@ -1629,8 +1634,8 @@ function fourierTermTopic(term: FourierTermId, locale: FourierLocale): HelpTopic
     winding: {
       eyebrow: '术语',
       title: '缠绕',
-      summary: '缠绕就是：把每个时间点的信号高度当作从中心伸出的长度，再让这根长度按测试频率旋转。',
-      sections: [{ title: '为什么不总在圆上', body: '如果 x(t) 不恒定，半径会跟着高度变化；如果 x(t) 是负数，长度会指向相反方向。所以缠绕后的图不一定落在同一个圆上。匹配的频率会让点云偏向一边，不匹配的频率通常会互相抵消。' }],
+      summary: '缠绕把时间 t 映射成旋转角度，把信号高度 x(t) 当作从中心伸出的有符号长度。',
+      sections: [{ title: '它为什么能检测频率', body: '缠绕频率对上信号节奏时，相似位置会反复落在相似方向，图形不再均匀平衡；对不上时，各方向更容易互相抵消。x(t) 为负时长度会翻向相反方向，所以路径不必落在同一个圆上。' }],
     },
     frequency: {
       eyebrow: '术语',
@@ -1641,14 +1646,14 @@ function fourierTermTopic(term: FourierTermId, locale: FourierLocale): HelpTopic
     coefficient: {
       eyebrow: '术语',
       title: '傅里叶系数',
-      summary: '傅里叶系数 C(f) 是某个频率 f 的平均点。',
-      sections: [{ title: '读法', body: '系数的大小表示这个频率有多强；系数的角度表示相位。注意：这里画的是复数傅里叶系数的大小，不一定等于原波形上的峰值高度。对真实信号，一个频率常常分成 +f 和 -f 两个镜像部分；振幅为 1 的正弦波，在双边频谱里可能显示成两个高度约为 0.5 的峰。' }],
+      summary: '傅里叶系数 C(f) 就是用缠绕频率 f 得到的重心位置。',
+      sections: [{ title: '分析与重建的两种读法', body: '检测时，系数长度 |C(f)| 是重心离中心的距离，角度是相位；重建时，同一个复数变成一根初始长度与方向已确定的旋转箭头。它不一定等于原波形峰值；振幅为 1 的真实正弦常分成 ±f 两个高度约 0.5 的镜像系数。' }],
     },
     'center-of-mass': {
       eyebrow: '术语',
-      title: '平均点',
-      summary: '平均点是缠绕后所有点的平均位置。',
-      sections: [{ title: '直觉', body: '如果点云围绕中心均匀分布，平均点接近原点；如果点云偏向一边，平均点会被拉过去。' }],
+      title: '重心（平均点）',
+      summary: '重心是缠绕后所有点的平均位置，也就是当前测试频率的 C(f)。',
+      sections: [{ title: '直觉', body: '图形围绕中心平衡时，各方向互相抵消，重心接近原点；图形向一侧失衡时，重心被拉远。离中心的距离写进幅值频谱，方向写进相位。' }],
     },
     spectrum: {
       eyebrow: '术语',
@@ -1665,14 +1670,14 @@ function fourierTermTopic(term: FourierTermId, locale: FourierLocale): HelpTopic
     reconstruction: {
       eyebrow: '术语',
       title: '重建',
-      summary: '重建是把选中的频率成分加回去，合成一个近似原信号。',
-      sections: [{ title: '说明', body: '在这个离散采样实验里，如果保留完整的一组频率系数，就能恢复原来的样本；只保留一部分时，得到的是近似。如果只用少数频率就能重建得很好，说明原信号的主要结构可以被这些频率解释。' }],
+      summary: '重建把每个 C(f) 变成按 f 旋转的箭头，再把所有箭头在每个时间点的实部相加。',
+      sections: [{ title: '贡献与累计结果', body: '一对 ±f 箭头先形成一条真实贡献波；所有频率块的贡献逐点相加就是累计重建。完整离散系数可以恢复样本，只保留一部分时得到近似。' }],
     },
     filtering: {
       eyebrow: '术语',
       title: '滤波',
-      summary: '滤波是有选择地保留或移除频率。',
-      sections: [{ title: '例子', body: '低通保留慢变化、削弱快变化；高通保留快变化、削弱慢趋势。' }],
+      summary: '滤波先把 C(f) 的某些柱子保留或压到零，再用完全相同的重建方法相加。',
+      sections: [{ title: '频谱规则', body: 'H(f) 表示每个频率保留多少，得到 H(f)C(f)。低通、高通、带通、带阻和幅值阈值只是不同的 H(f) 规则；真正生成时间信号的仍是重建。' }],
     },
   }
 
@@ -1680,8 +1685,8 @@ function fourierTermTopic(term: FourierTermId, locale: FourierLocale): HelpTopic
     winding: {
       eyebrow: 'Term',
       title: 'Winding',
-      summary: 'Winding treats each signal height as a length from the center, then rotates that length at the test frequency.',
-      sections: [{ title: 'Why it is not always one circle', body: 'If x(t) changes, the radius changes with it. If x(t) is negative, the length points the opposite way. A matching frequency pulls the point cloud to one side; a non-matching frequency tends to cancel around the center.' }],
+      summary: 'Winding maps time t to rotation angle and treats signal height x(t) as a signed length from the center.',
+      sections: [{ title: 'Why it detects frequency', body: 'At a matching winding speed, repeated parts of the signal land in similar directions and the graph becomes unbalanced. At a mismatch, directions tend to cancel. Negative x(t) flips the length, so the path need not lie on one circle.' }],
     },
     frequency: {
       eyebrow: 'Term',
@@ -1692,14 +1697,14 @@ function fourierTermTopic(term: FourierTermId, locale: FourierLocale): HelpTopic
     coefficient: {
       eyebrow: 'Term',
       title: 'Fourier coefficient',
-      summary: 'The Fourier coefficient C(f) is the average point for frequency f.',
-      sections: [{ title: 'Magnitude and phase', body: 'Its magnitude is frequency strength. Its angle is phase. This magnitude is not always the same as the peak height in the original waveform. For a real sine wave, the strength is often split between +f and -f; amplitude 1 can appear as two mirror peaks of about 0.5 each.' }],
+      summary: 'The Fourier coefficient C(f) is the center-of-mass position produced by winding frequency f.',
+      sections: [{ title: 'Analysis and reconstruction', body: 'During detection, |C(f)| is center-of-mass distance and its angle is phase. During reconstruction, the same complex number sets a rotating arrow’s initial length and direction. It need not equal waveform peak height; a real sine of amplitude 1 often splits into two mirror coefficients near 0.5.' }],
     },
     'center-of-mass': {
       eyebrow: 'Term',
-      title: 'Average point',
-      summary: 'The average point is the mean position of all wound points.',
-      sections: [{ title: 'Intuition', body: 'If the point cloud is balanced around the center, the average is near zero. If it leans to one side, the average is pulled away.' }],
+      title: 'Center of mass (average point)',
+      summary: 'The center of mass is the mean position of all wound points and equals C(f) for the current test frequency.',
+      sections: [{ title: 'Intuition', body: 'A balanced wound graph cancels in every direction, keeping the center of mass near zero. An unbalanced graph pulls it away. Distance goes into the magnitude spectrum and direction becomes phase.' }],
     },
     spectrum: {
       eyebrow: 'Term',
@@ -1716,14 +1721,14 @@ function fourierTermTopic(term: FourierTermId, locale: FourierLocale): HelpTopic
     reconstruction: {
       eyebrow: 'Term',
       title: 'Reconstruction',
-      summary: 'Reconstruction adds selected frequency components back together to approximate the original signal.',
-      sections: [{ title: 'Notes', body: 'In this sampled experiment, keeping the complete set of frequency coefficients can recover the original samples. Keeping only part of the set gives an approximation. If a few frequencies reconstruct the signal well, those frequencies explain most of its structure.' }],
+      summary: 'Reconstruction turns each C(f) into an arrow rotating at f, then adds every arrow’s real part at each time.',
+      sections: [{ title: 'Contribution and cumulative result', body: 'A ±f pair first makes one real contribution wave. Adding every frequency-block contribution point by point gives the cumulative reconstruction. A complete discrete set recovers the samples; a partial set gives an approximation.' }],
     },
     filtering: {
       eyebrow: 'Term',
       title: 'Filtering',
-      summary: 'Filtering selectively keeps or removes frequencies.',
-      sections: [{ title: 'Examples', body: 'Low-pass keeps slow changes and reduces fast changes. High-pass keeps fast changes and reduces slow trends.' }],
+      summary: 'Filtering keeps or lowers selected C(f) bars to zero, then uses exactly the same reconstruction.',
+      sections: [{ title: 'Spectrum rule', body: 'H(f) says how much of each frequency remains, producing H(f)C(f). Low-pass, high-pass, band-pass, band-stop, and magnitude threshold are different H(f) rules; reconstruction still makes the time signal.' }],
     },
   }
 
@@ -1751,8 +1756,8 @@ function drawSpectrumLesson(ctx: CanvasRenderingContext2D, viewport: GraphViewpo
   const lowerY = signalRect.y + signalRect.height + gap
   const spectrumRect = { x: gap, y: lowerY, width: viewport.width * 0.62 - gap * 1.5, height: viewport.height - lowerY - gap }
   const windingRect = { x: spectrumRect.x + spectrumRect.width + gap, y: lowerY, width: viewport.width - spectrumRect.width - gap * 3, height: spectrumRect.height }
-  drawSignalPanel(ctx, signalRect, theme, state.samples, true, state.playhead, state.showLabels ? label(state.locale, 'Time signal', '时间信号') : '')
-  if (state.showSpectrum) drawSpectrumPanel(ctx, spectrumRect, theme, state.spectrum, state.selectedFrequency, state.logMagnitude, state.positiveOnly, state.showPhase, state.showLabels ? label(state.locale, 'Magnitude spectrum', '幅值频谱') : '')
+  drawSignalPanel(ctx, signalRect, theme, state.samples, true, state.playhead, state.showLabels ? label(state.locale, 'Time signal', '时间信号') : '', state.showLabels)
+  if (state.showSpectrum) drawSpectrumPanel(ctx, spectrumRect, theme, state.spectrum, state.selectedFrequency, state.logMagnitude, state.positiveOnly, state.showPhase, state.showLabels ? label(state.locale, 'Magnitude spectrum', '幅值频谱') : '', state.showLabels)
   drawWindingPanel(ctx, windingRect, theme, state)
 }
 
@@ -1792,29 +1797,26 @@ function getFrequencyPairTheme(theme: GraphTheme): GraphTheme {
 }
 
 function drawPairSignalPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, state: DrawState) {
-  drawPanel(ctx, rect, theme, state.showLabels ? label(state.locale, 'Source and selected pair', '原信号与当前频率对') : '')
-  drawGridLines(ctx, rect, theme)
+  drawPanel(ctx, rect, theme, state.showLabels ? label(state.locale, 'Source and current contribution', '原信号与当前贡献') : '')
+  const legend = state.showLabels
+    ? [
+        ...(state.showOriginalSignal ? [{ label: label(state.locale, 'source', '原信号'), color: theme.primary }] : []),
+        { label: label(state.locale, 'current ±f contribution', '当前 ±f 贡献'), color: theme.warning },
+      ]
+    : []
+  const plotTopInset = legend.length > 0 ? 32 + countLegendRows(rect, legend, ctx) * 14 : 28
+  drawSignalGrid(ctx, rect, theme, plotTopInset)
   const displayedSamples = [
     ...(state.showOriginalSignal ? state.samples : []),
     ...state.frequencyPairSamples,
   ]
   const amplitudeRange = signalAmplitudeRange(displayedSamples)
   drawAmplitudeScale(ctx, rect, theme, amplitudeRange)
-  if (state.showOriginalSignal) drawSamples(ctx, rect, state.samples, theme.primary, 1.8, false, amplitudeRange)
-  drawSamples(ctx, rect, state.frequencyPairSamples, theme.warning, 2.4, false, amplitudeRange)
-  const cursorX = rect.x + 10 + clampProgress(state.playhead) * (rect.width - 20)
-  ctx.strokeStyle = theme.accent
-  ctx.lineWidth = 1.3
-  ctx.beginPath()
-  ctx.moveTo(cursorX, rect.y + 9)
-  ctx.lineTo(cursorX, rect.y + rect.height - 9)
-  ctx.stroke()
-  if (state.showLabels) {
-    drawFourierLegend(ctx, rect, theme, [
-      ...(state.showOriginalSignal ? [{ label: label(state.locale, 'source', '原信号'), color: theme.primary }] : []),
-      { label: label(state.locale, 'selected ±f pair', '当前 ±f 频率对'), color: theme.warning },
-    ])
-  }
+  if (state.showOriginalSignal) drawSamples(ctx, rect, state.samples, theme.primary, 1.8, false, amplitudeRange, plotTopInset)
+  drawSamples(ctx, rect, state.frequencyPairSamples, theme.warning, 2.4, false, amplitudeRange, plotTopInset)
+  drawTimeCursor(ctx, rect, theme, state.playhead, 1.3, plotTopInset)
+  drawFourierLegend(ctx, rect, theme, legend)
+  drawTimeAxisLabels(ctx, rect, theme, state.showLabels, plotTopInset)
 }
 
 function drawFrequencyPairPlane(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, state: DrawState) {
@@ -1950,12 +1952,35 @@ function drawReconstructionLesson(ctx: CanvasRenderingContext2D, viewport: Graph
     state.showLabels
       ? [
           ...(state.showOriginalSignal ? [{ label: label(state.locale, 'original', '原始'), color: theme.primary }] : []),
-          ...(state.showReconstruction ? [{ label: label(state.locale, 'reconstruction', '重建'), color: theme.warning }] : []),
+          ...(state.showReconstruction ? [{ label: label(state.locale, 'reconstruction', '累计重建'), color: theme.warning }] : []),
+          ...(state.currentContributionCoefficients.length > 0 ? [{ label: label(state.locale, 'current contribution', '当前新增贡献'), color: theme.highlight, dashed: true }] : []),
           ...(state.showResidual ? [{ label: label(state.locale, 'residual', '残差'), color: theme.secondary, dashed: true }] : []),
         ]
       : [],
+    state.showLabels,
+    state.currentContributionCoefficients.length > 0
+      ? [{ samples: state.currentContributionSamples, color: theme.highlight, width: 2.2, dashed: true }]
+      : [],
   )
-  if (state.showSpectrum) drawIntegerSpectrumPanel(ctx, spectrumRect, theme, state.integerSpectrum, state.includedCoefficients, state.showLabels ? label(state.locale, 'Selected coefficients', '选中的系数') : '')
+  if (state.showSpectrum) {
+    drawIntegerSpectrumPanel(
+      ctx,
+      spectrumRect,
+      theme,
+      state.integerSpectrum,
+      state.includedCoefficients,
+      state.currentContributionCoefficients,
+      state.showLabels ? label(state.locale, 'Coefficients used for reconstruction', '参与重建的系数') : '',
+      state.showLabels,
+      state.showLabels
+        ? [
+            ...(state.currentContributionCoefficients.length > 0 ? [{ label: label(state.locale, 'current block', '当前新增'), color: theme.highlight }] : []),
+            ...(state.includedCoefficients.length > state.currentContributionCoefficients.length ? [{ label: label(state.locale, 'already included', '此前已加入'), color: theme.warning }] : []),
+            { label: label(state.locale, 'not included', '未加入'), color: theme.gridMajor },
+          ]
+        : [],
+    )
+  }
 }
 
 function drawFilteringLesson(ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme, state: DrawState) {
@@ -1969,7 +1994,7 @@ function drawFilteringLesson(ctx: CanvasRenderingContext2D, viewport: GraphViewp
         ...(state.showResidual ? [{ label: label(state.locale, 'residual', '残差'), color: theme.secondary, dashed: true }] : []),
       ]
     : []
-  drawComparisonPanel(ctx, signalRect, theme, state.samples, state.filteredSamples, state.showOriginalSignal, true, state.showResidual, state.showLabels ? label(state.locale, 'Original vs filtered signal', '原始信号与滤波结果') : '', comparisonLegend)
+  drawComparisonPanel(ctx, signalRect, theme, state.samples, state.filteredSamples, state.showOriginalSignal, true, state.showResidual, state.showLabels ? label(state.locale, 'Original vs filtered signal', '原始信号与滤波结果') : '', comparisonLegend, state.showLabels)
   if (state.showSpectrum) {
     drawFilteredSpectrumPanel(
       ctx,
@@ -1977,6 +2002,7 @@ function drawFilteringLesson(ctx: CanvasRenderingContext2D, viewport: GraphViewp
       theme,
       state.integerSpectrum,
       state.filteredSpectrum,
+      state.filterConfig,
       state.showLabels ? label(state.locale, 'Original and filtered spectrum', '原始频谱与滤波后频谱') : '',
       state.showLabels
         ? [
@@ -1984,41 +2010,43 @@ function drawFilteringLesson(ctx: CanvasRenderingContext2D, viewport: GraphViewp
             { label: label(state.locale, 'filtered', '滤波后'), color: theme.warning },
           ]
         : [],
+      state.showLabels,
     )
   }
 }
 
-function drawSignalPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, samples: number[], showSignal: boolean, cursor: number, title: string) {
+function drawSignalPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, samples: number[], showSignal: boolean, cursor: number, title: string, showLabels: boolean) {
   drawPanel(ctx, rect, theme, title)
-  drawGridLines(ctx, rect, theme)
+  drawSignalGrid(ctx, rect, theme)
   const amplitudeRange = signalAmplitudeRange(samples)
   drawAmplitudeScale(ctx, rect, theme, amplitudeRange)
   if (showSignal) drawSamples(ctx, rect, samples, theme.primary, 2, false, amplitudeRange)
-  const x = rect.x + cursor * rect.width
-  ctx.strokeStyle = theme.accent
-  ctx.lineWidth = 1.5
-  ctx.beginPath()
-  ctx.moveTo(x, rect.y + 8)
-  ctx.lineTo(x, rect.y + rect.height - 8)
-  ctx.stroke()
+  drawTimeCursor(ctx, rect, theme, cursor, 1.5)
+  drawTimeAxisLabels(ctx, rect, theme, showLabels)
 }
 
-function drawComparisonPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, original: number[], comparison: number[], showOriginal: boolean, showComparison: boolean, showResidual: boolean, title: string, legend: FourierLegendItem[] = []) {
+type FourierCurve = { samples: number[]; color: string; width: number; dashed: boolean }
+
+function drawComparisonPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, original: number[], comparison: number[], showOriginal: boolean, showComparison: boolean, showResidual: boolean, title: string, legend: FourierLegendItem[] = [], showLabels = true, extraCurves: FourierCurve[] = []) {
   drawPanel(ctx, rect, theme, title)
-  drawGridLines(ctx, rect, theme)
+  const plotTopInset = legend.length > 0 ? 32 + countLegendRows(rect, legend, ctx) * 14 : 28
+  drawSignalGrid(ctx, rect, theme, plotTopInset)
   const residual = original.map((value, index) => value - (comparison[index] ?? 0))
   const amplitudeRange = signalAmplitudeRange([
     ...(showOriginal ? original : []),
     ...(showComparison ? comparison : []),
     ...(showResidual ? residual : []),
+    ...extraCurves.flatMap((curve) => curve.samples),
   ])
   drawAmplitudeScale(ctx, rect, theme, amplitudeRange)
-  if (showOriginal) drawSamples(ctx, rect, original, theme.primary, 2, false, amplitudeRange)
-  if (showComparison) drawSamples(ctx, rect, comparison, theme.warning, 2, false, amplitudeRange)
+  if (showOriginal) drawSamples(ctx, rect, original, theme.primary, 2, false, amplitudeRange, plotTopInset)
+  if (showComparison) drawSamples(ctx, rect, comparison, theme.warning, 2, false, amplitudeRange, plotTopInset)
   if (showResidual) {
-    drawSamples(ctx, rect, residual, theme.secondary, 1.6, true, amplitudeRange)
+    drawSamples(ctx, rect, residual, theme.secondary, 1.6, true, amplitudeRange, plotTopInset)
   }
+  extraCurves.forEach((curve) => drawSamples(ctx, rect, curve.samples, curve.color, curve.width, curve.dashed, amplitudeRange, plotTopInset))
   drawFourierLegend(ctx, rect, theme, legend)
+  drawTimeAxisLabels(ctx, rect, theme, showLabels, plotTopInset)
 }
 
 function drawWindingPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, state: DrawState) {
@@ -2074,62 +2102,163 @@ function drawWindingPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: Grap
   }
 }
 
-function drawSpectrumPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, spectrum: Spectrum, selectedFrequency: number, logMagnitude: boolean, positiveOnly: boolean, showPhase: boolean, title: string) {
+function drawSpectrumPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, spectrum: Spectrum, selectedFrequency: number, logMagnitude: boolean, positiveOnly: boolean, showPhase: boolean, title: string, showLabels: boolean) {
   drawPanel(ctx, rect, theme, title)
   const phaseHeight = showPhase ? rect.height * 0.34 : 0
   const magnitudeRect = { x: rect.x, y: rect.y, width: rect.width, height: rect.height - phaseHeight }
   const phaseRect = { x: rect.x, y: rect.y + magnitudeRect.height, width: rect.width, height: phaseHeight }
-  const coefficients = spectrum.coefficients.filter((coefficient) => !positiveOnly || coefficient.frequency >= 0)
+  const domain = frequencyDisplayDomain(spectrum.frequencyMin, spectrum.frequencyMax, positiveOnly)
+  const coefficients = spectrum.coefficients.filter((coefficient) => axisContains(domain, coefficient.frequency))
   const maxMagnitude = Math.max(...coefficients.map((coefficient) => displayMagnitude(coefficient.magnitude, logMagnitude)), 1e-9)
-  drawSpectrumBars(ctx, magnitudeRect, theme, coefficients, maxMagnitude, logMagnitude, theme.accent)
-  drawFrequencyMarker(ctx, magnitudeRect, theme, selectedFrequency, spectrum.frequencyMin, spectrum.frequencyMax)
+  const magnitudeLayout = getFrequencyPlotLayout(magnitudeRect, true)
+  drawFrequencyGrid(ctx, magnitudeLayout, theme)
+  drawSpectrumBars(ctx, magnitudeLayout, theme, coefficients, domain, maxMagnitude, logMagnitude, theme.accent)
+  drawFrequencyAxis(ctx, magnitudeLayout, theme, domain, showLabels && !showPhase)
+  drawFrequencyMarker(ctx, magnitudeLayout, theme, selectedFrequency, domain, showLabels)
   if (showPhase) {
-    drawPhaseGraph(ctx, phaseRect, theme, coefficients, spectrum.frequencyMin, spectrum.frequencyMax)
+    drawPhaseGraph(ctx, phaseRect, theme, coefficients, domain, showLabels)
   }
 }
 
-function drawIntegerSpectrumPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, spectrum: Spectrum, selected: FourierCoefficient[], title: string) {
+function drawIntegerSpectrumPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, spectrum: Spectrum, selected: FourierCoefficient[], current: FourierCoefficient[], title: string, showLabels: boolean, legend: FourierLegendItem[] = []) {
   drawPanel(ctx, rect, theme, title)
+  const domain = frequencyDisplayDomain(spectrum.frequencyMin, spectrum.frequencyMax, false)
+  const layout = getFrequencyPlotLayout(rect, true)
+  if (legend.length > 0) reserveLegendRows(layout, rect, legend, ctx)
+  drawFrequencyGrid(ctx, layout, theme)
   const selectedKeys = new Set(selected.map((coefficient) => coefficient.frequency))
+  const currentKeys = new Set(current.map((coefficient) => coefficient.frequency))
   const maxMagnitude = Math.max(...spectrum.coefficients.map((coefficient) => coefficient.magnitude), 1e-9)
   spectrum.coefficients.forEach((coefficient) => {
-    const x = mapRange(coefficient.frequency, spectrum.frequencyMin, spectrum.frequencyMax, rect.x + 14, rect.x + rect.width - 14)
-    const base = rect.y + rect.height - 18
-    const barHeight = (coefficient.magnitude / maxMagnitude) * (rect.height - 42)
-    ctx.strokeStyle = selectedKeys.has(coefficient.frequency) ? theme.warning : theme.gridMajor
-    ctx.lineWidth = selectedKeys.has(coefficient.frequency) ? 3 : 2
+    const x = axisValueToPosition(coefficient.frequency, domain, layout.left, layout.right)
+    const barHeight = (coefficient.magnitude / maxMagnitude) * layout.height
+    const isCurrent = currentKeys.has(coefficient.frequency)
+    const isSelected = selectedKeys.has(coefficient.frequency)
+    ctx.strokeStyle = isCurrent ? theme.highlight : isSelected ? theme.warning : theme.gridMajor
+    ctx.lineWidth = isCurrent ? 4.5 : isSelected ? 3 : 2
     ctx.beginPath()
-    ctx.moveTo(x, base)
-    ctx.lineTo(x, base - barHeight)
+    ctx.moveTo(x, layout.base)
+    ctx.lineTo(x, layout.base - barHeight)
     ctx.stroke()
   })
+  drawFourierLegend(ctx, rect, theme, legend)
+  drawFrequencyAxis(ctx, layout, theme, domain, showLabels)
 }
 
-function drawFilteredSpectrumPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, original: Spectrum, filtered: Spectrum, title: string, legend: FourierLegendItem[] = []) {
+function drawFilteredSpectrumPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, original: Spectrum, filtered: Spectrum, filterConfig: FilterConfig, title: string, legend: FourierLegendItem[] = [], showLabels = true) {
   drawPanel(ctx, rect, theme, title)
+  const domain = frequencyDisplayDomain(original.frequencyMin, original.frequencyMax, false)
+  const layout = getFrequencyPlotLayout(rect, true)
+  if (legend.length > 0) reserveLegendRows(layout, rect, legend, ctx)
+  drawFrequencyGrid(ctx, layout, theme)
   const maxMagnitude = Math.max(...original.coefficients.map((coefficient) => coefficient.magnitude), 1e-9)
+  drawFilterGuide(ctx, layout, theme, domain, filterConfig, maxMagnitude)
   original.coefficients.forEach((coefficient, index) => {
-    const x = mapRange(coefficient.frequency, original.frequencyMin, original.frequencyMax, rect.x + 14, rect.x + rect.width - 14)
-    const base = rect.y + rect.height - 18
-    const originalHeight = (coefficient.magnitude / maxMagnitude) * (rect.height - 42)
-    const filteredHeight = ((filtered.coefficients[index]?.magnitude ?? 0) / maxMagnitude) * (rect.height - 42)
+    const x = axisValueToPosition(coefficient.frequency, domain, layout.left, layout.right)
+    const originalHeight = (coefficient.magnitude / maxMagnitude) * layout.height
+    const filteredHeight = ((filtered.coefficients[index]?.magnitude ?? 0) / maxMagnitude) * layout.height
     ctx.strokeStyle = theme.primary
     ctx.lineWidth = 2
     ctx.beginPath()
-    ctx.moveTo(x, base)
-    ctx.lineTo(x, base - originalHeight)
+    ctx.moveTo(x, layout.base)
+    ctx.lineTo(x, layout.base - originalHeight)
     ctx.stroke()
     ctx.strokeStyle = filteredHeight > 0 ? theme.warning : theme.gridMinor
     ctx.lineWidth = 3
     ctx.beginPath()
-    ctx.moveTo(x + 3, base)
-    ctx.lineTo(x + 3, base - filteredHeight)
+    ctx.moveTo(x + 3, layout.base)
+    ctx.lineTo(x + 3, layout.base - filteredHeight)
     ctx.stroke()
   })
   drawFourierLegend(ctx, rect, theme, legend)
+  drawFrequencyAxis(ctx, layout, theme, domain, showLabels)
+}
+
+function drawFilterGuide(ctx: CanvasRenderingContext2D, layout: FrequencyPlotLayout, theme: GraphTheme, domain: AxisDomain, config: FilterConfig, maxMagnitude: number) {
+  ctx.save()
+  ctx.fillStyle = theme.warning
+  ctx.globalAlpha = 0.08
+
+  if (config.type === 'magnitude-threshold') {
+    const thresholdY = layout.base - Math.min(1, Math.max(0, config.threshold / Math.max(1e-9, maxMagnitude))) * layout.height
+    ctx.fillRect(layout.left, layout.top, layout.width, Math.max(0, thresholdY - layout.top))
+    ctx.globalAlpha = 0.72
+    ctx.strokeStyle = theme.warning
+    ctx.lineWidth = 1.3
+    ctx.setLineDash([5, 4])
+    ctx.beginPath()
+    ctx.moveTo(layout.left, thresholdY)
+    ctx.lineTo(layout.right, thresholdY)
+    ctx.stroke()
+    ctx.restore()
+    return
+  }
+
+  const cutoff = Math.abs(config.cutoff)
+  const low = Math.min(Math.abs(config.lowCutoff), Math.abs(config.highCutoff))
+  const high = Math.max(Math.abs(config.lowCutoff), Math.abs(config.highCutoff))
+  const keptIntervals = config.type === 'low-pass'
+    ? [[-cutoff, cutoff]]
+    : config.type === 'high-pass'
+      ? [[domain.min, -cutoff], [cutoff, domain.max]]
+      : config.type === 'band-pass'
+        ? [[-high, -low], [low, high]]
+        : [[domain.min, -high], [-low, low], [high, domain.max]]
+
+  keptIntervals.forEach(([start, end]) => {
+    const clampedStart = Math.max(domain.min, Math.min(domain.max, start))
+    const clampedEnd = Math.max(domain.min, Math.min(domain.max, end))
+    if (clampedEnd <= clampedStart) return
+    const x1 = axisValueToPosition(clampedStart, domain, layout.left, layout.right)
+    const x2 = axisValueToPosition(clampedEnd, domain, layout.left, layout.right)
+    ctx.fillRect(x1, layout.top, x2 - x1, layout.height)
+  })
+
+  const boundaries = config.type === 'low-pass' || config.type === 'high-pass'
+    ? [-cutoff, cutoff]
+    : [-high, -low, low, high]
+  ctx.globalAlpha = 0.68
+  ctx.strokeStyle = theme.warning
+  ctx.lineWidth = 1.2
+  ctx.setLineDash([5, 4])
+  ;[...new Set(boundaries.map((value) => Math.abs(value) < 1e-9 ? 0 : value))].forEach((boundary) => {
+    if (!axisContains(domain, boundary)) return
+    const x = axisValueToPosition(boundary, domain, layout.left, layout.right)
+    ctx.beginPath()
+    ctx.moveTo(x, layout.top)
+    ctx.lineTo(x, layout.base)
+    ctx.stroke()
+  })
+  ctx.restore()
 }
 
 type FourierLegendItem = { label: string; color: string; dashed?: boolean }
+
+function reserveLegendRows(layout: FrequencyPlotLayout, rect: Rect, items: FourierLegendItem[], ctx: CanvasRenderingContext2D) {
+  const rows = countLegendRows(rect, items, ctx)
+  layout.top = Math.min(layout.base - 4, rect.y + 34 + rows * 14)
+  layout.height = Math.max(4, layout.base - layout.top)
+}
+
+function countLegendRows(rect: Rect, items: FourierLegendItem[], ctx: CanvasRenderingContext2D): number {
+  if (items.length === 0) return 0
+  ctx.save()
+  ctx.font = '10px Inter, system-ui, sans-serif'
+  const availableWidth = Math.max(1, rect.width - 20)
+  let rows = 1
+  let usedWidth = 0
+  items.forEach((item) => {
+    const itemWidth = 22 + ctx.measureText(item.label).width + 10
+    if (usedWidth > 0 && usedWidth + itemWidth > availableWidth) {
+      rows += 1
+      usedWidth = itemWidth
+    } else {
+      usedWidth += itemWidth
+    }
+  })
+  ctx.restore()
+  return rows
+}
 
 function drawFourierLegend(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, items: FourierLegendItem[]) {
   if (!items.length) return
@@ -2161,44 +2290,66 @@ function drawFourierLegend(ctx: CanvasRenderingContext2D, rect: Rect, theme: Gra
   ctx.restore()
 }
 
-function drawSpectrumBars(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, coefficients: FourierCoefficient[], maxMagnitude: number, logMagnitude: boolean, color: string) {
-  drawGridLines(ctx, rect, theme)
+function drawSpectrumBars(ctx: CanvasRenderingContext2D, layout: FrequencyPlotLayout, theme: GraphTheme, coefficients: FourierCoefficient[], domain: AxisDomain, maxMagnitude: number, logMagnitude: boolean, color: string) {
   coefficients.forEach((coefficient) => {
-    const x = mapRange(coefficient.frequency, coefficients[0]?.frequency ?? -10, coefficients[coefficients.length - 1]?.frequency ?? 10, rect.x + 12, rect.x + rect.width - 12)
-    const base = rect.y + rect.height - 18
+    const x = axisValueToPosition(coefficient.frequency, domain, layout.left, layout.right)
     const value = displayMagnitude(coefficient.magnitude, logMagnitude)
-    const barHeight = (value / maxMagnitude) * (rect.height - 42)
-    ctx.strokeStyle = coefficient.magnitude > maxMagnitude * 0.35 ? color : theme.gridMajor
+    const barHeight = (value / maxMagnitude) * layout.height
+    ctx.strokeStyle = value > maxMagnitude * 0.35 ? color : theme.gridMajor
     ctx.lineWidth = 2
     ctx.beginPath()
-    ctx.moveTo(x, base)
-    ctx.lineTo(x, base - barHeight)
+    ctx.moveTo(x, layout.base)
+    ctx.lineTo(x, layout.base - barHeight)
     ctx.stroke()
   })
 }
 
-function drawPhaseGraph(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, coefficients: FourierCoefficient[], frequencyMin: number, frequencyMax: number) {
+function drawPhaseGraph(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, coefficients: FourierCoefficient[], domain: AxisDomain, showLabels: boolean) {
   drawPanel(ctx, rect, theme, '')
+  const layout = getFrequencyPlotLayout(rect, false)
+  drawFrequencyGrid(ctx, layout, theme)
   ctx.strokeStyle = theme.secondary
   ctx.lineWidth = 1.5
   ctx.beginPath()
   coefficients.forEach((coefficient, index) => {
-    const x = mapRange(coefficient.frequency, frequencyMin, frequencyMax, rect.x + 12, rect.x + rect.width - 12)
-    const y = mapRange(coefficient.phase, -Math.PI, Math.PI, rect.y + rect.height - 10, rect.y + 10)
+    const x = axisValueToPosition(coefficient.frequency, domain, layout.left, layout.right)
+    const y = mapRange(coefficient.phase, -Math.PI, Math.PI, layout.base, layout.top)
     if (index === 0) ctx.moveTo(x, y)
     else ctx.lineTo(x, y)
   })
   ctx.stroke()
+  drawFrequencyAxis(ctx, layout, theme, domain, showLabels)
 }
 
-function drawFrequencyMarker(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, frequency: number, frequencyMin: number, frequencyMax: number) {
-  const x = mapRange(frequency, frequencyMin, frequencyMax, rect.x + 12, rect.x + rect.width - 12)
+function drawFrequencyMarker(ctx: CanvasRenderingContext2D, layout: FrequencyPlotLayout, theme: GraphTheme, frequency: number, domain: AxisDomain, showLabel: boolean) {
+  if (!axisContains(domain, frequency)) return
+  const x = axisValueToPosition(frequency, domain, layout.left, layout.right)
   ctx.strokeStyle = theme.warning
   ctx.lineWidth = 1.4
   ctx.beginPath()
-  ctx.moveTo(x, rect.y + 10)
-  ctx.lineTo(x, rect.y + rect.height - 10)
+  ctx.moveTo(x, layout.top)
+  ctx.lineTo(x, layout.base)
   ctx.stroke()
+  if (!showLabel) return
+
+  const text = `f = ${formatFrequency(frequency)}`
+  ctx.save()
+  ctx.font = '10px Inter, system-ui, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  const paddingX = 5
+  const boxHeight = 16
+  const boxWidth = ctx.measureText(text).width + paddingX * 2
+  const centerX = Math.max(layout.left + boxWidth / 2, Math.min(layout.right - boxWidth / 2, x))
+  const boxY = layout.top + 2
+  ctx.fillStyle = theme.background
+  ctx.fillRect(centerX - boxWidth / 2, boxY, boxWidth, boxHeight)
+  ctx.strokeStyle = theme.warning
+  ctx.lineWidth = 1
+  ctx.strokeRect(centerX - boxWidth / 2, boxY, boxWidth, boxHeight)
+  ctx.fillStyle = theme.warning
+  ctx.fillText(text, centerX, boxY + boxHeight / 2)
+  ctx.restore()
 }
 
 function drawPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, title: string) {
@@ -2214,37 +2365,169 @@ function drawPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme,
   }
 }
 
-function drawGridLines(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme) {
+type FrequencyPlotLayout = {
+  left: number
+  right: number
+  top: number
+  base: number
+  width: number
+  height: number
+}
+
+function getSignalPlotRect(rect: Rect, topInset = 28): Rect {
+  const x = rect.x + 10
+  const y = rect.y + topInset
+  const right = rect.x + rect.width - 10
+  const bottom = rect.y + rect.height - 20
+  return {
+    x,
+    y,
+    width: Math.max(1, right - x),
+    height: Math.max(4, bottom - y),
+  }
+}
+
+function drawSignalGrid(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, topInset = 28) {
+  const plot = getSignalPlotRect(rect, topInset)
   ctx.strokeStyle = theme.gridMinor
   ctx.lineWidth = 1
   for (let index = 1; index < 4; index += 1) {
-    const x = rect.x + (rect.width * index) / 4
+    const x = plot.x + (plot.width * index) / 4
     ctx.beginPath()
-    ctx.moveTo(x, rect.y + 8)
-    ctx.lineTo(x, rect.y + rect.height - 8)
+    ctx.moveTo(x, plot.y)
+    ctx.lineTo(x, plot.y + plot.height)
     ctx.stroke()
   }
-  const midY = rect.y + rect.height / 2
+  const midY = plot.y + plot.height / 2
   ctx.strokeStyle = theme.axis
   ctx.beginPath()
-  ctx.moveTo(rect.x + 8, midY)
-  ctx.lineTo(rect.x + rect.width - 8, midY)
+  ctx.moveTo(plot.x, midY)
+  ctx.lineTo(plot.x + plot.width, midY)
   ctx.stroke()
 }
 
-function drawSamples(ctx: CanvasRenderingContext2D, rect: Rect, samples: number[], color: string, width: number, dashed: boolean, amplitudeRange: number) {
+function drawTimeCursor(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, progress: number, width: number, topInset = 28) {
+  const plot = getSignalPlotRect(rect, topInset)
+  const x = plot.x + clampProgress(progress) * plot.width
+  ctx.strokeStyle = theme.accent
+  ctx.lineWidth = width
+  ctx.beginPath()
+  ctx.moveTo(x, plot.y)
+  ctx.lineTo(x, plot.y + plot.height)
+  ctx.stroke()
+}
+
+function drawTimeAxisLabels(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, showLabels: boolean, topInset = 28) {
+  if (!showLabels) return
+  const plot = getSignalPlotRect(rect, topInset)
+  const y = rect.y + rect.height - 5
+  const ticks = [
+    { value: 0, label: '0', align: 'left' as const },
+    { value: 0.5, label: '0.5', align: 'center' as const },
+    { value: 1, label: '1', align: 'right' as const },
+  ]
+  ctx.save()
+  ctx.fillStyle = theme.muted
+  ctx.font = '10px Inter, system-ui, sans-serif'
+  ctx.textBaseline = 'alphabetic'
+  ticks.forEach((tick) => {
+    ctx.textAlign = tick.align
+    ctx.fillText(tick.label, plot.x + tick.value * plot.width, y)
+  })
+  ctx.restore()
+}
+
+function drawSamples(ctx: CanvasRenderingContext2D, rect: Rect, samples: number[], color: string, width: number, dashed: boolean, amplitudeRange: number, topInset = 28) {
+  const plot = getSignalPlotRect(rect, topInset)
   ctx.strokeStyle = color
   ctx.lineWidth = width
   ctx.setLineDash(dashed ? [6, 4] : [])
   ctx.beginPath()
   samples.forEach((sample, index) => {
-    const x = rect.x + 10 + (index / Math.max(1, samples.length - 1)) * (rect.width - 20)
-    const y = mapRange(sample, -amplitudeRange, amplitudeRange, rect.y + rect.height - 12, rect.y + 12)
+    const x = plot.x + (index / Math.max(1, samples.length - 1)) * plot.width
+    const y = mapRange(sample, -amplitudeRange, amplitudeRange, plot.y + plot.height, plot.y)
     if (index === 0) ctx.moveTo(x, y)
     else ctx.lineTo(x, y)
   })
   ctx.stroke()
   ctx.setLineDash([])
+}
+
+function getFrequencyPlotLayout(rect: Rect, hasTitle: boolean): FrequencyPlotLayout {
+  const left = rect.x + 12
+  const right = rect.x + rect.width - 12
+  const base = rect.y + rect.height - 18
+  const requestedTop = rect.y + (hasTitle ? 28 : 10)
+  const top = Math.min(requestedTop, base - 4)
+  return {
+    left,
+    right,
+    top,
+    base,
+    width: Math.max(1, right - left),
+    height: Math.max(4, base - top),
+  }
+}
+
+function drawFrequencyGrid(ctx: CanvasRenderingContext2D, layout: FrequencyPlotLayout, theme: GraphTheme) {
+  ctx.strokeStyle = theme.gridMinor
+  ctx.lineWidth = 1
+  for (let index = 1; index < 4; index += 1) {
+    const x = layout.left + (layout.width * index) / 4
+    ctx.beginPath()
+    ctx.moveTo(x, layout.top)
+    ctx.lineTo(x, layout.base)
+    ctx.stroke()
+  }
+  const midY = layout.top + layout.height / 2
+  ctx.beginPath()
+  ctx.moveTo(layout.left, midY)
+  ctx.lineTo(layout.right, midY)
+  ctx.stroke()
+}
+
+function drawFrequencyAxis(ctx: CanvasRenderingContext2D, layout: FrequencyPlotLayout, theme: GraphTheme, domain: AxisDomain, showLabels: boolean) {
+  ctx.save()
+  ctx.font = '10px Inter, system-ui, sans-serif'
+  const majorTicks = frequencyAxisTicks(domain, layout.width)
+  const minorTicks = integerMinorTicks(domain)
+
+  ctx.strokeStyle = theme.axis
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(layout.left, layout.base)
+  ctx.lineTo(layout.right, layout.base)
+  ctx.stroke()
+
+  ctx.strokeStyle = theme.gridMajor
+  minorTicks.forEach((value) => {
+    const x = axisValueToPosition(value, domain, layout.left, layout.right)
+    ctx.beginPath()
+    ctx.moveTo(x, layout.base)
+    ctx.lineTo(x, layout.base + 3)
+    ctx.stroke()
+  })
+
+  ctx.strokeStyle = theme.axis
+  majorTicks.forEach((tick) => {
+    const x = axisValueToPosition(tick.value, domain, layout.left, layout.right)
+    ctx.beginPath()
+    ctx.moveTo(x, layout.base)
+    ctx.lineTo(x, layout.base + 5)
+    ctx.stroke()
+  })
+
+  if (showLabels) {
+    ctx.fillStyle = theme.muted
+    ctx.textBaseline = 'alphabetic'
+    majorTicks.forEach((tick) => {
+      const x = axisValueToPosition(tick.value, domain, layout.left, layout.right)
+      const labelWidth = ctx.measureText(tick.label).width
+      ctx.textAlign = x - labelWidth / 2 < layout.left ? 'left' : x + labelWidth / 2 > layout.right ? 'right' : 'center'
+      ctx.fillText(tick.label, x, layout.base + 13)
+    })
+  }
+  ctx.restore()
 }
 
 function signalAmplitudeRange(samples: number[]): number {
@@ -2320,15 +2603,6 @@ function complexToScreen(center: { x: number; y: number }, scale: number, point:
   }
 }
 
-function selectReconstructionCoefficients(coefficients: FourierCoefficient[], mode: ReconstructionMode, count: number): FourierCoefficient[] {
-  if (mode === 'paired-frequency-blocks') return selectPairedFrequencyBlocks(coefficients, count)
-  if (mode === 'first-harmonics') {
-    const harmonic = Math.max(0, Math.floor(count / 2))
-    return coefficients.filter((coefficient) => Math.abs(coefficient.frequency) <= harmonic)
-  }
-  return selectTopCoefficients(coefficients, count)
-}
-
 function getValueRows(state: {
   locale: FourierLocale
   lessonKey: string
@@ -2350,14 +2624,14 @@ function getValueRows(state: {
   lowCutoff: number
   highCutoff: number
   threshold: number
-}): ValueRow[] {
+}): FourierValueRow[] {
   const dominant = findDominantPeaks(state.spectrum, 4).map((coefficient) => formatPeakFrequency(coefficient.frequency, state.locale)).join(', ')
   const noValue = state.locale === 'zh' ? '无' : 'none'
   if (state.lessonKey === 'spectrum' && state.spectrumView === 'pair') {
     const frame = computeFrequencyPairFrame(state.frequencyPair, state.playhead)
     const isDc = state.frequencyPair.frequency === 0 || !state.frequencyPair.negative
     return [
-      { label: state.locale === 'zh' ? '频率对' : 'frequency pair', value: isDc ? '0' : `±${formatFrequency(state.frequencyPair.frequency)}` },
+      { label: state.locale === 'zh' ? '旋转频率' : 'rotation frequency', value: isDc ? '0' : `±${formatFrequency(state.frequencyPair.frequency)}` },
       { label: 'C(+f)', value: formatComplexValue(state.frequencyPair.positive.value) },
       { label: 'C(-f)', value: state.frequencyPair.negative ? formatComplexValue(state.frequencyPair.negative.value) : (state.locale === 'zh' ? '与 C(0) 重合' : 'same as C(0)') },
       { label: '|C(+f)|', value: formatNumber(state.frequencyPair.positive.magnitude) },
@@ -2608,8 +2882,8 @@ function getFourierCanvasAriaLabel(copy: LessonCopy, locale: FourierLocale, spec
   const pairLabel = pair.frequency === 0 ? '0' : `±${formatFrequency(pair.frequency)}`
   const negativeMagnitude = pair.negative?.magnitude ?? pair.positive.magnitude
   return locale === 'zh'
-    ? `${copy.title}。当前频率对 ${pairLabel}；正频率幅值 ${formatNumber(pair.positive.magnitude)}，负频率幅值 ${formatNumber(negativeMagnitude)}。${copy.what}`
-    : `${copy.title}. Current frequency pair ${pairLabel}; positive magnitude ${formatNumber(pair.positive.magnitude)}, negative magnitude ${formatNumber(negativeMagnitude)}. ${copy.what}`
+    ? `${copy.title}。当前两根反向箭头的旋转频率 ${pairLabel}；正频率幅值 ${formatNumber(pair.positive.magnitude)}，负频率幅值 ${formatNumber(negativeMagnitude)}。${copy.what}`
+    : `${copy.title}. The two opposite arrows currently rotate at ${pairLabel}; positive magnitude ${formatNumber(pair.positive.magnitude)}, negative magnitude ${formatNumber(negativeMagnitude)}. ${copy.what}`
 }
 
 function getFourierConventionCopy(lessonKey: string, spectrumView: SpectrumView, locale: FourierLocale): string {

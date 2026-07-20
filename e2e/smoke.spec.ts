@@ -90,7 +90,8 @@ test.describe('ready explorers', () => {
       await expect(page.locator('.explorer-stage-header')).toBeVisible()
       await expect(page.locator('.lesson-stage-actions')).toBeVisible()
       const actionLabels = await page.locator('.lesson-stage-actions > button:visible').allTextContents()
-      expect(actionLabels.map((label) => label.trim())).toEqual(['Visual notes', 'Readout', 'Focus', 'Export PNG'])
+      const readoutLabel = route.includes('/fourier/') ? 'Intuition' : 'Readout'
+      expect(actionLabels.map((label) => label.trim())).toEqual(['Visual notes', readoutLabel, 'Focus', 'Export PNG'])
       await expect(page.getByRole('button', { name: 'Notes', exact: true }).filter({ visible: true })).toHaveCount(1)
       const shellBox = await shell.boundingBox()
       const stageBox = await stage.boundingBox()

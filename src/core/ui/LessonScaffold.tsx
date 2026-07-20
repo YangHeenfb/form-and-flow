@@ -26,6 +26,7 @@ type LessonScaffoldProps = {
   focusReadout?: ReactNode
   focusTransport?: ReactNode
   autoHideToggle?: ReactNode
+  readoutLabel?: string
   focusControlsLabel?: string
   focusReadoutLabel?: string
   closeFocusPanelLabel?: string
@@ -54,6 +55,7 @@ export function LessonScaffold({
   focusReadout,
   focusTransport,
   autoHideToggle,
+  readoutLabel,
   focusControlsLabel,
   focusReadoutLabel,
   closeFocusPanelLabel,
@@ -69,6 +71,7 @@ export function LessonScaffold({
   const readoutId = useId()
   const controlsContent = focusControls === undefined ? controls : focusControls
   const readoutContent = focusReadout === undefined ? explanation : focusReadout
+  const resolvedReadoutLabel = readoutLabel ?? labels.readout
   const focusPanels = useMemo(
     () =>
       [
@@ -86,7 +89,7 @@ export function LessonScaffold({
         },
         {
           id: 'readout' as const,
-          title: focusReadoutLabel ?? labels.readout,
+          title: focusReadoutLabel ?? resolvedReadoutLabel,
           content: (
             <div className="lesson-focus-drawer-content lesson-focus-drawer-content-readout">
               {readoutContent}
@@ -97,7 +100,7 @@ export function LessonScaffold({
           icon: Info,
         },
       ].filter((panel) => panel.enabled),
-    [controlsContent, focusControlsLabel, focusReadoutLabel, labels.controls, labels.readout, readoutContent],
+    [controlsContent, focusControlsLabel, focusReadoutLabel, labels.controls, readoutContent, resolvedReadoutLabel],
   )
   const activePanel = focusPanels.find((panel) => panel.id === activePanelId) ?? null
   const hasActiveFocusPanel = isFocusMode && activePanel !== null
@@ -118,7 +121,7 @@ export function LessonScaffold({
   return (
     <StandardReadoutActionProvider
       value={{
-        label: labels.readout,
+        label: resolvedReadoutLabel,
         open: standardReadoutOpen,
         enabled: !isFocusMode,
         onToggle: () => setStandardReadoutOpen((open) => !open),
@@ -165,7 +168,7 @@ export function LessonScaffold({
             onClick={() => setMobileReadoutOpen((open) => !open)}
           >
             <Info size={17} />
-            <span>{labels.readout}</span>
+            <span>{resolvedReadoutLabel}</span>
             <ChevronDown className="lesson-mobile-section-chevron" size={17} aria-hidden="true" />
           </button>
           <div className="lesson-mobile-section-content" id={readoutId}>{explanation}</div>
@@ -173,7 +176,7 @@ export function LessonScaffold({
         {!isFocusMode && standardReadoutOpen && (
           <OverlayDrawer
             className="lesson-standard-readout-drawer"
-            title={labels.readout}
+            title={resolvedReadoutLabel}
             side="right"
             closeLabel={closeFocusPanelLabel ?? labels.closePanel}
             onClose={() => setStandardReadoutOpen(false)}
