@@ -5,6 +5,7 @@ import { applyHighPass, applyLowPass } from '../modules/fourier/math/filters.ts'
 import { computeFrequencyPair, computeFrequencyPairFrame, synthesizeFrequencyPair } from '../modules/fourier/math/frequencyPair.ts'
 import { computeCoefficientAtFrequency, computeIntegerSpectrum, findDominantFrequencies, interpolateWindingPoint, selectPairedFrequencyBlocks } from '../modules/fourier/math/fourier.ts'
 import { maxAbsError, reconstructSamples } from '../modules/fourier/math/reconstruction.ts'
+import { axisContains, axisValueToPosition, frequencyAxisTicks, frequencyDisplayDomain, integerMinorTicks } from '../modules/fourier/math/axisTicks.ts'
 
 describe('fourier complex math', () => {
   it('multiplies, divides, and formats complex numbers', () => {
@@ -140,5 +141,39 @@ describe('conjugate frequency-pair synthesis', () => {
     expect(frame.negative).toBeNull()
     expect(frame.sum.re).toBeCloseTo(1, 10)
     expect(synthesizeFrequencyPair(pair, samples.length)).toEqual(samples)
+  })
+})
+
+describe('fourier axes', () => {
+  const measureLabel = (label: string) => label.length * 5
+
+  it('labels every integer in the default desktop frequency range', () => {
+    const domain = frequencyDisplayDomain(-10, 10, false)
+    expect(frequencyAxisTicks(domain, 510, measureLabel).map((tick) => tick.value)).toEqual([
+      -10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+    ])
+    expect(integerMinorTicks(domain)).toHaveLength(21)
+  })
+
+  it('reduces mobile labels while retaining integer minor ticks and zero', () => {
+    const domain = frequencyDisplayDomain(-10, 10, false)
+    expect(frequencyAxisTicks(domain, 185, measureLabel).map((tick) => tick.value)).toEqual([-10, -5, 0, 5, 10])
+    expect(integerMinorTicks(domain)).toContain(1)
+    expect(integerMinorTicks(domain)).toContain(-3)
+  })
+
+  it('uses the visible positive-frequency domain for every coordinate', () => {
+    const domain = frequencyDisplayDomain(-10, 10, true)
+    expect(domain).toEqual({ min: 0, max: 10 })
+    expect(axisContains(domain, -1)).toBe(false)
+    expect(axisContains(domain, 3)).toBe(true)
+    expect(axisValueToPosition(5, domain, 12, 212)).toBe(112)
+  })
+
+  it('creates readable nice ticks for non-integer ranges', () => {
+    const domain = frequencyDisplayDomain(-0.75, 1.25, false)
+    const ticks = frequencyAxisTicks(domain, 240, measureLabel)
+    expect(ticks.map((tick) => tick.value)).toEqual([-0.5, 0, 0.5, 1])
+    expect(ticks.find((tick) => tick.value === 0)?.label).toBe('0')
   })
 })

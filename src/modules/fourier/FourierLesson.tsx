@@ -16,6 +16,7 @@ import { usePlatformLocale } from '../../platform/platformLocale.tsx'
 import { calculusFunctionNames, completeBareFunctionInput, normalizeMathInput } from '../calculus/shared/mathInput.ts'
 import type { FilterConfig, FilterType, FourierCoefficient, ReconstructionMode, Spectrum, WindingPoint } from './fourierTypes.ts'
 import { compileFourierExpression, fourierPresets, getFourierPreset, sampleFourierExpression, sampleFourierPreset, type SignalPreset } from './fourierPresets.ts'
+import { axisContains, axisValueToPosition, frequencyAxisTicks, frequencyDisplayDomain, integerMinorTicks, type AxisDomain } from './math/axisTicks.ts'
 import { applyFilter } from './math/filters.ts'
 import { computeFrequencyPair, computeFrequencyPairFrame, synthesizeFrequencyPair, type FrequencyPair } from './math/frequencyPair.ts'
 import { computeCoefficientAtFrequency, computeIntegerSpectrum, computeSpectrum, computeWindingPoints, findDominantFrequencies, interpolateWindingPoint, selectPairedFrequencyBlocks, selectTopCoefficients } from './math/fourier.ts'
@@ -1751,8 +1752,8 @@ function drawSpectrumLesson(ctx: CanvasRenderingContext2D, viewport: GraphViewpo
   const lowerY = signalRect.y + signalRect.height + gap
   const spectrumRect = { x: gap, y: lowerY, width: viewport.width * 0.62 - gap * 1.5, height: viewport.height - lowerY - gap }
   const windingRect = { x: spectrumRect.x + spectrumRect.width + gap, y: lowerY, width: viewport.width - spectrumRect.width - gap * 3, height: spectrumRect.height }
-  drawSignalPanel(ctx, signalRect, theme, state.samples, true, state.playhead, state.showLabels ? label(state.locale, 'Time signal', '时间信号') : '')
-  if (state.showSpectrum) drawSpectrumPanel(ctx, spectrumRect, theme, state.spectrum, state.selectedFrequency, state.logMagnitude, state.positiveOnly, state.showPhase, state.showLabels ? label(state.locale, 'Magnitude spectrum', '幅值频谱') : '')
+  drawSignalPanel(ctx, signalRect, theme, state.samples, true, state.playhead, state.showLabels ? label(state.locale, 'Time signal', '时间信号') : '', state.showLabels)
+  if (state.showSpectrum) drawSpectrumPanel(ctx, spectrumRect, theme, state.spectrum, state.selectedFrequency, state.logMagnitude, state.positiveOnly, state.showPhase, state.showLabels ? label(state.locale, 'Magnitude spectrum', '幅值频谱') : '', state.showLabels)
   drawWindingPanel(ctx, windingRect, theme, state)
 }
 
@@ -1793,7 +1794,7 @@ function getFrequencyPairTheme(theme: GraphTheme): GraphTheme {
 
 function drawPairSignalPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, state: DrawState) {
   drawPanel(ctx, rect, theme, state.showLabels ? label(state.locale, 'Source and selected pair', '原信号与当前频率对') : '')
-  drawGridLines(ctx, rect, theme)
+  drawSignalGrid(ctx, rect, theme)
   const displayedSamples = [
     ...(state.showOriginalSignal ? state.samples : []),
     ...state.frequencyPairSamples,
@@ -1802,19 +1803,14 @@ function drawPairSignalPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: G
   drawAmplitudeScale(ctx, rect, theme, amplitudeRange)
   if (state.showOriginalSignal) drawSamples(ctx, rect, state.samples, theme.primary, 1.8, false, amplitudeRange)
   drawSamples(ctx, rect, state.frequencyPairSamples, theme.warning, 2.4, false, amplitudeRange)
-  const cursorX = rect.x + 10 + clampProgress(state.playhead) * (rect.width - 20)
-  ctx.strokeStyle = theme.accent
-  ctx.lineWidth = 1.3
-  ctx.beginPath()
-  ctx.moveTo(cursorX, rect.y + 9)
-  ctx.lineTo(cursorX, rect.y + rect.height - 9)
-  ctx.stroke()
+  drawTimeCursor(ctx, rect, theme, state.playhead, 1.3)
   if (state.showLabels) {
     drawFourierLegend(ctx, rect, theme, [
       ...(state.showOriginalSignal ? [{ label: label(state.locale, 'source', '原信号'), color: theme.primary }] : []),
       { label: label(state.locale, 'selected ±f pair', '当前 ±f 频率对'), color: theme.warning },
     ])
   }
+  drawTimeAxisLabels(ctx, rect, theme, state.showLabels)
 }
 
 function drawFrequencyPairPlane(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, state: DrawState) {
@@ -1954,8 +1950,9 @@ function drawReconstructionLesson(ctx: CanvasRenderingContext2D, viewport: Graph
           ...(state.showResidual ? [{ label: label(state.locale, 'residual', '残差'), color: theme.secondary, dashed: true }] : []),
         ]
       : [],
+    state.showLabels,
   )
-  if (state.showSpectrum) drawIntegerSpectrumPanel(ctx, spectrumRect, theme, state.integerSpectrum, state.includedCoefficients, state.showLabels ? label(state.locale, 'Selected coefficients', '选中的系数') : '')
+  if (state.showSpectrum) drawIntegerSpectrumPanel(ctx, spectrumRect, theme, state.integerSpectrum, state.includedCoefficients, state.showLabels ? label(state.locale, 'Selected coefficients', '选中的系数') : '', state.showLabels)
 }
 
 function drawFilteringLesson(ctx: CanvasRenderingContext2D, viewport: GraphViewport, theme: GraphTheme, state: DrawState) {
@@ -1969,7 +1966,7 @@ function drawFilteringLesson(ctx: CanvasRenderingContext2D, viewport: GraphViewp
         ...(state.showResidual ? [{ label: label(state.locale, 'residual', '残差'), color: theme.secondary, dashed: true }] : []),
       ]
     : []
-  drawComparisonPanel(ctx, signalRect, theme, state.samples, state.filteredSamples, state.showOriginalSignal, true, state.showResidual, state.showLabels ? label(state.locale, 'Original vs filtered signal', '原始信号与滤波结果') : '', comparisonLegend)
+  drawComparisonPanel(ctx, signalRect, theme, state.samples, state.filteredSamples, state.showOriginalSignal, true, state.showResidual, state.showLabels ? label(state.locale, 'Original vs filtered signal', '原始信号与滤波结果') : '', comparisonLegend, state.showLabels)
   if (state.showSpectrum) {
     drawFilteredSpectrumPanel(
       ctx,
@@ -1984,28 +1981,24 @@ function drawFilteringLesson(ctx: CanvasRenderingContext2D, viewport: GraphViewp
             { label: label(state.locale, 'filtered', '滤波后'), color: theme.warning },
           ]
         : [],
+      state.showLabels,
     )
   }
 }
 
-function drawSignalPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, samples: number[], showSignal: boolean, cursor: number, title: string) {
+function drawSignalPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, samples: number[], showSignal: boolean, cursor: number, title: string, showLabels: boolean) {
   drawPanel(ctx, rect, theme, title)
-  drawGridLines(ctx, rect, theme)
+  drawSignalGrid(ctx, rect, theme)
   const amplitudeRange = signalAmplitudeRange(samples)
   drawAmplitudeScale(ctx, rect, theme, amplitudeRange)
   if (showSignal) drawSamples(ctx, rect, samples, theme.primary, 2, false, amplitudeRange)
-  const x = rect.x + cursor * rect.width
-  ctx.strokeStyle = theme.accent
-  ctx.lineWidth = 1.5
-  ctx.beginPath()
-  ctx.moveTo(x, rect.y + 8)
-  ctx.lineTo(x, rect.y + rect.height - 8)
-  ctx.stroke()
+  drawTimeCursor(ctx, rect, theme, cursor, 1.5)
+  drawTimeAxisLabels(ctx, rect, theme, showLabels)
 }
 
-function drawComparisonPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, original: number[], comparison: number[], showOriginal: boolean, showComparison: boolean, showResidual: boolean, title: string, legend: FourierLegendItem[] = []) {
+function drawComparisonPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, original: number[], comparison: number[], showOriginal: boolean, showComparison: boolean, showResidual: boolean, title: string, legend: FourierLegendItem[] = [], showLabels = true) {
   drawPanel(ctx, rect, theme, title)
-  drawGridLines(ctx, rect, theme)
+  drawSignalGrid(ctx, rect, theme)
   const residual = original.map((value, index) => value - (comparison[index] ?? 0))
   const amplitudeRange = signalAmplitudeRange([
     ...(showOriginal ? original : []),
@@ -2019,6 +2012,7 @@ function drawComparisonPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: G
     drawSamples(ctx, rect, residual, theme.secondary, 1.6, true, amplitudeRange)
   }
   drawFourierLegend(ctx, rect, theme, legend)
+  drawTimeAxisLabels(ctx, rect, theme, showLabels)
 }
 
 function drawWindingPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, state: DrawState) {
@@ -2074,59 +2068,69 @@ function drawWindingPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: Grap
   }
 }
 
-function drawSpectrumPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, spectrum: Spectrum, selectedFrequency: number, logMagnitude: boolean, positiveOnly: boolean, showPhase: boolean, title: string) {
+function drawSpectrumPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, spectrum: Spectrum, selectedFrequency: number, logMagnitude: boolean, positiveOnly: boolean, showPhase: boolean, title: string, showLabels: boolean) {
   drawPanel(ctx, rect, theme, title)
   const phaseHeight = showPhase ? rect.height * 0.34 : 0
   const magnitudeRect = { x: rect.x, y: rect.y, width: rect.width, height: rect.height - phaseHeight }
   const phaseRect = { x: rect.x, y: rect.y + magnitudeRect.height, width: rect.width, height: phaseHeight }
-  const coefficients = spectrum.coefficients.filter((coefficient) => !positiveOnly || coefficient.frequency >= 0)
+  const domain = frequencyDisplayDomain(spectrum.frequencyMin, spectrum.frequencyMax, positiveOnly)
+  const coefficients = spectrum.coefficients.filter((coefficient) => axisContains(domain, coefficient.frequency))
   const maxMagnitude = Math.max(...coefficients.map((coefficient) => displayMagnitude(coefficient.magnitude, logMagnitude)), 1e-9)
-  drawSpectrumBars(ctx, magnitudeRect, theme, coefficients, maxMagnitude, logMagnitude, theme.accent)
-  drawFrequencyMarker(ctx, magnitudeRect, theme, selectedFrequency, spectrum.frequencyMin, spectrum.frequencyMax)
+  const magnitudeLayout = getFrequencyPlotLayout(magnitudeRect, true)
+  drawFrequencyGrid(ctx, magnitudeLayout, theme)
+  drawSpectrumBars(ctx, magnitudeLayout, theme, coefficients, domain, maxMagnitude, logMagnitude, theme.accent)
+  drawFrequencyAxis(ctx, magnitudeLayout, theme, domain, showLabels && !showPhase)
+  drawFrequencyMarker(ctx, magnitudeLayout, theme, selectedFrequency, domain, showLabels)
   if (showPhase) {
-    drawPhaseGraph(ctx, phaseRect, theme, coefficients, spectrum.frequencyMin, spectrum.frequencyMax)
+    drawPhaseGraph(ctx, phaseRect, theme, coefficients, domain, showLabels)
   }
 }
 
-function drawIntegerSpectrumPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, spectrum: Spectrum, selected: FourierCoefficient[], title: string) {
+function drawIntegerSpectrumPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, spectrum: Spectrum, selected: FourierCoefficient[], title: string, showLabels: boolean) {
   drawPanel(ctx, rect, theme, title)
+  const domain = frequencyDisplayDomain(spectrum.frequencyMin, spectrum.frequencyMax, false)
+  const layout = getFrequencyPlotLayout(rect, true)
+  drawFrequencyGrid(ctx, layout, theme)
   const selectedKeys = new Set(selected.map((coefficient) => coefficient.frequency))
   const maxMagnitude = Math.max(...spectrum.coefficients.map((coefficient) => coefficient.magnitude), 1e-9)
   spectrum.coefficients.forEach((coefficient) => {
-    const x = mapRange(coefficient.frequency, spectrum.frequencyMin, spectrum.frequencyMax, rect.x + 14, rect.x + rect.width - 14)
-    const base = rect.y + rect.height - 18
-    const barHeight = (coefficient.magnitude / maxMagnitude) * (rect.height - 42)
+    const x = axisValueToPosition(coefficient.frequency, domain, layout.left, layout.right)
+    const barHeight = (coefficient.magnitude / maxMagnitude) * layout.height
     ctx.strokeStyle = selectedKeys.has(coefficient.frequency) ? theme.warning : theme.gridMajor
     ctx.lineWidth = selectedKeys.has(coefficient.frequency) ? 3 : 2
     ctx.beginPath()
-    ctx.moveTo(x, base)
-    ctx.lineTo(x, base - barHeight)
+    ctx.moveTo(x, layout.base)
+    ctx.lineTo(x, layout.base - barHeight)
     ctx.stroke()
   })
+  drawFrequencyAxis(ctx, layout, theme, domain, showLabels)
 }
 
-function drawFilteredSpectrumPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, original: Spectrum, filtered: Spectrum, title: string, legend: FourierLegendItem[] = []) {
+function drawFilteredSpectrumPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, original: Spectrum, filtered: Spectrum, title: string, legend: FourierLegendItem[] = [], showLabels = true) {
   drawPanel(ctx, rect, theme, title)
+  const domain = frequencyDisplayDomain(original.frequencyMin, original.frequencyMax, false)
+  const layout = getFrequencyPlotLayout(rect, true)
+  drawFrequencyGrid(ctx, layout, theme)
   const maxMagnitude = Math.max(...original.coefficients.map((coefficient) => coefficient.magnitude), 1e-9)
   original.coefficients.forEach((coefficient, index) => {
-    const x = mapRange(coefficient.frequency, original.frequencyMin, original.frequencyMax, rect.x + 14, rect.x + rect.width - 14)
-    const base = rect.y + rect.height - 18
-    const originalHeight = (coefficient.magnitude / maxMagnitude) * (rect.height - 42)
-    const filteredHeight = ((filtered.coefficients[index]?.magnitude ?? 0) / maxMagnitude) * (rect.height - 42)
+    const x = axisValueToPosition(coefficient.frequency, domain, layout.left, layout.right)
+    const originalHeight = (coefficient.magnitude / maxMagnitude) * layout.height
+    const filteredHeight = ((filtered.coefficients[index]?.magnitude ?? 0) / maxMagnitude) * layout.height
     ctx.strokeStyle = theme.primary
     ctx.lineWidth = 2
     ctx.beginPath()
-    ctx.moveTo(x, base)
-    ctx.lineTo(x, base - originalHeight)
+    ctx.moveTo(x, layout.base)
+    ctx.lineTo(x, layout.base - originalHeight)
     ctx.stroke()
     ctx.strokeStyle = filteredHeight > 0 ? theme.warning : theme.gridMinor
     ctx.lineWidth = 3
     ctx.beginPath()
-    ctx.moveTo(x + 3, base)
-    ctx.lineTo(x + 3, base - filteredHeight)
+    ctx.moveTo(x + 3, layout.base)
+    ctx.lineTo(x + 3, layout.base - filteredHeight)
     ctx.stroke()
   })
   drawFourierLegend(ctx, rect, theme, legend)
+  drawFrequencyAxis(ctx, layout, theme, domain, showLabels)
 }
 
 type FourierLegendItem = { label: string; color: string; dashed?: boolean }
@@ -2161,44 +2165,66 @@ function drawFourierLegend(ctx: CanvasRenderingContext2D, rect: Rect, theme: Gra
   ctx.restore()
 }
 
-function drawSpectrumBars(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, coefficients: FourierCoefficient[], maxMagnitude: number, logMagnitude: boolean, color: string) {
-  drawGridLines(ctx, rect, theme)
+function drawSpectrumBars(ctx: CanvasRenderingContext2D, layout: FrequencyPlotLayout, theme: GraphTheme, coefficients: FourierCoefficient[], domain: AxisDomain, maxMagnitude: number, logMagnitude: boolean, color: string) {
   coefficients.forEach((coefficient) => {
-    const x = mapRange(coefficient.frequency, coefficients[0]?.frequency ?? -10, coefficients[coefficients.length - 1]?.frequency ?? 10, rect.x + 12, rect.x + rect.width - 12)
-    const base = rect.y + rect.height - 18
+    const x = axisValueToPosition(coefficient.frequency, domain, layout.left, layout.right)
     const value = displayMagnitude(coefficient.magnitude, logMagnitude)
-    const barHeight = (value / maxMagnitude) * (rect.height - 42)
-    ctx.strokeStyle = coefficient.magnitude > maxMagnitude * 0.35 ? color : theme.gridMajor
+    const barHeight = (value / maxMagnitude) * layout.height
+    ctx.strokeStyle = value > maxMagnitude * 0.35 ? color : theme.gridMajor
     ctx.lineWidth = 2
     ctx.beginPath()
-    ctx.moveTo(x, base)
-    ctx.lineTo(x, base - barHeight)
+    ctx.moveTo(x, layout.base)
+    ctx.lineTo(x, layout.base - barHeight)
     ctx.stroke()
   })
 }
 
-function drawPhaseGraph(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, coefficients: FourierCoefficient[], frequencyMin: number, frequencyMax: number) {
+function drawPhaseGraph(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, coefficients: FourierCoefficient[], domain: AxisDomain, showLabels: boolean) {
   drawPanel(ctx, rect, theme, '')
+  const layout = getFrequencyPlotLayout(rect, false)
+  drawFrequencyGrid(ctx, layout, theme)
   ctx.strokeStyle = theme.secondary
   ctx.lineWidth = 1.5
   ctx.beginPath()
   coefficients.forEach((coefficient, index) => {
-    const x = mapRange(coefficient.frequency, frequencyMin, frequencyMax, rect.x + 12, rect.x + rect.width - 12)
-    const y = mapRange(coefficient.phase, -Math.PI, Math.PI, rect.y + rect.height - 10, rect.y + 10)
+    const x = axisValueToPosition(coefficient.frequency, domain, layout.left, layout.right)
+    const y = mapRange(coefficient.phase, -Math.PI, Math.PI, layout.base, layout.top)
     if (index === 0) ctx.moveTo(x, y)
     else ctx.lineTo(x, y)
   })
   ctx.stroke()
+  drawFrequencyAxis(ctx, layout, theme, domain, showLabels)
 }
 
-function drawFrequencyMarker(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, frequency: number, frequencyMin: number, frequencyMax: number) {
-  const x = mapRange(frequency, frequencyMin, frequencyMax, rect.x + 12, rect.x + rect.width - 12)
+function drawFrequencyMarker(ctx: CanvasRenderingContext2D, layout: FrequencyPlotLayout, theme: GraphTheme, frequency: number, domain: AxisDomain, showLabel: boolean) {
+  if (!axisContains(domain, frequency)) return
+  const x = axisValueToPosition(frequency, domain, layout.left, layout.right)
   ctx.strokeStyle = theme.warning
   ctx.lineWidth = 1.4
   ctx.beginPath()
-  ctx.moveTo(x, rect.y + 10)
-  ctx.lineTo(x, rect.y + rect.height - 10)
+  ctx.moveTo(x, layout.top)
+  ctx.lineTo(x, layout.base)
   ctx.stroke()
+  if (!showLabel) return
+
+  const text = `f = ${formatFrequency(frequency)}`
+  ctx.save()
+  ctx.font = '10px Inter, system-ui, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  const paddingX = 5
+  const boxHeight = 16
+  const boxWidth = ctx.measureText(text).width + paddingX * 2
+  const centerX = Math.max(layout.left + boxWidth / 2, Math.min(layout.right - boxWidth / 2, x))
+  const boxY = layout.top + 2
+  ctx.fillStyle = theme.background
+  ctx.fillRect(centerX - boxWidth / 2, boxY, boxWidth, boxHeight)
+  ctx.strokeStyle = theme.warning
+  ctx.lineWidth = 1
+  ctx.strokeRect(centerX - boxWidth / 2, boxY, boxWidth, boxHeight)
+  ctx.fillStyle = theme.warning
+  ctx.fillText(text, centerX, boxY + boxHeight / 2)
+  ctx.restore()
 }
 
 function drawPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, title: string) {
@@ -2214,37 +2240,169 @@ function drawPanel(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme,
   }
 }
 
-function drawGridLines(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme) {
+type FrequencyPlotLayout = {
+  left: number
+  right: number
+  top: number
+  base: number
+  width: number
+  height: number
+}
+
+function getSignalPlotRect(rect: Rect): Rect {
+  const x = rect.x + 10
+  const y = rect.y + 9
+  const right = rect.x + rect.width - 10
+  const bottom = rect.y + rect.height - 20
+  return {
+    x,
+    y,
+    width: Math.max(1, right - x),
+    height: Math.max(4, bottom - y),
+  }
+}
+
+function drawSignalGrid(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme) {
+  const plot = getSignalPlotRect(rect)
   ctx.strokeStyle = theme.gridMinor
   ctx.lineWidth = 1
   for (let index = 1; index < 4; index += 1) {
-    const x = rect.x + (rect.width * index) / 4
+    const x = plot.x + (plot.width * index) / 4
     ctx.beginPath()
-    ctx.moveTo(x, rect.y + 8)
-    ctx.lineTo(x, rect.y + rect.height - 8)
+    ctx.moveTo(x, plot.y)
+    ctx.lineTo(x, plot.y + plot.height)
     ctx.stroke()
   }
-  const midY = rect.y + rect.height / 2
+  const midY = plot.y + plot.height / 2
   ctx.strokeStyle = theme.axis
   ctx.beginPath()
-  ctx.moveTo(rect.x + 8, midY)
-  ctx.lineTo(rect.x + rect.width - 8, midY)
+  ctx.moveTo(plot.x, midY)
+  ctx.lineTo(plot.x + plot.width, midY)
   ctx.stroke()
 }
 
+function drawTimeCursor(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, progress: number, width: number) {
+  const plot = getSignalPlotRect(rect)
+  const x = plot.x + clampProgress(progress) * plot.width
+  ctx.strokeStyle = theme.accent
+  ctx.lineWidth = width
+  ctx.beginPath()
+  ctx.moveTo(x, plot.y)
+  ctx.lineTo(x, plot.y + plot.height)
+  ctx.stroke()
+}
+
+function drawTimeAxisLabels(ctx: CanvasRenderingContext2D, rect: Rect, theme: GraphTheme, showLabels: boolean) {
+  if (!showLabels) return
+  const plot = getSignalPlotRect(rect)
+  const y = rect.y + rect.height - 5
+  const ticks = [
+    { value: 0, label: '0', align: 'left' as const },
+    { value: 0.5, label: '0.5', align: 'center' as const },
+    { value: 1, label: '1', align: 'right' as const },
+  ]
+  ctx.save()
+  ctx.fillStyle = theme.muted
+  ctx.font = '10px Inter, system-ui, sans-serif'
+  ctx.textBaseline = 'alphabetic'
+  ticks.forEach((tick) => {
+    ctx.textAlign = tick.align
+    ctx.fillText(tick.label, plot.x + tick.value * plot.width, y)
+  })
+  ctx.restore()
+}
+
 function drawSamples(ctx: CanvasRenderingContext2D, rect: Rect, samples: number[], color: string, width: number, dashed: boolean, amplitudeRange: number) {
+  const plot = getSignalPlotRect(rect)
   ctx.strokeStyle = color
   ctx.lineWidth = width
   ctx.setLineDash(dashed ? [6, 4] : [])
   ctx.beginPath()
   samples.forEach((sample, index) => {
-    const x = rect.x + 10 + (index / Math.max(1, samples.length - 1)) * (rect.width - 20)
-    const y = mapRange(sample, -amplitudeRange, amplitudeRange, rect.y + rect.height - 12, rect.y + 12)
+    const x = plot.x + (index / Math.max(1, samples.length - 1)) * plot.width
+    const y = mapRange(sample, -amplitudeRange, amplitudeRange, plot.y + plot.height, plot.y)
     if (index === 0) ctx.moveTo(x, y)
     else ctx.lineTo(x, y)
   })
   ctx.stroke()
   ctx.setLineDash([])
+}
+
+function getFrequencyPlotLayout(rect: Rect, hasTitle: boolean): FrequencyPlotLayout {
+  const left = rect.x + 12
+  const right = rect.x + rect.width - 12
+  const base = rect.y + rect.height - 18
+  const requestedTop = rect.y + (hasTitle ? 28 : 10)
+  const top = Math.min(requestedTop, base - 4)
+  return {
+    left,
+    right,
+    top,
+    base,
+    width: Math.max(1, right - left),
+    height: Math.max(4, base - top),
+  }
+}
+
+function drawFrequencyGrid(ctx: CanvasRenderingContext2D, layout: FrequencyPlotLayout, theme: GraphTheme) {
+  ctx.strokeStyle = theme.gridMinor
+  ctx.lineWidth = 1
+  for (let index = 1; index < 4; index += 1) {
+    const x = layout.left + (layout.width * index) / 4
+    ctx.beginPath()
+    ctx.moveTo(x, layout.top)
+    ctx.lineTo(x, layout.base)
+    ctx.stroke()
+  }
+  const midY = layout.top + layout.height / 2
+  ctx.beginPath()
+  ctx.moveTo(layout.left, midY)
+  ctx.lineTo(layout.right, midY)
+  ctx.stroke()
+}
+
+function drawFrequencyAxis(ctx: CanvasRenderingContext2D, layout: FrequencyPlotLayout, theme: GraphTheme, domain: AxisDomain, showLabels: boolean) {
+  ctx.save()
+  ctx.font = '10px Inter, system-ui, sans-serif'
+  const majorTicks = frequencyAxisTicks(domain, layout.width)
+  const minorTicks = integerMinorTicks(domain)
+
+  ctx.strokeStyle = theme.axis
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.moveTo(layout.left, layout.base)
+  ctx.lineTo(layout.right, layout.base)
+  ctx.stroke()
+
+  ctx.strokeStyle = theme.gridMajor
+  minorTicks.forEach((value) => {
+    const x = axisValueToPosition(value, domain, layout.left, layout.right)
+    ctx.beginPath()
+    ctx.moveTo(x, layout.base)
+    ctx.lineTo(x, layout.base + 3)
+    ctx.stroke()
+  })
+
+  ctx.strokeStyle = theme.axis
+  majorTicks.forEach((tick) => {
+    const x = axisValueToPosition(tick.value, domain, layout.left, layout.right)
+    ctx.beginPath()
+    ctx.moveTo(x, layout.base)
+    ctx.lineTo(x, layout.base + 5)
+    ctx.stroke()
+  })
+
+  if (showLabels) {
+    ctx.fillStyle = theme.muted
+    ctx.textBaseline = 'alphabetic'
+    majorTicks.forEach((tick) => {
+      const x = axisValueToPosition(tick.value, domain, layout.left, layout.right)
+      const labelWidth = ctx.measureText(tick.label).width
+      ctx.textAlign = x - labelWidth / 2 < layout.left ? 'left' : x + labelWidth / 2 > layout.right ? 'right' : 'center'
+      ctx.fillText(tick.label, x, layout.base + 13)
+    })
+  }
+  ctx.restore()
 }
 
 function signalAmplitudeRange(samples: number[]): number {
