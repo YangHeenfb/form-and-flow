@@ -31,11 +31,24 @@ export function reconstructFilteredSignal(spectrum: Spectrum, filterConfig: Filt
 }
 
 export function applyFilter(spectrum: Spectrum, filterConfig: FilterConfig): Spectrum {
-  if (filterConfig.type === 'low-pass') return applyLowPass(spectrum, filterConfig.cutoff)
-  if (filterConfig.type === 'high-pass') return applyHighPass(spectrum, filterConfig.cutoff)
-  if (filterConfig.type === 'band-pass') return applyBandPass(spectrum, filterConfig.lowCutoff, filterConfig.highCutoff)
-  if (filterConfig.type === 'band-stop') return applyBandStop(spectrum, filterConfig.lowCutoff, filterConfig.highCutoff)
-  return applyMagnitudeThreshold(spectrum, filterConfig.threshold)
+  return mapSpectrum(spectrum, (coefficient) => filterKeepsCoefficient(coefficient, filterConfig))
+}
+
+export function filterKeepsCoefficient(coefficient: FourierCoefficient, filterConfig: FilterConfig): boolean {
+  const frequency = Math.abs(coefficient.frequency)
+  if (filterConfig.type === 'low-pass') return frequency <= Math.abs(filterConfig.cutoff)
+  if (filterConfig.type === 'high-pass') return frequency >= Math.abs(filterConfig.cutoff)
+  if (filterConfig.type === 'band-pass') {
+    const low = Math.min(Math.abs(filterConfig.lowCutoff), Math.abs(filterConfig.highCutoff))
+    const high = Math.max(Math.abs(filterConfig.lowCutoff), Math.abs(filterConfig.highCutoff))
+    return frequency >= low && frequency <= high
+  }
+  if (filterConfig.type === 'band-stop') {
+    const low = Math.min(Math.abs(filterConfig.lowCutoff), Math.abs(filterConfig.highCutoff))
+    const high = Math.max(Math.abs(filterConfig.lowCutoff), Math.abs(filterConfig.highCutoff))
+    return frequency < low || frequency > high
+  }
+  return coefficient.magnitude >= filterConfig.threshold
 }
 
 function mapSpectrum(spectrum: Spectrum, keep: (coefficient: FourierCoefficient) => boolean): Spectrum {

@@ -21,6 +21,7 @@ export type GraphTheme = {
   primary: string
   secondary: string
   accent: string
+  highlight: string
   warning: string
   fill: string
 }
@@ -212,6 +213,7 @@ function readGraphTheme(element: HTMLElement): GraphTheme {
     primary: read('--graph-function-primary', '#7fd6c2'),
     secondary: read('--graph-function-secondary', '#b9a7ff'),
     accent: read('--focus', '#7fd6c2'),
+    highlight: read('--graph-highlight', '#ff9f68'),
     warning: read('--graph-warning', '#c7dc8a'),
     fill: read('--graph-area-fill', 'rgba(127, 214, 194, 0.24)'),
   }

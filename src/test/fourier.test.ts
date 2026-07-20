@@ -6,6 +6,8 @@ import { computeFrequencyPair, computeFrequencyPairFrame, synthesizeFrequencyPai
 import { computeCoefficientAtFrequency, computeIntegerSpectrum, findDominantFrequencies, interpolateWindingPoint, selectPairedFrequencyBlocks } from '../modules/fourier/math/fourier.ts'
 import { maxAbsError, reconstructSamples } from '../modules/fourier/math/reconstruction.ts'
 import { axisContains, axisValueToPosition, frequencyAxisTicks, frequencyDisplayDomain, integerMinorTicks } from '../modules/fourier/math/axisTicks.ts'
+import { buildFourierModeHref, filterSummary, pairSynthesisConclusion, probeResponseConclusion, reconstructionContributionLabel, selectCurrentContribution } from '../modules/fourier/fourierExplanation.ts'
+import type { FilterConfig, FourierCoefficient, Spectrum } from '../modules/fourier/fourierTypes.ts'
 
 describe('fourier complex math', () => {
   it('multiplies, divides, and formats complex numbers', () => {
@@ -175,5 +177,85 @@ describe('fourier axes', () => {
     const ticks = frequencyAxisTicks(domain, 240, measureLabel)
     expect(ticks.map((tick) => tick.value)).toEqual([-0.5, 0, 0.5, 1])
     expect(ticks.find((tick) => tick.value === 0)?.label).toBe('0')
+  })
+})
+
+describe('fourier intuition explanation model', () => {
+  it('classifies weak, partial, and strong winding responses and marks non-integer tests', () => {
+    expect(probeResponseConclusion({ locale: 'en', frequency: 1, magnitude: 0.1, peakMagnitude: 1 })).toContain('weak response')
+    expect(probeResponseConclusion({ locale: 'en', frequency: 1, magnitude: 0.4, peakMagnitude: 1 })).toContain('partial response')
+    expect(probeResponseConclusion({ locale: 'en', frequency: 1, magnitude: 0.7, peakMagnitude: 1 })).toContain('strong response')
+    expect(probeResponseConclusion({ locale: 'en', frequency: 1.5, magnitude: 0.4, peakMagnitude: 1 })).toContain('continuous winding test')
+    expect(probeResponseConclusion({ locale: 'zh', frequency: 1.5, magnitude: 0.4, peakMagnitude: 1 })).toContain('连续缠绕测试')
+  })
+
+  it('selects and labels DC, mirrored pairs, and single-coefficient contributions', () => {
+    const dcSpectrum = computeIntegerSpectrum(sampleFourierPreset('constant', 128, false), 3)
+    const pairSpectrum = computeIntegerSpectrum(sampleFourierPreset('sine-1', 128, false), 3)
+    const dc = selectCurrentContribution(dcSpectrum.coefficients, 'paired-frequency-blocks', 1)
+    const pair = selectCurrentContribution(pairSpectrum.coefficients, 'paired-frequency-blocks', 1)
+    const single = selectCurrentContribution(pairSpectrum.coefficients, 'top-magnitudes', 1)
+
+    expect(dc.map((coefficient) => coefficient.frequency)).toEqual([0])
+    expect(reconstructionContributionLabel(dc, 'en')).toBe('0')
+    expect(pair.map((coefficient) => coefficient.frequency)).toEqual([-1, 1])
+    expect(reconstructionContributionLabel(pair, 'en')).toBe('±1')
+    expect(single).toHaveLength(1)
+    expect(reconstructionContributionLabel(single, 'en')).toMatch(/^-?1$/)
+  })
+
+  it('distinguishes continuous arrow pairs and the single DC contribution', () => {
+    const continuous = pairSynthesisConclusion({ locale: 'en', frequency: 1.5, magnitude: 0.2, hasNegative: true })
+    expect(continuous).toContain("only this pair's contribution")
+    expect(continuous).toContain('not a discrete reconstruction block')
+    const dc = pairSynthesisConclusion({ locale: 'en', frequency: 0, magnitude: 1, hasNegative: false })
+    expect(dc).toContain('never a doubled pair')
+  })
+
+  it('summarizes all five filtering rules with retained and removed bin counts', () => {
+    const coefficients: FourierCoefficient[] = [-2, -1, 0, 1, 2].map((frequency) => ({
+      frequency,
+      value: complex(0.5, 0),
+      magnitude: 0.5,
+      phase: 0,
+    }))
+    const spectrum: Spectrum = { coefficients, frequencyMin: -2, frequencyMax: 2, frequencyStep: 1, sampleCount: 5 }
+    const cases: Array<{ config: FilterConfig; name: string; counts: string }> = [
+      { config: { type: 'low-pass', cutoff: 1, lowCutoff: 0, highCutoff: 0, threshold: 0 }, name: 'Low-pass', counts: '3 integer frequencies remain and 2 are removed' },
+      { config: { type: 'high-pass', cutoff: 1, lowCutoff: 0, highCutoff: 0, threshold: 0 }, name: 'High-pass', counts: '4 integer frequencies remain and 1 is removed' },
+      { config: { type: 'band-pass', cutoff: 0, lowCutoff: 1, highCutoff: 2, threshold: 0 }, name: 'Band-pass', counts: '4 integer frequencies remain and 1 is removed' },
+      { config: { type: 'band-stop', cutoff: 0, lowCutoff: 1, highCutoff: 2, threshold: 0 }, name: 'Band-stop', counts: '1 integer frequency remains and 4 are removed' },
+      { config: { type: 'magnitude-threshold', cutoff: 0, lowCutoff: 0, highCutoff: 0, threshold: 0.4 }, name: 'Magnitude thresholding', counts: '5 integer frequencies remain and 0 are removed' },
+    ]
+
+    cases.forEach(({ config, name, counts }) => {
+      const summary = filterSummary({ locale: 'en', config, spectrum })
+      expect(summary).toContain(name)
+      expect(summary).toContain(counts)
+    })
+  })
+
+  it('carries only preset or custom signal definition into the next Fourier mode', () => {
+    const presetHref = buildFourierModeHref({ nextMode: 'reconstruction', presetId: 'square-wave', expression: 'ignored', sampleCount: 256, normalizeAmplitude: false })
+    const presetUrl = new URL(presetHref, 'http://localhost')
+    expect(Object.fromEntries(presetUrl.searchParams)).toEqual({
+      mode: 'reconstruction',
+      preset: 'square-wave',
+      samples: '256',
+      normalize: 'false',
+    })
+
+    const customExpression = 'sin(2*pi*t) + 0.5*cos(6*pi*t)'
+    const customHref = buildFourierModeHref({ nextMode: 'filtering', presetId: 'custom', expression: customExpression, sampleCount: 512, normalizeAmplitude: true })
+    const customUrl = new URL(customHref, 'http://localhost')
+    expect(Object.fromEntries(customUrl.searchParams)).toEqual({
+      mode: 'filtering',
+      preset: 'custom',
+      f: customExpression,
+      samples: '512',
+      normalize: 'true',
+    })
+    expect(customUrl.searchParams.has('freq')).toBe(false)
+    expect(customUrl.searchParams.has('cutoff')).toBe(false)
   })
 })

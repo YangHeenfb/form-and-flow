@@ -8,6 +8,7 @@ import { LessonScaffold } from '../core/ui/LessonScaffold.tsx'
 import { appCopy } from '../i18n.ts'
 import { identityMatrix } from '../math/matrix.ts'
 import { MatrixMotionLab } from '../modules/matrix/MatrixMotionLab.tsx'
+import { FourierExplanation } from '../modules/fourier/FourierExplanation.tsx'
 import { useResizeObserver } from '../platform/useElementSize.ts'
 import { LessonStageActions } from '../platform/LessonStageActions.tsx'
 import { VisualizationWorkbench } from '../platform/VisualizationWorkbench.tsx'
@@ -150,6 +151,67 @@ describe('LessonScaffold standard readout action', () => {
     expect(container.querySelector('[role="dialog"]')).toBeNull()
     expect(document.activeElement).toBe(readoutButton)
 
+    unmount()
+  })
+
+  it('uses an optional readout label without changing the default label', async () => {
+    const { container, unmount } = render(
+      <LessonScaffold
+        controls={<p>Controls</p>}
+        title="Fourier"
+        stage={<div>Stage</div>}
+        stageActions={(
+          <LessonStageActions
+            graphLabel="Graph notes"
+            onGraphHelp={vi.fn()}
+            focusButton={<button type="button">Focus</button>}
+            exportLabel="Export"
+            onExport={vi.fn()}
+          />
+        )}
+        explanation={<p>Intuition content</p>}
+        readoutLabel="Intuition"
+      />,
+    )
+    const button = container.querySelector<HTMLButtonElement>('.lesson-stage-readout-action')!
+    expect(button.textContent).toContain('Intuition')
+    await click(button)
+    expect(container.querySelector('[role="dialog"] h2')?.textContent).toContain('Intuition')
+    unmount()
+  })
+})
+
+describe('FourierExplanation', () => {
+  it('leads with three intuition steps and keeps exact formulas collapsed by default', () => {
+    const { container, unmount } = render(
+      <FourierExplanation
+        model={{
+          coreLabel: 'Core idea',
+          currentLabel: 'What is happening now',
+          continueLabel: 'Continue exploring',
+          detailsLabel: 'Exact readout and formula',
+          readingsLabel: 'Exact readout',
+          formulaLabel: 'Formula',
+          notesLabel: 'Conventions and limits',
+          termsLabel: 'Related terms',
+          steps: [
+            { title: 'One', body: 'First step' },
+            { title: 'Two', body: 'Second step' },
+            { title: 'Three', body: 'Third step' },
+          ],
+          current: 'Current conclusion',
+          nextAction: 'Continue',
+          nextHref: '/modules/fourier?mode=reconstruction',
+        }}
+        values={[{ label: '|C(f)|', value: '0.5' }]}
+        formulaTex="C(f)"
+        formulaLabel="C(f)"
+        notes={['Convention']}
+      />,
+    )
+    expect(container.querySelectorAll('.fourier-intuition-steps li')).toHaveLength(3)
+    expect(container.querySelector<HTMLDetailsElement>('.fourier-precision-details')?.open).toBe(false)
+    expect(container.querySelector('.fourier-precision-details')?.textContent).toContain('|C(f)|')
     unmount()
   })
 })

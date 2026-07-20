@@ -233,6 +233,7 @@ function surfaceVariables(surfaceMode: PlatformSurfaceMode): CSSProperties {
     '--grid-color': dark ? '#414b52' : '#cad1d6',
     '--axis-color': dark ? '#d6dde1' : '#293640',
     '--graph-canvas-background': dark ? '#11171b' : '#fbfcfd',
+    '--graph-highlight': dark ? '#ff9f68' : '#b84d12',
     '--native-control-scheme': dark ? 'dark' : 'light',
   } as CSSProperties
 }
